@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+
+<!--    <bean type="annotation" expression="com.baomidou.mybatisplus.annotation.TableId"/>-->
+<!--    <context:include-filter type="annotation" expression="com.baomidou.mybatisplus.annotation.TableField"/>-->
+    <bean id="hotThemeService" class="com.blog.service.impl.HotThemeServiceImpl"></bean>
+    <bean id="redisService" class="com.blog.service.impl.RedisServiceImpl"></bean>
+
+    <!--mysql-->
+    <context:property-placeholder location="classpath:loadHotTheme.properties"/>
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driver}"></property>
+        <property name="url" value="${jdbc.url}"></property>
+        <property name="username" value="${jdbc.username}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+    </bean>
+
+    <!--redis-->
+    <!--构建连接池配置信息-->
+<!--    <bean id="redisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">-->
+<!--        <property name="maxIdle" value="${redis.maxIdle}"/>-->
+<!--        <property name="maxTotal" value="${redis.maxActive}"/>-->
+<!--        <property name="maxWaitMillis" value="${redis.maxWaitMillis}"/>-->
+<!--        <property name="testOnBorrow" value="${redis.testOnBorrow}"/>-->
+<!--    </bean>-->
+
+<!--    &lt;!&ndash;构建Spring-data-redis连接工厂，其实就是连接池&ndash;&gt;-->
+<!--    <bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">-->
+<!--        <constructor-arg index="0" ref="redisPoolConfig"></constructor-arg>-->
+<!--        &lt;!&ndash;设置IP&ndash;&gt;-->
+<!--        <property name="hostName" value="${redis.hostname}"></property>-->
+<!--        &lt;!&ndash;设置端口&ndash;&gt;-->
+<!--        <property name="port" value="${redis.port}"></property>-->
+<!--        &lt;!&ndash;设置密码默认是没有密码&ndash;&gt;-->
+<!--        <property name="password" value="${redis.password}"></property>-->
+<!--        &lt;!&ndash;设置是否使用连接池&ndash;&gt;-->
+<!--        <property name="poolConfig" ref="redisPoolConfig"></property>-->
+<!--        &lt;!&ndash;指定存储的数据库&ndash;&gt;-->
+<!--        <property name="database" value="1"></property>-->
+<!--    </bean>-->
+
+<!--    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">-->
+<!--        <property name="connectionFactory" ref="jedisConnectionFactory" />-->
+<!--        <property name="keySerializer">-->
+<!--            &lt;!&ndash;对key的序列化器&ndash;&gt;-->
+<!--            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />-->
+<!--        </property>-->
+<!--        &lt;!&ndash;对value的序列化器&ndash;&gt;-->
+<!--        <property name="valueSerializer">-->
+<!--            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />-->
+<!--        </property>-->
+<!--        &lt;!&ndash;对hash key的序列化器&ndash;&gt;-->
+<!--        <property name="hashKeySerializer">-->
+<!--            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />-->
+<!--        </property>-->
+<!--        &lt;!&ndash;对hash value的序列化器&ndash;&gt;-->
+<!--        <property name="hashValueSerializer">-->
+<!--            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />-->
+<!--        </property>-->
+<!--    </bean>-->
+
+
+    <!-- 定义MybatisPlus的全局策略配置 -->
+<!--    <bean id="globalConfig" class="com.baomidou.mybatisplus.core.config.GlobalConfig">-->
+<!--        <property name="dbConfig" ref="dbConfig"></property>-->
+<!--    </bean>-->
+    <!-- 定义dbConfig -->
+<!--    <bean id="dbConfig" class="com.baomidou.mybatisplus.core.config.GlobalConfig.DbConfig">-->
+<!--        <property name="idType" value="AUTO"></property>-->
+<!--    </bean>-->
+
+
+
+    <!--配置SqlSessionFactory工厂-->
+    <bean id="sqlSessionFactoryBean" class="com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 添加MP的全局配置策略 -->
+<!--        <property name="globalConfig" ref="globalConfig"></property>-->
+    </bean>
+
+    <!--配置dao的接口所在的包-->
+    <bean id="mapperScanner" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.blog.dao"/>
+    </bean>
+
+</beans>
