@@ -46,4 +46,5 @@ shopeeApi:
   host: https://partner.test-stable.shopeemobile.com
   partner_id: 1141020
   partner_key: 62484d6c546c7a474c53456b646154464d4b736f6c79437266564c4d6346756b
-  redirect_url: http://localhost:8081/shops/save
+  shop_redirect_url: http://localhost:8081/shopee/saveShopToken
+  account_redirect_url: http://localhost:8081/shopee/saveAccountToken

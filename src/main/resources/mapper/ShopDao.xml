@@ -3,37 +3,32 @@
 <mapper namespace="com.boss.bossscreen.dao.ShopDao">
 
 
-<!--    <select id="listCategoryDTO" resultType="com.blog.dto.CategoryDTO">-->
-<!--		SELECT-->
-<!--		  c.id,-->
-<!--		  c.category_name,-->
-<!--		  COUNT( a.id ) AS article_count-->
-<!--		FROM-->
-<!--		  tb_category c-->
-<!--		  LEFT JOIN ( SELECT id, category_id FROM tb_article WHERE is_delete = 0 AND `status` = 1 ) a ON c.id = a.category_id-->
-<!--		GROUP BY-->
-<!--		  c.id-->
-<!--    </select>-->
+    <select id="shopCount" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        FROM
+            shop s
+        <where>
+            <if test="condition.shop_id != null">
+                s.shop_id like concat('%',#{condition.shop_id},'%')
+            </if>
+        </where>
+    </select>
 
-<!--	<select id="listCategoryBackDTO" resultType="com.blog.dto.CategoryBackDTO">-->
-<!--		SELECT-->
-<!--		  c.id,-->
-<!--		  c.category_name,-->
-<!--		  COUNT( a.id ) AS article_count,-->
-<!--		  c.create_time-->
-<!--		FROM-->
-<!--		  tb_category c-->
-<!--		  LEFT JOIN tb_article a ON c.id = a.category_id-->
-<!--		<where>-->
-<!--			<if test="condition.keywords != null">-->
-<!--			     category_name like concat('%',#{condition.keywords},'%')-->
-<!--			</if>-->
-<!--		</where>-->
-<!--		GROUP BY-->
-<!--		  c.id-->
-<!--		ORDER BY-->
-<!--		  c.id DESC-->
-<!--        LIMIT #{current},#{size}-->
-<!--	</select>-->
+
+    <select id="shopList" resultType="com.boss.bossscreen.vo.ShopVO">
+        SELECT
+            id,
+            shop_id,
+            status,
+            account_id
+        FROM
+            shop s
+        <where>
+            <if test="condition.shop_id != null">
+                s.shop_id like concat('%',#{condition.shop_id},'%')
+            </if>
+        </where>
+    </select>
 
 </mapper>

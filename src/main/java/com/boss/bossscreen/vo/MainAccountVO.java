@@ -7,21 +7,17 @@ import lombok.NoArgsConstructor;
 /**
  * @Description
  * @Author 罗宇航
- * @Date 2024/4/9
+ * @Date 2024/4/11
  */
-
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ShopVO {
+public class MainAccountVO {
 
     private Integer id;
 
-    private long shopId;
-
-    private String name;
+    private long mainAccountId;
 
     private Integer status;
-
 }

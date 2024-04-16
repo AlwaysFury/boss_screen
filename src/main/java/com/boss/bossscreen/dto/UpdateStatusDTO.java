@@ -1,4 +1,4 @@
-package com.boss.bossscreen.vo;
+package com.boss.bossscreen.dto;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -17,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiModel(description = "逻辑删除")
-public class UpdateStatusVO {
+public class UpdateStatusDTO {
 
 
     /**

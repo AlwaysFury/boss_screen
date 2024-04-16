@@ -1,4 +1,4 @@
-package com.boss.bossscreen.vo;
+package com.boss.bossscreen.dto;
 
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Data
-public class ShopAuthVO {
+public class ShopAuthDTO {
 
     @Value("${shopeeApi.host}")
     private String host;
@@ -23,7 +23,7 @@ public class ShopAuthVO {
     @Value("${shopeeApi.partner_key}")
     private String tmp_partner_key;
 
-    @Value("${shopeeApi.redirect_url}")
+    @Value("${shopeeApi.shop_redirect_url}")
     private String redirect_url;
 
 

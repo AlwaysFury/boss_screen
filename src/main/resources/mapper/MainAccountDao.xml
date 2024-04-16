@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boss.bossscreen.dao.MainAccountDao">
+
+
+<!--    <select id="listCategoryDTO" resultType="com.blog.dto.CategoryDTO">-->
+<!--		SELECT-->
+<!--		  c.id,-->
+<!--		  c.category_name,-->
+<!--		  COUNT( a.id ) AS article_count-->
+<!--		FROM-->
+<!--		  tb_category c-->
+<!--		  LEFT JOIN ( SELECT id, category_id FROM tb_article WHERE is_delete = 0 AND `status` = 1 ) a ON c.id = a.category_id-->
+<!--		GROUP BY-->
+<!--		  c.id-->
+<!--    </select>-->
+
+<!--	<select id="listCategoryBackDTO" resultType="com.blog.dto.CategoryBackDTO">-->
+<!--		SELECT-->
+<!--		  c.id,-->
+<!--		  c.category_name,-->
+<!--		  COUNT( a.id ) AS article_count,-->
+<!--		  c.create_time-->
+<!--		FROM-->
+<!--		  tb_category c-->
+<!--		  LEFT JOIN tb_article a ON c.id = a.category_id-->
+<!--		<where>-->
+<!--			<if test="condition.keywords != null">-->
+<!--			     category_name like concat('%',#{condition.keywords},'%')-->
+<!--			</if>-->
+<!--		</where>-->
+<!--		GROUP BY-->
+<!--		  c.id-->
+<!--		ORDER BY-->
+<!--		  c.id DESC-->
+<!--        LIMIT #{current},#{size}-->
+<!--	</select>-->
+
+    <select id="accountCount" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        FROM
+            main_account s
+        <where>
+            <if test="condition.account_id != null">
+                s.account_id like concat('%',#{condition.account_id},'%')
+            </if>
+        </where>
+        GROUP BY
+        s.id
+    </select>
+
+
+    <select id="accountList" resultType="com.boss.bossscreen.vo.MainAccountVO">
+        SELECT
+            s.id,
+            s.account_id,
+            COUNT( d.id ) AS article_count,
+            s.status,
+            s.create_time
+        FROM
+            main_account s
+        LEFT JOIN shop d ON s.account_id = d.account_id
+        <where>
+            <if test="condition.account_id != null">
+                s.account_id like concat('%',#{condition.account_id},'%')
+            </if>
+        </where>
+        GROUP BY
+            s.id
+        ORDER BY
+            s.id DESC
+        LIMIT #{current},#{size}
+    </select>
+</mapper>

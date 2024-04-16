@@ -11,23 +11,19 @@ import java.time.LocalDateTime;
 /**
  * @Description
  * @Author 罗宇航
- * @Date 2024/4/9
+ * @Date 2024/4/11
  */
-
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("shop")
-public class Shop {
-
+@TableName("main_account")
+public class MainAccount {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    private long shopId;
-
-    private String name;
+    private long accountId;
 
     private String authCode;
 
@@ -36,8 +32,6 @@ public class Shop {
     private String refreshToken;
 
     private Integer status;
-
-    private Long accountId;
 
     /**
      * 创建时间
