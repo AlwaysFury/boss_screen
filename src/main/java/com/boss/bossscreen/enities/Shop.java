@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("shop")
+@TableName("tb_shop")
 public class Shop {
 
     @TableId(value = "id", type = IdType.AUTO)

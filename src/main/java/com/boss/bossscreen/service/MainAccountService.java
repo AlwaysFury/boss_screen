@@ -2,7 +2,7 @@ package com.boss.bossscreen.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.boss.bossscreen.enities.MainAccount;
-import com.boss.bossscreen.dto.ConditionDTO;
+import com.boss.bossscreen.dto.ShopAndAccountConditionDTO;
 import com.boss.bossscreen.vo.MainAccountVO;
 import com.boss.bossscreen.vo.PageResult;
 import com.boss.bossscreen.dto.UpdateStatusDTO;
@@ -19,7 +19,7 @@ public interface MainAccountService extends IService<MainAccount> {
 
     void saveOrUpdateToken(String code, long mainAccountId) throws ParseException, IOException;
 
-    PageResult<MainAccountVO> accountsListByCondition(ConditionDTO conditionDTO);
+    PageResult<MainAccountVO> accountsListByCondition(ShopAndAccountConditionDTO condition);
 
     void updateAccountsStatus(UpdateStatusDTO updateStatusDTO);
 

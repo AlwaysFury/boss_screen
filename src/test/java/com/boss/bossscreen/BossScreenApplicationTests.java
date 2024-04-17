@@ -1,8 +1,12 @@
 package com.boss.bossscreen;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.boss.bossscreen.service.impl.OrderServiceImpl;
+import com.boss.bossscreen.service.impl.ProductServiceImpl;
+import com.boss.bossscreen.service.impl.ShopServiceImpl;
 import com.boss.bossscreen.util.ShopeeUtil;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
@@ -43,7 +47,7 @@ class BossScreenApplicationTests {
 
     @Test
     void getProductsTest() {
-        String accessToken = "5a52646b6b425a59706f6b4159615169";
+        String accessToken = "4b64616e46486f63654369776f694247";
         JSONObject object = ShopeeUtil.getProducts(accessToken, 1017169304);
         System.out.println(object);
     }
@@ -51,20 +55,76 @@ class BossScreenApplicationTests {
 
     @Test
     void getProductInfoTest() {
-        String accessToken = "5a52646b6b425a59706f6b4159615169";
-        String itemId = "20392169588";
+        String accessToken = "4b64616e46486f63654369776f694247";
+        long itemId = Long.valueOf("25812541180");
         JSONObject object = ShopeeUtil.getProductInfo(accessToken, 1017169304, itemId);
         System.out.println(object);
     }
 
     @Test
     void getModelListTest() {
-        String accessToken = "7a546e7872636869714458556b786a64";
-        String itemId = "20392169588";
+        String accessToken = "4b64616e46486f63654369776f694247";
+        long itemId = Long.valueOf("25812541180");
         JSONObject object = ShopeeUtil.getModelList(accessToken, 1017169304, itemId);
         System.out.println(object);
     }
 
+    @Test
+    void getAttributesTest() {
+        String accessToken = "4b64616e46486f63654369776f694247";
+        long category_id = Long.valueOf("100352");
+        JSONObject object = ShopeeUtil.getAttributes(accessToken, 1017169304, category_id);
+        System.out.println(object);
+    }
 
+    @Test
+    void getCategoryTest() {
+        String accessToken = "4b64616e46486f63654369776f694247";
+        long category_id = Long.valueOf("100352");
+        JSONObject object = ShopeeUtil.getCategory(accessToken, 1017169304, category_id);
+        System.out.println(object);
+    }
+
+    @Autowired
+    private ProductServiceImpl productService;
+
+    @Test
+    void saveOrUpdateProduct() {
+        productService.saveOrUpdateProduct();
+    }
+
+    @Test
+    void getOrderList() {
+        String accessToken = "4b64616e46486f63654369776f694247";
+        JSONObject object = ShopeeUtil.getOrderList(accessToken, 1017169304);
+        System.out.println(object);
+    }
+
+    @Test
+    void getOrderDetail() {
+        JSONObject object = ShopeeUtil.getOrderDetail("4b64616e46486f63654369776f694247", 1017169304, "240409APT11HFB");
+        System.out.println(object);
+    }
+
+    @Autowired
+    private OrderServiceImpl orderService;
+
+    @Test
+    void saveOrUpdateOrder() {
+        orderService.saveOrUpdateOrder();
+    }
+
+    @Autowired
+    private ShopServiceImpl shopService;
+    @Test
+    void refreshShopToken() {
+        shopService.refreshShopTokenByAccount();
+    }
+
+    @Test
+    void getItemPromotionTest() {
+        JSONObject object = ShopeeUtil.getItemPromotion("4b64616e46486f63654369776f694247", 1017169304, "23248487563");
+        System.out.println(object);
+    }
 
 }

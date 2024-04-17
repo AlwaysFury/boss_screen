@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.bossscreen.dao.ShopDao;
-import com.boss.bossscreen.dto.ConditionDTO;
+import com.boss.bossscreen.dto.ShopAndAccountConditionDTO;
 import com.boss.bossscreen.dto.ShopDTO;
 import com.boss.bossscreen.dto.UpdateStatusDTO;
 import com.boss.bossscreen.enities.Shop;
@@ -60,7 +60,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopDao, Shop> implements ShopS
     }
 
     @Override
-    public PageResult<ShopVO> shopsListByCondition(ConditionDTO condition) {
+    public PageResult<ShopVO> shopsListByCondition(ShopAndAccountConditionDTO condition) {
         // 查询分类数量
         Integer count = shopDao.shopCount(condition);
         if (count == 0) {

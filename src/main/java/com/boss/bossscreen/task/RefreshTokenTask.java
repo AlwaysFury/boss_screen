@@ -4,7 +4,6 @@ import com.boss.bossscreen.service.impl.MainAccountServiceImpl;
 import com.boss.bossscreen.service.impl.ShopServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,7 +37,7 @@ public class RefreshTokenTask {
         shopService.refreshShopToken();
     }
 
-    @Scheduled(cron = "*/10 * * * * *")
+//    @Scheduled(cron = "*/10 * * * * *")
     public void refreshAccountToken() {
         log.info("======开始刷新账号 token");
         shopService.refreshShopTokenByAccount();

@@ -1,23 +1,14 @@
 package com.boss.bossscreen.dto;
 
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-
 /**
- * 查询条件
+ * @Description
+ * @Author 罗宇航
+ * @Date 2024/4/17
  */
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-@ApiModel(description = "查询条件")
 public class ConditionDTO {
 
     /**
@@ -49,17 +40,4 @@ public class ConditionDTO {
      */
     @ApiModelProperty(name = "endTime", value = "结束时间", dataType = "LocalDateTime")
     private LocalDateTime endTime;
-
-    /**
-     * 商店 id
-     */
-    @ApiModelProperty(name = "shop_id", value = "商店 id", dataType = "Long")
-    private Long shop_id;
-
-    /**
-     * 账号 id
-     */
-    @ApiModelProperty(name = "account_id", value = "账号 id", dataType = "Long")
-    private Long account_id;
-
 }

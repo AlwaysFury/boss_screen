@@ -4,12 +4,11 @@ import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.bossscreen.dao.MainAccountDao;
 import com.boss.bossscreen.dao.ShopDao;
-import com.boss.bossscreen.dto.ConditionDTO;
+import com.boss.bossscreen.dto.ShopAndAccountConditionDTO;
 import com.boss.bossscreen.dto.MainAccountDTO;
 import com.boss.bossscreen.dto.ShopDTO;
 import com.boss.bossscreen.dto.UpdateStatusDTO;
@@ -99,7 +98,7 @@ public class MainAccountServiceImpl extends ServiceImpl<MainAccountDao, MainAcco
     }
 
     @Override
-    public PageResult<MainAccountVO> accountsListByCondition(ConditionDTO condition) {
+    public PageResult<MainAccountVO> accountsListByCondition(ShopAndAccountConditionDTO condition) {
         // 查询分类数量
         Integer count = mainAccountDao.accountCount(condition);
         if (count == 0) {

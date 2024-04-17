@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("main_account")
+@TableName("tb_main_account")
 public class MainAccount {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;

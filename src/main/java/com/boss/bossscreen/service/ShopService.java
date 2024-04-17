@@ -3,7 +3,7 @@ package com.boss.bossscreen.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.boss.bossscreen.dto.ShopDTO;
 import com.boss.bossscreen.enities.Shop;
-import com.boss.bossscreen.dto.ConditionDTO;
+import com.boss.bossscreen.dto.ShopAndAccountConditionDTO;
 import com.boss.bossscreen.vo.PageResult;
 import com.boss.bossscreen.vo.ShopVO;
 import com.boss.bossscreen.dto.UpdateStatusDTO;
@@ -17,7 +17,7 @@ public interface ShopService extends IService<Shop>  {
 
     void saveOrUpdateToken(ShopDTO shopDTO);
 
-    PageResult<ShopVO> shopsListByCondition(ConditionDTO conditionDTO);
+    PageResult<ShopVO> shopsListByCondition(ShopAndAccountConditionDTO condition);
 
     void updateShopsStatus(UpdateStatusDTO updateStatusDTO);
 

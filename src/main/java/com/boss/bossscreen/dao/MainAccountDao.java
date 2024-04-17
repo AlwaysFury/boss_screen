@@ -1,7 +1,7 @@
 package com.boss.bossscreen.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.boss.bossscreen.dto.ConditionDTO;
+import com.boss.bossscreen.dto.ShopAndAccountConditionDTO;
 import com.boss.bossscreen.enities.MainAccount;
 import com.boss.bossscreen.vo.MainAccountVO;
 import org.apache.ibatis.annotations.Param;
@@ -17,8 +17,8 @@ import java.util.List;
 public interface MainAccountDao extends BaseMapper<MainAccount> {
 
 
-    Integer accountCount(@Param("condition") ConditionDTO conditionDTO);
+    Integer accountCount(@Param("condition") ShopAndAccountConditionDTO condition);
 
 
-    List<MainAccountVO> accountList(@Param("current") Long current, @Param("size") Long size, @Param("condition") ConditionDTO condition);
+    List<MainAccountVO> accountList(@Param("current") Long current, @Param("size") Long size, @Param("condition") ShopAndAccountConditionDTO condition);
 }
