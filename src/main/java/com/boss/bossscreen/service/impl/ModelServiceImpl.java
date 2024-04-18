@@ -2,17 +2,21 @@ package com.boss.bossscreen.service.impl;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.bossscreen.dao.ModelDao;
 import com.boss.bossscreen.enities.Model;
 import com.boss.bossscreen.service.ModelService;
+import com.boss.bossscreen.util.BeanCopyUtils;
 import com.boss.bossscreen.util.ShopeeUtil;
+import com.boss.bossscreen.vo.ModelVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Description
@@ -88,5 +92,13 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
         }
 
         return modelList;
+    }
+
+    public List<ModelVO> getModelVOListByItemId(Long itemId) {
+        List<ModelVO> modelVOList = modelDao.selectList(new QueryWrapper<Model>().eq("item_id", itemId))
+                .stream().map(model ->
+                        BeanCopyUtils.copyObject(model, ModelVO.class)
+                ).collect(Collectors.toList());
+        return modelVOList;
     }
 }

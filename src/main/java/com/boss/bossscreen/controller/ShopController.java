@@ -1,7 +1,7 @@
 package com.boss.bossscreen.controller;
 
 import com.boss.bossscreen.annotation.OptLog;
-import com.boss.bossscreen.dto.ShopAndAccountConditionDTO;
+import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.dto.UpdateStatusDTO;
 import com.boss.bossscreen.service.impl.ShopServiceImpl;
 import com.boss.bossscreen.vo.PageResult;
@@ -31,8 +31,8 @@ public class ShopController {
     private ShopServiceImpl shopService;
 
     @ApiOperation(value = "获取所有店铺")
-    @GetMapping("/shopsList")
-    public Result<PageResult<ShopVO>> shopsList(ShopAndAccountConditionDTO condition) {
+    @GetMapping("/shopList")
+    public Result<PageResult<ShopVO>> shopsList(ConditionDTO condition) {
         return Result.ok(shopService.shopsListByCondition(condition));
     }
 
@@ -44,7 +44,7 @@ public class ShopController {
      */
     @OptLog(optType = REMOVE)
     @ApiOperation(value = "删除店铺（逻辑）0 / 冻结 2/ 激活 1")
-    @DeleteMapping("/updateShopsStatus")
+    @DeleteMapping("/updateShopStatus")
     public Result<?> updateShopsStatus(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
         shopService.updateShopsStatus(updateStatusDTO);
         return Result.ok();

@@ -5,19 +5,31 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * @Description
  * @Author 罗宇航
- * @Date 2024/4/17
+ * @Date 2024/4/18
  */
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductVO {
+public class ProductDetailVO {
 
     private Integer id;
+
+    /**
+     * 创建时间
+     */
+    private Long createTime;
+
+    /**
+     * 修改时间
+     */
+    private Long updateTime;
 
     /**
      * 系统 id
@@ -40,11 +52,6 @@ public class ProductVO {
     private String itemSku;
 
     /**
-     * 主图 url
-     */
-    private String mainImgUrl;
-
-    /**
      * 等级
      */
     private String grade;
@@ -59,8 +66,6 @@ public class ProductVO {
      */
     private String status;
 
-    /**
-     * 创建时间
-     */
-    private Long createTime;
+
+    List<ModelVO> modelVOList;
 }

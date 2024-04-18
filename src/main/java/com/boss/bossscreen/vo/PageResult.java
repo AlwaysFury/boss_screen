@@ -13,9 +13,9 @@ import java.util.List;
  * 分页对象
  */
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 @ApiModel(description = "分页对象")
 public class PageResult<T> {
 

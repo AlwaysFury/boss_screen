@@ -3,4 +3,38 @@
 <mapper namespace="com.boss.bossscreen.dao.ProductDao">
 
 
+    <select id="productCount" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        FROM
+            tb_product s
+        <where>
+            <if test="condition.item_id != null">
+                s.item_id like concat('%',#{condition.item_id},'%')
+            </if>
+        </where>
+    </select>
+
+
+    <select id="productList" resultType="com.boss.bossscreen.vo.ProductVO">
+        SELECT
+            id,
+            item_id,
+            category_id,
+            item_name,
+            item_sku,
+            mainImg_url,
+            grade,
+            shop_id,
+            status,
+            create_time
+        FROM
+            tb_product s
+        <where>
+            <if test="condition.item_id != null">
+                s.item_id like concat('%',#{condition.item_id},'%')
+            </if>
+        </where>
+        LIMIT #{current},#{size}
+    </select>
 </mapper>

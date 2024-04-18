@@ -1,7 +1,7 @@
 package com.boss.bossscreen.controller;
 
 import com.boss.bossscreen.annotation.OptLog;
-import com.boss.bossscreen.dto.ShopAndAccountConditionDTO;
+import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.dto.UpdateStatusDTO;
 import com.boss.bossscreen.service.impl.MainAccountServiceImpl;
 import com.boss.bossscreen.vo.MainAccountVO;
@@ -33,8 +33,8 @@ public class MainAccountController {
 
 
     @ApiOperation(value = "获取所有账号")
-    @GetMapping("/accountsList")
-    public Result<PageResult<MainAccountVO>> accountsList(ShopAndAccountConditionDTO condition) {
+    @GetMapping("/accountList")
+    public Result<PageResult<MainAccountVO>> accountList(ConditionDTO condition) {
         return Result.ok(mainAccountService.accountsListByCondition(condition));
     }
 

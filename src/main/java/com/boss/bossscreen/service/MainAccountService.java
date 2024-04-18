@@ -1,11 +1,11 @@
 package com.boss.bossscreen.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.boss.bossscreen.dto.ConditionDTO;
+import com.boss.bossscreen.dto.UpdateStatusDTO;
 import com.boss.bossscreen.enities.MainAccount;
-import com.boss.bossscreen.dto.ShopAndAccountConditionDTO;
 import com.boss.bossscreen.vo.MainAccountVO;
 import com.boss.bossscreen.vo.PageResult;
-import com.boss.bossscreen.dto.UpdateStatusDTO;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -19,7 +19,7 @@ public interface MainAccountService extends IService<MainAccount> {
 
     void saveOrUpdateToken(String code, long mainAccountId) throws ParseException, IOException;
 
-    PageResult<MainAccountVO> accountsListByCondition(ShopAndAccountConditionDTO condition);
+    PageResult<MainAccountVO> accountsListByCondition(ConditionDTO condition);
 
     void updateAccountsStatus(UpdateStatusDTO updateStatusDTO);
 

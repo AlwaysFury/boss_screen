@@ -6,11 +6,17 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.bossscreen.dao.ProductDao;
 import com.boss.bossscreen.dao.ShopDao;
+import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.enities.Model;
 import com.boss.bossscreen.enities.Product;
 import com.boss.bossscreen.enities.Shop;
 import com.boss.bossscreen.service.ProductService;
+import com.boss.bossscreen.util.BeanCopyUtils;
+import com.boss.bossscreen.util.PageUtils;
 import com.boss.bossscreen.util.ShopeeUtil;
+import com.boss.bossscreen.vo.PageResult;
+import com.boss.bossscreen.vo.ProductDetailVO;
+import com.boss.bossscreen.vo.ProductVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,6 +40,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
     @Autowired
     private ModelServiceImpl modelService;
+
+    @Autowired
+    private ProductDao productDao;
 
     // todo 优化下拉
     @Transactional(rollbackFor = Exception.class)
@@ -128,6 +137,29 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         }
 
         return productList;
+    }
+
+    public PageResult<ProductVO> productListByCondition(ConditionDTO condition) {
+        // 查询分类数量
+        Integer count = productDao.productCount(condition);
+        if (count == 0) {
+            return new PageResult<>();
+        }
+        // 分页查询分类列表
+        List<ProductVO> productList = productDao.productList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition);
+        return new PageResult<>(productList, count);
+    }
+
+    @Override
+    public ProductDetailVO getProductDetail(Long itemId) {
+
+        Product product = productDao.selectOne(new QueryWrapper<Product>().eq("item_id", itemId));
+
+        ProductDetailVO productDetailVO = BeanCopyUtils.copyObject(product, ProductDetailVO.class);
+
+        productDetailVO.setModelVOList(modelService.getModelVOListByItemId(itemId));
+
+        return productDetailVO;
     }
 
 

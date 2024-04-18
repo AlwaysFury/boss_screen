@@ -7,10 +7,10 @@
         SELECT
             count(*)
         FROM
-            shop s
+            tb_shop as s
         <where>
             <if test="condition.shop_id != null">
-                s.shop_id like concat('%',#{condition.shop_id},'%')
+                s.shop_id = #{condition.shop_id}
             </if>
         </where>
     </select>
@@ -23,12 +23,13 @@
             status,
             account_id
         FROM
-            shop s
+            tb_shop as s
         <where>
             <if test="condition.shop_id != null">
-                s.shop_id like concat('%',#{condition.shop_id},'%')
+                s.shop_id = #{condition.shop_id}
             </if>
         </where>
+        LIMIT #{current},#{size}
     </select>
 
 </mapper>

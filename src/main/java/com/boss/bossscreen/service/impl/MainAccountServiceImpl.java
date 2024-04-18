@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.bossscreen.dao.MainAccountDao;
 import com.boss.bossscreen.dao.ShopDao;
-import com.boss.bossscreen.dto.ShopAndAccountConditionDTO;
+import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.dto.MainAccountDTO;
 import com.boss.bossscreen.dto.ShopDTO;
 import com.boss.bossscreen.dto.UpdateStatusDTO;
@@ -98,7 +98,7 @@ public class MainAccountServiceImpl extends ServiceImpl<MainAccountDao, MainAcco
     }
 
     @Override
-    public PageResult<MainAccountVO> accountsListByCondition(ShopAndAccountConditionDTO condition) {
+    public PageResult<MainAccountVO> accountsListByCondition(ConditionDTO condition) {
         // 查询分类数量
         Integer count = mainAccountDao.accountCount(condition);
         if (count == 0) {
@@ -127,38 +127,5 @@ public class MainAccountServiceImpl extends ServiceImpl<MainAccountDao, MainAcco
         updateWrapper.in("account_id", updateStatusDTO.getIdList());
         shopDao.update(updateWrapper);
     }
-
-//    @Override
-//    public void refreshAccountToken() {
-//        QueryWrapper<MainAccount> wrapper = new QueryWrapper<>();
-//        wrapper.select("id", "account_id", "access_token", "refresh_token");
-//
-//        List<MainAccount> oldList = mainAccountDao.selectList(wrapper);
-//        for (MainAccount account : oldList) {
-//            long accountId = account.getAccountId();
-//
-//            JSONObject object = ShopeeUtil.refreshToken(account.getRefreshToken(), accountId, "account");
-//            log.info("====={} 的 token：{}", accountId, object);
-//
-//            if ("error".equals(object.getString("error"))) {
-//                continue;
-//            }
-//
-//            String newAccessToken = object.getString("access_token");
-//            String newRefreshToken = object.getString("refresh_token");
-//
-//            UpdateWrapper<Shop> shopWrapper = new UpdateWrapper<>();
-//            shopWrapper.set("access_token", newAccessToken);
-//            shopWrapper.set("refresh_token", newRefreshToken);
-//            shopWrapper.eq("account_id", accountId);
-//            shopDao.update(shopWrapper);
-//
-//            UpdateWrapper<MainAccount> accountWrapper = new UpdateWrapper<>();
-//            accountWrapper.set("access_token", newAccessToken);
-//            accountWrapper.set("refresh_token", newRefreshToken);
-//            accountWrapper.eq("account_id", accountId);
-//            this.update(accountWrapper);
-//        }
-//    }
 
 }
