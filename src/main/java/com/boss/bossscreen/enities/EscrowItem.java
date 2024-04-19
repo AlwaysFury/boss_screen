@@ -12,16 +12,15 @@ import java.time.LocalDateTime;
 /**
  * @Description
  * @Author 罗宇航
- * @Date 2024/4/17
+ * @Date 2024/4/19
  */
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("tb_order_item")
-public class OrderItem {
-
+@TableName("tb_escrow_item")
+public class EscrowItem {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
@@ -41,11 +40,6 @@ public class OrderItem {
      * 订单号
      */
     private String orderSn;
-
-    /**
-     * 运单号
-     */
-    private String packageNumber;
 
     /**
      * 产品 id
@@ -83,22 +77,32 @@ public class OrderItem {
     private int count;
 
     /**
-     * 图片链接
+     * 原始价格
      */
-    private String imageUrl;
+    private BigDecimal originalPrice;
+
+    /**
+     * 销售价格
+     */
+    private BigDecimal sellingPrice;
+
+    /**
+     * 折扣价格
+     */
+    private BigDecimal discountedPrice;
+
+    /**
+     * 卖家折扣
+     */
+    private BigDecimal sellerDiscount;
 
     /**
      * 活动 id
      */
-    private Long promotionId;
+    private Long activityId;
 
     /**
      * 活动类型
      */
-    private String promotionType;
-
-    /**
-     * 成本
-     */
-    private BigDecimal cost;
+    private String activityType;
 }

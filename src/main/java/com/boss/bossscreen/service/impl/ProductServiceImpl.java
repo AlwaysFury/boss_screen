@@ -15,7 +15,7 @@ import com.boss.bossscreen.util.BeanCopyUtils;
 import com.boss.bossscreen.util.PageUtils;
 import com.boss.bossscreen.util.ShopeeUtil;
 import com.boss.bossscreen.vo.PageResult;
-import com.boss.bossscreen.vo.ProductDetailVO;
+import com.boss.bossscreen.vo.ProductInfoVO;
 import com.boss.bossscreen.vo.ProductVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +63,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
             shopId = shop.getShopId();
             accessToken = shop.getAccessToken();
 
-            // todo 集合查询
+            // todo 优化为集合查询
             result = ShopeeUtil.getProducts(accessToken, shopId);
 
             if (result.getString("error").contains("error")) {
@@ -84,6 +84,14 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
             }
         }
         // todo 检测入库
+        // 将新旧数据全部数据缓存进入 redis
+        // 新数据与旧数据进行比较：时间戳
+        // key：product:产品id:时间戳
+        // value：数据 json 格式化
+        // 全量检查！！！！！！
+        // 新增：将数据存入新增集合，存入 redis 和 mysql
+        // 更新：将更新数据存入更新集合，更新 reids 和 mysql 中的数据
+        // 删除：指示标记该条数据被删除！！！不是物理删除，存入删除集合，并在更新 redis 和 mysql 中的数据
         System.out.println(JSONArray.toJSONString(productList));
         this.saveBatch(productList);
         System.out.println(JSONArray.toJSONString(modelList));
@@ -151,15 +159,15 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
     }
 
     @Override
-    public ProductDetailVO getProductDetail(Long itemId) {
+    public ProductInfoVO getProductInfo(Long itemId) {
 
         Product product = productDao.selectOne(new QueryWrapper<Product>().eq("item_id", itemId));
 
-        ProductDetailVO productDetailVO = BeanCopyUtils.copyObject(product, ProductDetailVO.class);
+        ProductInfoVO productInfoVO = BeanCopyUtils.copyObject(product, ProductInfoVO.class);
 
-        productDetailVO.setModelVOList(modelService.getModelVOListByItemId(itemId));
+        productInfoVO.setModelVOList(modelService.getModelVOListByItemId(itemId));
 
-        return productDetailVO;
+        return productInfoVO;
     }
 
 

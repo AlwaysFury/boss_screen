@@ -1,13 +1,11 @@
-package com.boss.bossscreen.enities;
+package com.boss.bossscreen.vo;
 
-import com.baomidou.mybatisplus.annotation.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
  * @Description
@@ -19,33 +17,9 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("tb_order_item")
-public class OrderItem {
+public class OrderEscrowItemVO {
 
-    @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
-
-    /**
-     * 创建时间
-     */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
-
-    /**
-     * 修改时间
-     */
-    @TableField(fill = FieldFill.UPDATE)
-    private LocalDateTime updateTime;
-
-    /**
-     * 订单号
-     */
-    private String orderSn;
-
-    /**
-     * 运单号
-     */
-    private String packageNumber;
 
     /**
      * 产品 id
@@ -88,17 +62,48 @@ public class OrderItem {
     private String imageUrl;
 
     /**
+     * 原始价格
+     */
+    private BigDecimal originalPrice;
+
+    /**
+     * 销售价格
+     */
+    private BigDecimal sellingPrice;
+
+    /**
+     * 折扣价格
+     */
+    private BigDecimal discountedPrice;
+
+    /**
+     * 卖家折扣
+     */
+    private BigDecimal sellerDiscount;
+
+    /**
      * 活动 id
      */
-    private Long promotionId;
+    private Long activityId;
 
     /**
      * 活动类型
      */
-    private String promotionType;
+    private String activityType;
 
     /**
      * 成本
      */
     private BigDecimal cost;
+
+    /**
+     * 利润
+     */
+    private BigDecimal profit;
+
+    /**
+     * 利润率
+     */
+    private float profitRate;
+
 }

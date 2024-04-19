@@ -1,8 +1,13 @@
 package com.boss.bossscreen.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.enities.Order;
+import com.boss.bossscreen.vo.OrderEscrowVO;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 
 /**
@@ -12,9 +17,9 @@ import org.springframework.stereotype.Repository;
 public interface OrderDao extends BaseMapper<Order> {
 
 
-//    Integer shopCount(@Param("condition") ConditionDTO conditionDTO);
-//
-//
-//    List<ShopVO> shopList(@Param("current") Long current, @Param("size") Long size, @Param("condition") ConditionDTO condition);
+    Integer orderCount(@Param("condition") ConditionDTO condition);
+
+
+    List<OrderEscrowVO> orderList(@Param("current") Long current, @Param("size") Long size, @Param("condition") ConditionDTO condition);
 
 }

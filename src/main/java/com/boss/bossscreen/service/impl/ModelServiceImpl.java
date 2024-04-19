@@ -62,8 +62,6 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
             // 为了图片
             String modelName = modelObject.getString("model_name");
 
-
-            // todo 图片
             Model model = Model.builder()
                     .modelId(modelObject.getLong("model_id"))
                     .modelName(modelName)

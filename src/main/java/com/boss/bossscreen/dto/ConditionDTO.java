@@ -70,6 +70,12 @@ public class ConditionDTO {
     /**
      * 产品 id
      */
-    @ApiModelProperty(name = "item_sku", value = "产品 sku", dataType = "Long")
+    @ApiModelProperty(name = "item_sku", value = "产品 sku", dataType = "String")
     private String item_sku;
+
+    /**
+     * 订单 id
+     */
+    @ApiModelProperty(name = "order_sn", value = "订单 id", dataType = "String")
+    private String order_sn;
 }

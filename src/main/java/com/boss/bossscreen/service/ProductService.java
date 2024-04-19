@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.enities.Product;
 import com.boss.bossscreen.vo.PageResult;
-import com.boss.bossscreen.vo.ProductDetailVO;
+import com.boss.bossscreen.vo.ProductInfoVO;
 import com.boss.bossscreen.vo.ProductVO;
 
 /**
@@ -19,7 +19,7 @@ public interface ProductService extends IService<Product> {
     PageResult<ProductVO> productListByCondition(ConditionDTO conditionDTO);
 
 
-    ProductDetailVO getProductDetail(Long itemId);
+    ProductInfoVO getProductInfo(Long itemId);
 //
 //    void updateAccountsStatus(UpdateStatusDTO updateStatusDTO);
 

@@ -17,7 +17,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductDetailVO {
+public class ProductInfoVO {
 
     private Integer id;
 

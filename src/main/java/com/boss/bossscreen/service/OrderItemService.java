@@ -2,6 +2,9 @@ package com.boss.bossscreen.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.boss.bossscreen.enities.OrderItem;
+import com.boss.bossscreen.vo.OrderEscrowItemVO;
+
+import java.util.List;
 
 /**
  * @Description
@@ -10,5 +13,5 @@ import com.boss.bossscreen.enities.OrderItem;
  */
 public interface OrderItemService extends IService<OrderItem> {
 
-
+    List<OrderEscrowItemVO> getOrderItemVOListByOrderSn(String orderSn);
 }

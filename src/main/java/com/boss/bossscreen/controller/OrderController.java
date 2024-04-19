@@ -1,10 +1,10 @@
 package com.boss.bossscreen.controller;
 
 import com.boss.bossscreen.dto.ConditionDTO;
-import com.boss.bossscreen.service.impl.ProductServiceImpl;
+import com.boss.bossscreen.service.impl.OrderServiceImpl;
+import com.boss.bossscreen.vo.OrderEscrowInfoVO;
+import com.boss.bossscreen.vo.OrderEscrowVO;
 import com.boss.bossscreen.vo.PageResult;
-import com.boss.bossscreen.vo.ProductInfoVO;
-import com.boss.bossscreen.vo.ProductVO;
 import com.boss.bossscreen.vo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -23,28 +23,25 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Api(tags = "产品模块")
 @RestController
-@RequestMapping("/product")
+@RequestMapping("/order")
 @Slf4j
-public class ProductController {
+public class OrderController {
     @Autowired
-    private ProductServiceImpl productService;
+    private OrderServiceImpl orderService;
 
-    @ApiOperation(value = "获取所有产品")
-    @GetMapping("/productList")
-    public Result<PageResult<ProductVO>> productList(ConditionDTO condition) {
+    @ApiOperation(value = "获取所有订单")
+    @GetMapping("/orderList")
+    public Result<PageResult<OrderEscrowVO>> orderList(ConditionDTO condition) {
 
-        return Result.ok(productService.productListByCondition(condition));
+        return Result.ok(orderService.orderListByCondition(condition));
     }
 
-    @ApiOperation(value = "根据产品 id 获取产品详细")
+    @ApiOperation(value = "根据订单 id 获取订单详细")
     @GetMapping("/info")
-    public Result<ProductInfoVO> getProductInfo(@RequestParam("item_id") Long itemId) {
+    public Result<OrderEscrowInfoVO> getOrderInfo(@RequestParam("order_sn") String orderSn) {
 
-        return Result.ok(productService.getProductInfo(itemId));
+        return Result.ok(orderService.getOrderInfo(orderSn));
     }
-
-    // todo 下架
-
 
 
 }

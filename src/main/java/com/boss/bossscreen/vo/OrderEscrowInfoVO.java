@@ -1,38 +1,30 @@
-package com.boss.bossscreen.enities;
+package com.boss.bossscreen.vo;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 /**
  * @Description
  * @Author 罗宇航
- * @Date 2024/4/17
+ * @Date 2024/4/18
  */
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("tb_order")
-public class Order {
-
-    @TableId(value = "id", type = IdType.AUTO)
+public class OrderEscrowInfoVO {
     private Integer id;
 
     /**
      * 创建时间
      */
     private Long createTime;
-
-    /**
-     * 修改时间
-     */
-    private Long updateTime;
 
     /**
      * 订单号
@@ -45,19 +37,14 @@ public class Order {
     private String packageNumber;
 
     /**
-     * 所属店铺
-     */
-    private Long shopId;
-
-    /**
      * 状态
      */
     private String status;
 
     /**
-     * 付款时间
+     * 所属店铺
      */
-    private Long payTime;
+    private Long shopId;
 
     /**
      * 买家id
@@ -83,4 +70,34 @@ public class Order {
      * 买家取消原因
      */
     private String buyerCancelReason;
+
+    /**
+     * 付款时间
+     */
+    private Long payTime;
+
+    /**
+     * 买家最终付款金额
+     */
+    private BigDecimal buyerTotalAmount;
+
+    /**
+     * 买家最终支付运费
+     */
+    private BigDecimal buyerPaidShippingFee;
+
+    /**
+     * 平台实际运费
+     */
+    private BigDecimal actualShippingFee;
+
+    /**
+     * 平台最终金额
+     */
+    private BigDecimal escrowAmount;
+
+    /**
+     * 订单中的产品
+     */
+    private List<OrderEscrowItemVO> orderEscrowItemVOList;
 }

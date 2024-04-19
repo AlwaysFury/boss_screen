@@ -127,4 +127,11 @@ class BossScreenApplicationTests {
         System.out.println(object);
     }
 
+
+    @Test
+    void getEscrowDetailTest() {
+        JSONObject object = ShopeeUtil.getEscrowDetail("4869704e624374516f7957646b747571", 1017169304, "240405UHE0VN3H");
+        System.out.println(object);
+    }
+
 }

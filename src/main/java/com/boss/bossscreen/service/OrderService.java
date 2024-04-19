@@ -1,7 +1,11 @@
 package com.boss.bossscreen.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.enities.Order;
+import com.boss.bossscreen.vo.OrderEscrowInfoVO;
+import com.boss.bossscreen.vo.OrderEscrowVO;
+import com.boss.bossscreen.vo.PageResult;
 
 /**
  * @Description
@@ -12,9 +16,7 @@ public interface OrderService extends IService<Order> {
 
     void saveOrUpdateOrder();
 
-//    PageResult<MainAccountVO> accountsListByCondition(ConditionDTO conditionDTO);
-//
-//    void updateAccountsStatus(UpdateStatusDTO updateStatusDTO);
+    PageResult<OrderEscrowVO> orderListByCondition(ConditionDTO condition);
 
-//    void refreshAccountToken();
+    OrderEscrowInfoVO getOrderInfo(String orderSn);
 }
