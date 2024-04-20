@@ -6,8 +6,6 @@ import com.boss.bossscreen.vo.OrderEscrowInfoVO;
 import com.boss.bossscreen.vo.OrderEscrowVO;
 import com.boss.bossscreen.vo.PageResult;
 import com.boss.bossscreen.vo.Result;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
  * @Date 2024/4/16
  */
 
-@Api(tags = "产品模块")
 @RestController
 @RequestMapping("/order")
 @Slf4j
@@ -29,14 +26,22 @@ public class OrderController {
     @Autowired
     private OrderServiceImpl orderService;
 
-    @ApiOperation(value = "获取所有订单")
+    /**
+     * 获取订单列表
+     * @param condition
+     * @return
+     */
     @GetMapping("/orderList")
     public Result<PageResult<OrderEscrowVO>> orderList(ConditionDTO condition) {
 
         return Result.ok(orderService.orderListByCondition(condition));
     }
 
-    @ApiOperation(value = "根据订单 id 获取订单详细")
+    /**
+     * 根据订单 id 获取订单详细
+     * @param orderSn
+     * @return
+     */
     @GetMapping("/info")
     public Result<OrderEscrowInfoVO> getOrderInfo(@RequestParam("order_sn") String orderSn) {
 

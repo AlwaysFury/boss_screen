@@ -6,8 +6,6 @@ import com.boss.bossscreen.vo.PageResult;
 import com.boss.bossscreen.vo.ProductInfoVO;
 import com.boss.bossscreen.vo.ProductVO;
 import com.boss.bossscreen.vo.Result;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
  * @Date 2024/4/16
  */
 
-@Api(tags = "产品模块")
 @RestController
 @RequestMapping("/product")
 @Slf4j
@@ -29,14 +26,22 @@ public class ProductController {
     @Autowired
     private ProductServiceImpl productService;
 
-    @ApiOperation(value = "获取所有产品")
+    /**
+     * 获取产品列表
+     * @param condition
+     * @return
+     */
     @GetMapping("/productList")
     public Result<PageResult<ProductVO>> productList(ConditionDTO condition) {
 
         return Result.ok(productService.productListByCondition(condition));
     }
 
-    @ApiOperation(value = "根据产品 id 获取产品详细")
+    /**
+     * 根据产品 id 获取产品详细
+     * @param itemId
+     * @return
+     */
     @GetMapping("/info")
     public Result<ProductInfoVO> getProductInfo(@RequestParam("item_id") Long itemId) {
 

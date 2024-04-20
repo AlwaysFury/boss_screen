@@ -3,7 +3,8 @@ package com.boss.bossscreen.vo;
 import com.boss.bossscreen.enums.StatusCodeEnum;
 import lombok.Data;
 
-import static com.boss.bossscreen.enums.StatusCodeEnum.*;
+import static com.boss.bossscreen.enums.StatusCodeEnum.FAIL;
+import static com.boss.bossscreen.enums.StatusCodeEnum.SUCCESS;
 
 /**
  * 接口返回类
@@ -15,14 +16,17 @@ public class Result<T> {
      * 返回状态
      */
     private Boolean flag;
+
     /**
      * 返回码
      */
     private Integer code;
+
     /**
      * 返回信息
      */
     private String message;
+
     /**
      * 返回数据
      */

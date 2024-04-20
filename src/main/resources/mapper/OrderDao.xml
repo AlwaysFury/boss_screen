@@ -9,7 +9,7 @@
             tb_order as s
         <where>
             <if test="condition.order_sn != null">
-                s.order_sn like concat('%',#{order_sn},'%')
+                s.order_sn like concat('%',#{condition.order_sn},'%')
             </if>
         </where>
     </select>
@@ -26,7 +26,7 @@
             tb_order as s
         <where>
             <if test="condition.order_sn != null">
-                s.order_sn like concat('%',#{order_sn},'%')
+                s.order_sn like concat('%',#{condition.order_sn},'%')
             </if>
         </where>
         LIMIT #{current},#{size}

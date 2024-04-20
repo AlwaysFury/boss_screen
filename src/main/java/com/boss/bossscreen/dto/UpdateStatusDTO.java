@@ -1,7 +1,6 @@
 package com.boss.bossscreen.dto;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,22 +15,19 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiModel(description = "逻辑删除")
 public class UpdateStatusDTO {
 
 
     /**
      * id列表
      */
-//    @NotNull(message = "id不能为空")
-    @ApiModelProperty(name = "idList", value = "id列表", required = true, dataType = "List<Integer>")
+    @NotNull(message = "id不能为空")
     private List<Integer> idList;
 
     /**
      * 状态值
      */
-//    @NotNull(message = "状态值不能为空")
-    @ApiModelProperty(name = "isDelete", value = "删除状态", required = true, dataType = "Integer")
+    @NotNull(message = "状态值不能为空")
     private Integer status;
 
 }

@@ -7,8 +7,6 @@ import com.boss.bossscreen.service.impl.ProductServiceImpl;
 import com.boss.bossscreen.service.impl.ShopServiceImpl;
 import com.boss.bossscreen.util.ShopeeUtil;
 import com.boss.bossscreen.vo.Result;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
  * @Date 2024/4/9
  */
 
-@Api(tags = "店铺模块")
 @RestController
 @RequestMapping("/shopee")
 @Slf4j
@@ -37,13 +34,20 @@ public class ShopeeController {
     @Autowired
     private ProductServiceImpl productService;
 
-    @ApiOperation("获取授权链接")
+    /**
+     * 获取授权链接
+     */
     @GetMapping("/getAuthUrl")
     public Result<String> getAuthUrl(String type) {
         return Result.ok(ShopeeUtil.getAuthUrl(type));
     }
 
-    @ApiOperation("获取店铺 token")
+    /**
+     * 获取店铺 token
+     * @param code
+     * @param shopId
+     * @return
+     */
     @GetMapping("/saveOrUpdateShop")
     public Result<JSONObject> saveOrUpdateShop(String code, @RequestParam("shop_id") long shopId) {
 
@@ -70,7 +74,12 @@ public class ShopeeController {
         return Result.ok();
     }
 
-    @ApiOperation("获取账号 token")
+    /**
+     * 获取账号 token
+     * @param code
+     * @param mainAccountId
+     * @return
+     */
     @GetMapping("/saveOrUpdateAccount")
     public Result<JSONObject> saveOrUpdateAccount(String code, @RequestParam("main_account_id") long mainAccountId) {
 
@@ -87,17 +96,17 @@ public class ShopeeController {
     }
 
 
-    public Result<JSONObject> saveOrUpdateProduct() {
-        try {
-
-            productService.saveOrUpdateProduct();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Result.fail("授权失败：" + e);
-        }
-
-        return Result.ok();
-    }
+//    public Result<JSONObject> saveOrUpdateProduct() {
+//        try {
+//
+//            productService.saveOrUpdateProduct();
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return Result.fail("授权失败：" + e);
+//        }
+//
+//        return Result.ok();
+//    }
 
 }

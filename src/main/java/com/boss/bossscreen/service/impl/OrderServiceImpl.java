@@ -324,6 +324,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                         orderEscrowItemVO.setActivityType(escrowItem.getActivityType());
                     }
 
+                    // todo 成本，利润，利润率计算
+
                     return orderEscrowItemVO;
                 }
         ).collect(Collectors.toList());

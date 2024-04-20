@@ -7,8 +7,6 @@ import com.boss.bossscreen.service.impl.ShopServiceImpl;
 import com.boss.bossscreen.vo.PageResult;
 import com.boss.bossscreen.vo.Result;
 import com.boss.bossscreen.vo.ShopVO;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +20,6 @@ import static com.boss.bossscreen.constant.OptTypeConst.REMOVE;
  * @Date 2024/4/16
  */
 
-@Api(tags = "店铺模块")
 @RestController
 @RequestMapping("/shop")
 @Slf4j
@@ -30,21 +27,23 @@ public class ShopController {
     @Autowired
     private ShopServiceImpl shopService;
 
-    @ApiOperation(value = "获取所有店铺")
+    /**
+     * 获取店铺列表
+     * @param condition
+     * @return
+     */
     @GetMapping("/shopList")
     public Result<PageResult<ShopVO>> shopsList(ConditionDTO condition) {
         return Result.ok(shopService.shopsListByCondition(condition));
     }
 
     /**
-     * 删除店铺（逻辑）0 / 冻结 2/ 激活 1
-     *
-     * @param updateStatusDTO 店铺id列表
-     * @return {@link Result<>}
+     * 更新店铺状态 逻辑删除 0 / 冻结 2/ 激活 1
+     * @param updateStatusDTO
+     * @return
      */
     @OptLog(optType = REMOVE)
-    @ApiOperation(value = "删除店铺（逻辑）0 / 冻结 2/ 激活 1")
-    @DeleteMapping("/updateShopStatus")
+    @PostMapping("/updateShopStatus")
     public Result<?> updateShopsStatus(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
         shopService.updateShopsStatus(updateStatusDTO);
         return Result.ok();
