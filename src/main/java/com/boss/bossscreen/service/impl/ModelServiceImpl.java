@@ -1,13 +1,14 @@
 package com.boss.bossscreen.service.impl;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.bossscreen.dao.ModelDao;
 import com.boss.bossscreen.enities.Model;
 import com.boss.bossscreen.service.ModelService;
 import com.boss.bossscreen.util.BeanCopyUtils;
+import com.boss.bossscreen.util.CommonUtil;
 import com.boss.bossscreen.util.ShopeeUtil;
 import com.boss.bossscreen.vo.ModelVO;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.boss.bossscreen.constant.RedisPrefixConst.PRODUCT_ITEM_MODEL;
 
 /**
  * @Description
@@ -31,12 +34,15 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
     @Autowired
     private ModelDao modelDao;
 
+    @Autowired
+    private RedisServiceImpl redisService;
+
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public List<Model> getModel(long itemId, String token, long shopId, List<Model> modelList) {
+    public void getModel(long itemId, String token, long shopId, List<Model> modelList, List<Model> updateModeList) {
         JSONObject result = ShopeeUtil.getModelList(token, shopId, itemId);
         if (result.getString("error").contains("error")) {
-            return modelList;
+            return;
         }
 
         JSONArray modelArray = result.getJSONObject("response").getJSONArray("model");
@@ -44,10 +50,11 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
         JSONArray imageInfoArray = result.getJSONObject("response").getJSONArray("tier_variation").getJSONObject(0).getJSONArray("option_list");
 
         if (modelArray.size() == 0) {
-            return modelList;
+            return;
         }
 
         JSONObject modelObject;
+        Object redisResult;
         for (int i = 0; i < modelArray.size(); i++) {
             modelObject = modelArray.getJSONObject(i);
 
@@ -61,9 +68,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
 
             // 为了图片
             String modelName = modelObject.getString("model_name");
-
+            long modelId = modelObject.getLong("model_id");
             Model model = Model.builder()
-                    .modelId(modelObject.getLong("model_id"))
+                    .modelId(modelId)
                     .modelName(modelName)
                     .modelSku(modelObject.getString("model_sku"))
                     .status(modelObject.getString("model_status"))
@@ -86,10 +93,21 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
                 }
             }
 
-            modelList.add(model);
-        }
+            CommonUtil.judgeRedis(redisService, PRODUCT_ITEM_MODEL + modelId, modelList, updateModeList, model, Model.class);
 
-        return modelList;
+//            redisResult = redisService.get(PRODUCT_ITEM_MODEL + modelId);
+//            String productJsonString = JSON.toJSONString(model, SerializerFeature.WriteMapNullValue);
+//            if (Objects.isNull(redisResult)) {
+//                // 为空入库
+//                redisService.set(PRODUCT_ITEM_MODEL + modelId, productJsonString);
+//                modelList.add(model);
+//            } else {
+//                // 不为空判断更新
+//                if (!productJsonString.equals(redisResult)) {
+//                    updateModeList.add(JSON.parseObject(redisResult.toString(), Model.class));
+//                }
+//            }
+        }
     }
 
     public List<ModelVO> getModelVOListByItemId(Long itemId) {

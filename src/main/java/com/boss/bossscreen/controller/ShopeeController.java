@@ -1,6 +1,6 @@
 package com.boss.bossscreen.controller;
 
-import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson.JSONObject;
 import com.boss.bossscreen.dto.ShopDTO;
 import com.boss.bossscreen.service.impl.MainAccountServiceImpl;
 import com.boss.bossscreen.service.impl.ProductServiceImpl;
@@ -95,18 +95,5 @@ public class ShopeeController {
         return Result.ok();
     }
 
-
-//    public Result<JSONObject> saveOrUpdateProduct() {
-//        try {
-//
-//            productService.saveOrUpdateProduct();
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return Result.fail("授权失败：" + e);
-//        }
-//
-//        return Result.ok();
-//    }
 
 }

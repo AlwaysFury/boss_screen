@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import static com.boss.bossscreen.constant.OptTypeConst.REMOVE;
+import static com.boss.bossscreen.constant.OptTypeConst.UPDATE;
 
 /**
  * @Description
@@ -44,7 +44,7 @@ public class MainAccountController {
      * @param updateStatusDTO 店铺id列表
      * @return {@link Result<>}
      */
-    @OptLog(optType = REMOVE)
+    @OptLog(optType = UPDATE)
     @PutMapping("/updateAccountStatus")
     public Result<?> updateAccountStatus(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
         mainAccountService.updateAccountsStatus(updateStatusDTO);

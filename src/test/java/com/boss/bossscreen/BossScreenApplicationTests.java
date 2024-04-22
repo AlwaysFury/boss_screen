@@ -1,6 +1,6 @@
 package com.boss.bossscreen;
 
-import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson.JSONObject;
 import com.boss.bossscreen.service.impl.OrderServiceImpl;
 import com.boss.bossscreen.service.impl.ProductServiceImpl;
 import com.boss.bossscreen.service.impl.ShopServiceImpl;
@@ -131,6 +131,18 @@ class BossScreenApplicationTests {
     @Test
     void getEscrowDetailTest() {
         JSONObject object = ShopeeUtil.getEscrowDetail("4869704e624374516f7957646b747571", 1017169304, "240405UHE0VN3H");
+        System.out.println(object);
+    }
+
+    @Test
+    void getTrackingNumberTest() {
+        JSONObject object = ShopeeUtil.getTrackingNumber("42756d4753794544747a595673537671", 1017169304, "240405UHE0VN3H");
+        System.out.println(object);
+    }
+
+    @Test
+    void createShippingDocumentTest() {
+        JSONObject object = ShopeeUtil.createShippingDocument("42756d4753794544747a595673537671", 1017169304, "2404208P1PBPG8");
         System.out.println(object);
     }
 

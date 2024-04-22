@@ -4,8 +4,9 @@ import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.http.Header;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.boss.bossscreen.dto.MainAccountAuthDTO;
 import com.boss.bossscreen.dto.ShopAuthDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -334,6 +335,48 @@ public class ShopeeUtil {
 
         String result = HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8);
 
+
+        return JSONObject.parseObject(result);
+    }
+
+    public static JSONObject getTrackingNumber(String accessToken, long shopId, String orderSn) {
+        long timest = System.currentTimeMillis() / 1000L;
+        String host = ShopAuthDTO.getHost();
+        String path = "/api/v2/logistics/get_tracking_number";
+        long partner_id = ShopAuthDTO.getPartnerId();
+        String tmp_partner_key = ShopAuthDTO.getTempPartnerKey();
+        BigInteger sign = getShopTokenSign(partner_id, path,timest, accessToken, shopId, tmp_partner_key);
+        // "https://partner.shopeemobile.com/api/v2/order/get_order_list?page_size=20&response_optional_fields=order_status&timestamp=timestamp&shop_id=shop_id&order_status=READY_TO_SHIP&partner_id=partner_id&access_token=access_token&cursor=""&time_range_field=create_time&time_from=1607235072&time_to=1608271872&sign=sign"
+        String tmp_url = host + path + String.format("?&partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&order_sn=%s",
+                partner_id, timest, String.format("%032x",sign), accessToken, shopId, orderSn);
+
+        String result = HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8);
+
+
+        return JSONObject.parseObject(result);
+    }
+
+
+    public static JSONObject createShippingDocument(String accessToken, long shopId, String orderSn) {
+        long timest = System.currentTimeMillis() / 1000L;
+        String host = ShopAuthDTO.getHost();
+        String path = "/api/v2/logistics/create_shipping_document";
+        long partner_id = ShopAuthDTO.getPartnerId();
+        String tmp_partner_key = ShopAuthDTO.getTempPartnerKey();
+        BigInteger sign = getShopTokenSign(partner_id, path,timest, accessToken, shopId, tmp_partner_key);
+        // "https://partner.shopeemobile.com/api/v2/order/get_order_list?page_size=20&response_optional_fields=order_status&timestamp=timestamp&shop_id=shop_id&order_status=READY_TO_SHIP&partner_id=partner_id&access_token=access_token&cursor=""&time_range_field=create_time&time_from=1607235072&time_to=1608271872&sign=sign"
+        String tmp_url = host + path + String.format("?&partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s",
+                partner_id, timest, String.format("%032x",sign), accessToken, shopId, orderSn);
+
+        JSONObject bodyObject = new JSONObject();
+        JSONArray orderSnArray = new JSONArray();
+        JSONObject orderSnObject = new JSONObject();
+        orderSnObject.put("order_sn", orderSn);
+        orderSnArray.add(orderSnObject);
+        bodyObject.put("order_list", orderSnArray);
+        System.out.println(bodyObject);
+
+        String result = HttpUtil.post(tmp_url, bodyObject.toJSONString());
 
         return JSONObject.parseObject(result);
     }

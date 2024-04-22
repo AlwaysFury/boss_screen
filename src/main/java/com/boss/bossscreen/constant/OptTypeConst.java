@@ -8,12 +8,12 @@ public class OptTypeConst {
     /**
      * 新增操作
      */
-    public static final String SAVE_OR_UPDATE = "新增或修改";
+    public static final String SYSTEM_LOG = "系统日志";
 
     /**
      * 新增
      */
-    public static final String SAVE = "新增";
+    public static final String USER_LOG = "用户日志";
 
     /**
      * 修改操作

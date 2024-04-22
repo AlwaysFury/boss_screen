@@ -1,8 +1,8 @@
 package com.boss.bossscreen.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -76,8 +76,7 @@ public class MainAccountServiceImpl extends ServiceImpl<MainAccountDao, MainAcco
             wrapper.eq("id", existAccount.getId());
             this.update(wrapper);
         } else {
-            MainAccount mainAccount = new MainAccount();
-            BeanUtil.copyProperties(mainAccountDTO, mainAccount);
+            MainAccount mainAccount = BeanUtil.copyProperties(mainAccountDTO, MainAccount.class);
             this.save(mainAccount);
         }
 

@@ -29,10 +29,17 @@ spring:
       connection-timeout: 30000
       connection-test-query: SELECT 1
   # redis配置
-  redis:
-    host: localhost
-    port: 6379
-    password:
+  data:
+    redis:
+      database: 1
+      host: 127.0.0.1
+      port: 6379
+      lettuce:
+        pool:
+          max-active: 8
+          min-idle: 8
+          max-idle: 0
+          max-wait: 1000
 
 # 配置MybatisPlus
 mybatis-plus:
@@ -46,5 +53,5 @@ shopeeApi:
   host: https://partner.shopeemobile.com/
   partner_id: 2007608
   partner_key: 636a44756841535751715058756d4173505a5a63495a766f515372447a664a43
-  shop_redirect_url: http://localhost:8081/shopee/saveShopToken
-  account_redirect_url: http://localhost:8081/shopee/saveAccountToken
+  shop_redirect_url: http://localhost:8081/shopee/saveOrUpdateShop
+  account_redirect_url: http://localhost:8081/shopee/saveOrUpdateAccount

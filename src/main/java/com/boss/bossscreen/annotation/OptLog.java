@@ -15,4 +15,6 @@ public @interface OptLog {
      */
     String optType() default "";
 
+    String optDesc() default "";
+
 }

@@ -10,9 +10,9 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/boss_screen?serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    username: root
-    password: lyh.5201314
+    url: jdbc:mysql://120.25.154.29:3306/boss_screen?serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    username: alwaysfury
+    password: Lyh5201314!
     hikari:
       minimum-idle: 5
       # 空闲连接存活最大时间，默认600000（10分钟）
@@ -29,10 +29,17 @@ spring:
       connection-timeout: 30000
       connection-test-query: SELECT 1
   # redis配置
-  redis:
-    host: localhost
-    port: 6379
-    password:
+  data:
+    redis:
+      database: 1
+      host: 127.0.0.1
+      port: 6379
+      lettuce:
+        pool:
+          max-active: 8
+          min-idle: 8
+          max-idle: 0
+          max-wait: 1000
 
 # 配置MybatisPlus
 mybatis-plus:
@@ -43,8 +50,8 @@ mybatis-plus:
 
 
 shopeeApi:
-  host: https://partner.test-stable.shopeemobile.com
-  partner_id: 1141020
-  partner_key: 62484d6c546c7a474c53456b646154464d4b736f6c79437266564c4d6346756b
+  host: https://partner.shopeemobile.com/
+  partner_id: 2007608
+  partner_key: 636a44756841535751715058756d4173505a5a63495a766f515372447a664a43
   shop_redirect_url: http://localhost:8081/shopee/saveShopToken
   account_redirect_url: http://localhost:8081/shopee/saveAccountToken

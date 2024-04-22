@@ -1,7 +1,7 @@
 package com.boss.bossscreen.service.impl;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.bossscreen.dao.ProductDao;
@@ -12,6 +12,7 @@ import com.boss.bossscreen.enities.Product;
 import com.boss.bossscreen.enities.Shop;
 import com.boss.bossscreen.service.ProductService;
 import com.boss.bossscreen.util.BeanCopyUtils;
+import com.boss.bossscreen.util.CommonUtil;
 import com.boss.bossscreen.util.PageUtils;
 import com.boss.bossscreen.util.ShopeeUtil;
 import com.boss.bossscreen.vo.PageResult;
@@ -24,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.boss.bossscreen.constant.RedisPrefixConst.PRODUCT_ITEM;
 
 /**
  * @Description
@@ -44,10 +47,14 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
     @Autowired
     private ProductDao productDao;
 
+    @Autowired
+    private RedisServiceImpl redisService;
+
     // todo 优化下拉
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void saveOrUpdateProduct() {
+        long startTime =  System.currentTimeMillis();
         // 遍历所有未冻结店铺获取 token 和 shopId
         QueryWrapper<Shop> shopQueryWrapper = new QueryWrapper<>();
         shopQueryWrapper.select("shop_id", "access_token").eq("status", "1");
@@ -56,6 +63,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         // 根据每个店铺的 token 和 shopId 获取产品
         List<Product> productList = new ArrayList<>();
         List<Model> modelList =  new ArrayList<>();
+        List<Product> updateProList = new ArrayList<>();
+        List<Model> updateModelList = new ArrayList<>();
         long shopId;
         String accessToken = "";
         JSONObject result = new JSONObject();
@@ -63,7 +72,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
             shopId = shop.getShopId();
             accessToken = shop.getAccessToken();
 
-            // todo 优化为集合查询
             result = ShopeeUtil.getProducts(accessToken, shopId);
 
             if (result.getString("error").contains("error")) {
@@ -75,41 +83,39 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 continue;
             }
 
-
             for (int i = 0; i < itemArray.size(); i++) {
                 JSONObject itemObject = itemArray.getJSONObject(i);
                 long itemId = itemObject.getLong("item_id");
-                productList = getProductDetail(itemId, accessToken, shopId, productList);
-                modelList = modelService.getModel(itemId, accessToken, shopId, modelList);
+                getProductDetail(itemId, accessToken, shopId, productList, updateProList);
+                modelService.getModel(itemId, accessToken, shopId, modelList, updateModelList);
             }
         }
-        // todo 检测入库
-        // 将新旧数据全部数据缓存进入 redis
-        // 新数据与旧数据进行比较：时间戳
-        // key：product:产品id:时间戳
-        // value：数据 json 格式化
-        // 全量检查！！！！！！
-        // 新增：将数据存入新增集合，存入 redis 和 mysql
-        // 更新：将更新数据存入更新集合，更新 reids 和 mysql 中的数据
-        // 删除：指示标记该条数据被删除！！！不是物理删除，存入删除集合，并在更新 redis 和 mysql 中的数据
-        System.out.println(JSONArray.toJSONString(productList));
+
+        log.info("更新产品耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
+
+        System.out.println("productList===>" + JSONArray.toJSONString(productList));
         this.saveBatch(productList);
-        System.out.println(JSONArray.toJSONString(modelList));
+        System.out.println("updateProList===>" + JSONArray.toJSONString(updateProList));
+        this.updateBatchById(updateProList);
+        System.out.println("modelList===>" + JSONArray.toJSONString(modelList));
         modelService.saveBatch(modelList);
+        System.out.println("updateModelList===>" + JSONArray.toJSONString(updateModelList));
+        modelService.updateBatchById(updateModelList);
     }
 
-    private List<Product> getProductDetail(long itemId, String token, long shopId, List<Product> productList) {
+    private void getProductDetail(long itemId, String token, long shopId, List<Product> productList, List<Product> updateProList) {
         JSONObject result = ShopeeUtil.getProductInfo(token, shopId, itemId);
 
         if (result.getString("error").contains("error")) {
-            return productList;
+            return;
         }
 
         JSONArray itemArray = result.getJSONObject("response").getJSONArray("item_list");
 
         JSONObject itemObject;
-        JSONArray imgIdArray = new JSONArray();
-        JSONArray imgUrlArray = new JSONArray();
+        JSONArray imgIdArray;
+        JSONArray imgUrlArray;
+        Object redisResult;
         for (int i = 0; i < itemArray.size(); i++) {
             itemObject = itemArray.getJSONObject(i);
 
@@ -139,12 +145,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 product.setMainImgUrl(imgUrlArray.getString(0));
             }
 
-            productList.add(product);
 
-
+            CommonUtil.judgeRedis(redisService,PRODUCT_ITEM + itemId, productList, updateProList, product, Product.class);
         }
-
-        return productList;
     }
 
     public PageResult<ProductVO> productListByCondition(ConditionDTO condition) {
@@ -170,7 +173,5 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         return productInfoVO;
     }
 
-    // todo 日志
-
-    // todo 等级
+    // todo 等级  时间段（订单创建时间），各种衣服种类的成本
 }
