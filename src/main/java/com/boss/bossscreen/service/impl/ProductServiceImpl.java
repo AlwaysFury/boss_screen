@@ -43,10 +43,13 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
     private ShopDao shopDao;
 
     @Autowired
+    private ProductDao productDao;
+
+    @Autowired
     private ModelServiceImpl modelService;
 
     @Autowired
-    private ProductDao productDao;
+    private ShopServiceImpl shopService;
 
     @Autowired
     private RedisServiceImpl redisService;
@@ -57,7 +60,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         long startTime =  System.currentTimeMillis();
         // 遍历所有未冻结店铺获取 token 和 shopId
         QueryWrapper<Shop> shopQueryWrapper = new QueryWrapper<>();
-        shopQueryWrapper.select("shop_id", "access_token").eq("status", "1");
+        shopQueryWrapper.select("shop_id").eq("status", "1");
         List<Shop> shopList = shopDao.selectList(shopQueryWrapper);
 
         // 根据每个店铺的 token 和 shopId 获取产品
@@ -70,7 +73,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         List<String> itemIds;
         for (Shop shop : shopList) {
             shopId = shop.getShopId();
-            accessToken = shop.getAccessToken();
+            accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
 
             itemIds = ShopeeUtil.getProducts(accessToken, shopId, 0, new ArrayList<>());
 
@@ -87,11 +90,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
             // 开线程池，线程数量为要遍历的对象的长度
             ExecutorService modelExecutor = Executors.newFixedThreadPool(itemIdList.size());
             for (String itemId : itemIdList) {
-                String finalAccessToken = accessToken;
+
                 long finalShopId = shopId;
 
                 CompletableFuture.runAsync(() -> {
                     try {
+                        String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
                         getProductDetail(itemId, finalAccessToken, finalShopId, productList, updateProList);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -105,6 +109,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                     try {
                         String[] splitIds = itemId.split(",");
                         for (String splitId : splitIds) {
+                            String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
                             modelService.getModel(Long.parseLong(splitId), finalAccessToken, finalShopId, modelList, updateModelList);
                         }
                     } catch (Exception e) {

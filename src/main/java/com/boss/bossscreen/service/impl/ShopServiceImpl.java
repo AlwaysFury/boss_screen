@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -138,4 +139,29 @@ public class ShopServiceImpl extends ServiceImpl<ShopDao, Shop> implements ShopS
             shopDao.update(shopWrapper);
         }
     }
+
+    @Override
+    public String getAccessTokenByShopId(String shopId) {
+        QueryWrapper<Shop> wrapper = new QueryWrapper<>();
+        wrapper.select("id", "shop_id", "access_token", "refresh_token","account_id","update_time").eq("shop_id", shopId);
+
+        Shop shop = shopDao.selectOne(wrapper);
+        LocalDateTime updateTime = shop.getUpdateTime();
+        if (LocalDateTime.now().isAfter(updateTime.plusHours(3))) {
+            JSONObject object = ShopeeUtil.refreshToken(shop.getRefreshToken(), Long.parseLong(shopId), "shop");
+            log.info("====={} 的 token：{}", shopId, object);
+            if (!object.getString("error").contains("error")) {
+                UpdateWrapper<Shop> shopWrapper = new UpdateWrapper<>();
+                shopWrapper.set("access_token", object.getString("access_token"));
+                shopWrapper.set("refresh_token", object.getString("refresh_token"));
+                shopWrapper.eq("shop_id", shopId);
+                shopWrapper.eq("update_time", updateTime);
+                this.update(shopWrapper);
+            }
+        }
+
+        return shopDao.selectOne(wrapper).getAccessToken();
+    }
+
+
 }

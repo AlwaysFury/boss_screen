@@ -60,6 +60,18 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
     private EscrowItemDao escrowItemDao;
 
     @Autowired
+    private OrderItemServiceImpl orderItemService;
+
+    @Autowired
+    private EscrowInfoServiceImpl escrowInfoService;
+
+    @Autowired
+    private EscrowItemServiceImpl escrowItemService;
+
+    @Autowired
+    private ShopServiceImpl shopService;
+
+    @Autowired
     private RedisServiceImpl redisService;
 
     @Transactional(rollbackFor = Exception.class)
@@ -77,7 +89,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
         // 遍历所有未冻结店铺获取 token 和 shopId
         QueryWrapper<Shop> shopQueryWrapper = new QueryWrapper<>();
-        shopQueryWrapper.select("shop_id", "access_token").eq("status", "1");
+        shopQueryWrapper.select("shop_id").eq("status", "1");
         List<Shop> shopList = shopDao.selectList(shopQueryWrapper);
 
         // 根据每个店铺的 token 和 shopId 获取产品
@@ -94,7 +106,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         JSONObject result;
         for (Shop shop : shopList) {
             shopId = shop.getShopId();
-            accessToken = shop.getAccessToken();
+            accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
 
             List<LocalDate[]> timeList = splitIntoEvery15DaysTimestamp(startTime, endTime);
             List<String> orderSnList = new ArrayList<>();
@@ -117,11 +129,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             // 开线程池，线程数量为要遍历的对象的长度
             ExecutorService escrowExecutor = Executors.newFixedThreadPool(newOrderSnList.size());
             for (String orderSn : newOrderSnList) {
-                String finalAccessToken = accessToken;
+
                 long finalShopId = shopId;
 
                 CompletableFuture.runAsync(() -> {
                     try {
+                        String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
                         JSONObject orderObject = ShopeeUtil.getOrderDetail(finalAccessToken, finalShopId, orderSn);
                         JSONArray orderArray = orderObject.getJSONObject("response").getJSONArray("order_list");
                         JSONObject orderDetailObject;
@@ -142,6 +155,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                     try {
                         String[] splitOrderSns = orderSn.split(",");
                         for (String sn : splitOrderSns) {
+                            String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
                             JSONObject escrowResult = ShopeeUtil.getEscrowDetail(finalAccessToken, finalShopId, sn);
                             JSONObject escrowInfoObject = escrowResult.getJSONObject("response");
                             if (escrowResult.getString("error").contains("error") && escrowInfoObject == null) {
@@ -168,24 +182,24 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             }
         }
 
-        log.info("更新订单耗时： {}秒", (System.currentTimeMillis() - logStart) / 1000);
-
-        System.out.println("orderList===>" + JSONArray.toJSONString(ordertList));
-//        this.saveBatch(ordertList);
+//        System.out.println("orderList===>" + JSONArray.toJSONString(ordertList));
+        this.saveBatch(ordertList);
         System.out.println("updateOrderList===>" + JSONArray.toJSONString(updateOrderList));
-//        this.updateBatchById(updateOrderList);
-        System.out.println("orderItemList===>" + JSONArray.toJSONString(orderItemList));
-//        orderItemService.saveBatch(orderItemList);
+        this.updateBatchById(updateOrderList);
+//        System.out.println("orderItemList===>" + JSONArray.toJSONString(orderItemList));
+        orderItemService.saveBatch(orderItemList);
         System.out.println("updateOrderItemList===>" + JSONArray.toJSONString(updateOrderItemList));
-//        orderItemService.updateBatchById(updateOrderItemList);
-        System.out.println("escrowInfoList===>" + JSONArray.toJSONString(escrowInfoList));
-//        escrowItemService.saveBatch(escrowInfoList);
+        orderItemService.updateBatchById(updateOrderItemList);
+//        System.out.println("escrowInfoList===>" + JSONArray.toJSONString(escrowInfoList));
+        escrowInfoService.saveBatch(escrowInfoList);
         System.out.println("updateEscrowInfoList===>" + JSONArray.toJSONString(updateEscrowInfoList));
-//        escrowItemService.updateBatchById(updateEscrowInfoList);
-        System.out.println("escrowItemList===>" + JSONArray.toJSONString(escrowItemList));
-//        escrowItemService.saveBatch(escrowItemList);
+        escrowInfoService.updateBatchById(updateEscrowInfoList);
+//        System.out.println("escrowItemList===>" + JSONArray.toJSONString(escrowItemList));
+        escrowItemService.saveBatch(escrowItemList);
         System.out.println("updateEscrowItemList===>" + JSONArray.toJSONString(updateEscrowItemList));
-//        escrowItemService.updateBatchById(updateEscrowItemList);
+        escrowItemService.updateBatchById(updateEscrowItemList);
+
+        log.info("更新订单耗时： {}秒", (System.currentTimeMillis() - logStart) / 1000);
     }
 
     private List<LocalDate[]> splitIntoEvery15DaysTimestamp(LocalDate startDate, LocalDate endDate) {
@@ -258,8 +272,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             }
 
             JSONObject imageInfoArray = itemObject.getJSONObject("image_info");
-            if (imageInfoArray != null/* && imageInfoArray.size() > 0*/) {
-//                orderItem.setImageUrl(imageInfoArray.getJSONObject(0).getString("image_url"));
+            if (imageInfoArray != null && imageInfoArray.size() > 0) {
                 orderItem.setImageUrl(imageInfoArray.getString("image_url"));
             }
 

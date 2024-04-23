@@ -1,9 +1,11 @@
 package com.boss.bossscreen.task;
 
 import com.boss.bossscreen.service.impl.MainAccountServiceImpl;
-import com.boss.bossscreen.service.impl.ShopServiceImpl;
+import com.boss.bossscreen.service.impl.OrderServiceImpl;
+import com.boss.bossscreen.service.impl.ProductServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,7 +19,10 @@ import org.springframework.stereotype.Component;
 public class RefreshTokenTask {
 
     @Autowired
-    private ShopServiceImpl shopService;
+    private ProductServiceImpl productService;
+
+    @Autowired
+    private OrderServiceImpl orderService;
 
     @Autowired
     private MainAccountServiceImpl mainAccountService;
@@ -31,15 +36,15 @@ public class RefreshTokenTask {
      * 月（0~11）
      * 周几（ 可填1-7 或 SUN/MON/TUE/WED/THU/FRI/SAT）
      */
-//    @Scheduled(cron = "*/10 * * * * *")
-    public void refreshShopToken() {
-        log.info("======开始刷新店铺 token");
-        shopService.refreshShopToken();
+    @Scheduled(cron = "0 */10 * * * ?")
+    public void refreshProduct() {
+        log.info("======开始刷新产品信息");
+        productService.saveOrUpdateProduct();
     }
 
-//    @Scheduled(cron = "*/10 * * * * *")
-    public void refreshAccountToken() {
-        log.info("======开始刷新账号 token");
-        shopService.refreshShopTokenByAccount();
+    @Scheduled(cron = "0 */10 * * * ?")
+    public void refreshOrder() {
+        log.info("======开始刷新订单信息");
+        orderService.saveOrUpdateOrder("2024-01-01 00:00:00");
     }
 }

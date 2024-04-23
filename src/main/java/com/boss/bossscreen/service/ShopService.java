@@ -24,4 +24,6 @@ public interface ShopService extends IService<Shop>  {
     void refreshShopToken();
 
     void refreshShopTokenByAccount();
+
+    String getAccessTokenByShopId(String shopId);
 }

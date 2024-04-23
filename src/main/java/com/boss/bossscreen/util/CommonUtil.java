@@ -3,6 +3,9 @@ package com.boss.bossscreen.util;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.boss.bossscreen.service.impl.RedisServiceImpl;
+import me.codeleep.jsondiff.DefaultJsonDifference;
+import me.codeleep.jsondiff.common.model.JsonCompareResult;
+import me.codeleep.jsondiff.core.config.JsonComparedOption;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -49,6 +52,12 @@ public class CommonUtil {
             // 不为空判断更新
             String oldJsonStr = redisResult.toString();
             if (!newJsonStr.equals(oldJsonStr)) {
+                JsonComparedOption jsonComparedOption = new JsonComparedOption().setIgnoreOrder(true);
+                JsonCompareResult jsonCompareResult = new DefaultJsonDifference()
+                        .option(jsonComparedOption)
+                        .detectDiff(newJsonStr, oldJsonStr);
+                System.out.println(JSON.toJSONString(jsonCompareResult));
+
                 redisService.set(redisKey, newJsonStr);
                 updateList.add(JSON.parseObject(redisResult.toString(), clazz));
             }

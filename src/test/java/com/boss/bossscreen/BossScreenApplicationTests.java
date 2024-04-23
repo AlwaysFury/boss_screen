@@ -53,7 +53,7 @@ class BossScreenApplicationTests {
 
     @Test
     void getProductsTest() {
-        String accessToken = "52477748795470596b6b684f4b54486f";
+        String accessToken = "5661665276626747684365696f4d5552";
         List<String> itemList = ShopeeUtil.getProducts(accessToken, 1017169304, 0, new ArrayList<String>());
         System.out.println(itemList);
     }
@@ -186,6 +186,13 @@ class BossScreenApplicationTests {
     void createShippingDocumentTest() {
         JSONObject object = ShopeeUtil.createShippingDocument("42756d4753794544747a595673537671", 1017169304, "2404208P1PBPG8");
         System.out.println(object);
+    }
+
+    @Test
+    void createGetTokenById() {
+        for (int i = 0; i < 100; i++) {
+            new Thread(shopService.getAccessTokenByShopId("1017169304")).start();
+        }
     }
 
 }
