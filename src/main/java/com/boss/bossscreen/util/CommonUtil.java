@@ -45,6 +45,7 @@ public class CommonUtil {
             redisService.set(redisKey, newJsonStr);
             insertList.add(t);
         } else {
+            // todo json 比对输出日志
             // 不为空判断更新
             String oldJsonStr = redisResult.toString();
             if (!newJsonStr.equals(oldJsonStr)) {

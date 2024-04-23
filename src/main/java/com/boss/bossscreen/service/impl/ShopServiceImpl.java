@@ -1,6 +1,7 @@
 package com.boss.bossscreen.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
@@ -12,6 +13,7 @@ import com.boss.bossscreen.dto.UpdateStatusDTO;
 import com.boss.bossscreen.enities.Shop;
 import com.boss.bossscreen.service.ShopService;
 import com.boss.bossscreen.util.PageUtils;
+import com.boss.bossscreen.util.ShopeeUtil;
 import com.boss.bossscreen.vo.PageResult;
 import com.boss.bossscreen.vo.ShopVO;
 import lombok.extern.slf4j.Slf4j;
@@ -90,21 +92,23 @@ public class ShopServiceImpl extends ServiceImpl<ShopDao, Shop> implements ShopS
         for (Shop shop : oldList) {
             long shopId = shop.getShopId();
 
-//            JSONObject object = ShopeeUtil.refreshToken(shop.getRefreshToken(), shopId, "shop");
-//            log.info("====={} 的 token：{}", shopId, object);
-//
-//            if ("error".equals(object.getString("error"))) {
-//                continue;
-//            }
-//
-//            String newAccessToken = object.getString("access_token");
-//            String newRefreshToken = object.getString("refresh_token");
-//
-//            UpdateWrapper<Shop> shopWrapper = new UpdateWrapper<>();
-//            shopWrapper.set("access_token", newAccessToken);
-//            shopWrapper.set("refresh_token", newRefreshToken);
-//            shopWrapper.eq("shop_id", shopId);
-//            shopDao.update(shopWrapper);
+            // 四小时刷新token
+
+            JSONObject object = ShopeeUtil.refreshToken(shop.getRefreshToken(), shopId, "shop");
+            log.info("====={} 的 token：{}", shopId, object);
+
+            if ("error".equals(object.getString("error"))) {
+                continue;
+            }
+
+            String newAccessToken = object.getString("access_token");
+            String newRefreshToken = object.getString("refresh_token");
+
+            UpdateWrapper<Shop> shopWrapper = new UpdateWrapper<>();
+            shopWrapper.set("access_token", newAccessToken);
+            shopWrapper.set("refresh_token", newRefreshToken);
+            shopWrapper.eq("shop_id", shopId);
+            shopDao.update(shopWrapper);
         }
     }
 
@@ -116,23 +120,22 @@ public class ShopServiceImpl extends ServiceImpl<ShopDao, Shop> implements ShopS
         List<Shop> oldList = shopDao.selectList(wrapper);
         for (Shop shop : oldList) {
             long shopId = shop.getShopId();
-            long accountId = shop.getAccountId();
 
-//            JSONObject object = ShopeeUtil.refreshToken(shop.getRefreshToken(), shopId, "shop");
-//            log.info("====={} 的 token：{}", shopId, object);
-//
-//            if (object.getString("error").contains("error")) {
-//                continue;
-//            }
-//
-//            String newAccessToken = object.getString("access_token");
-//            String newRefreshToken = object.getString("refresh_token");
-//
-//            UpdateWrapper<Shop> shopWrapper = new UpdateWrapper<>();
-//            shopWrapper.set("access_token", newAccessToken);
-//            shopWrapper.set("refresh_token", newRefreshToken);
-//            shopWrapper.eq("shop_id", shopId);
-//            shopDao.update(shopWrapper);
+            JSONObject object = ShopeeUtil.refreshToken(shop.getRefreshToken(), shopId, "shop");
+            log.info("====={} 的 token：{}", shopId, object);
+
+            if (object.getString("error").contains("error")) {
+                continue;
+            }
+
+            String newAccessToken = object.getString("access_token");
+            String newRefreshToken = object.getString("refresh_token");
+
+            UpdateWrapper<Shop> shopWrapper = new UpdateWrapper<>();
+            shopWrapper.set("access_token", newAccessToken);
+            shopWrapper.set("refresh_token", newRefreshToken);
+            shopWrapper.eq("shop_id", shopId);
+            shopDao.update(shopWrapper);
         }
     }
 }

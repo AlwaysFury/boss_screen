@@ -1,9 +1,7 @@
 package com.boss.bossscreen.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.bossscreen.dao.*;
@@ -23,9 +21,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -58,32 +60,35 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
     private EscrowItemDao escrowItemDao;
 
     @Autowired
-    private EscrowInfoServiceImpl escrowInfoService;
-
-    @Autowired
-    private EscrowItemServiceImpl escrowItemService;
-
-    @Autowired
-    private OrderItemServiceImpl orderItemService;
-
-    @Autowired
     private RedisServiceImpl redisService;
 
-    // todo 优化下拉
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void saveOrUpdateOrder() {
-        long startTime =  System.currentTimeMillis();
+    public void saveOrUpdateOrder(String orderSnStartTime) {
+        long logStart =  System.currentTimeMillis();
+
+        // 定义日期格式
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd 00:00:00");
+
+        // 将字符串转换为LocalDate对象
+        LocalDate startTime = LocalDate.parse(orderSnStartTime, formatter);
+
+        LocalDate endTime = LocalDate.from(LocalDateTime.now());
+
         // 遍历所有未冻结店铺获取 token 和 shopId
         QueryWrapper<Shop> shopQueryWrapper = new QueryWrapper<>();
         shopQueryWrapper.select("shop_id", "access_token").eq("status", "1");
         List<Shop> shopList = shopDao.selectList(shopQueryWrapper);
 
         // 根据每个店铺的 token 和 shopId 获取产品
-        List<Order> ordertList = new ArrayList<>();
-        List<Order> updateOrderList = new ArrayList<>();
-        List<OrderItem> orderItemList =  new ArrayList<>();
-        List<OrderItem> updateOrderItemList = new ArrayList<>();
+        List<Order> ordertList = new CopyOnWriteArrayList<>();
+        List<Order> updateOrderList = new CopyOnWriteArrayList<>();
+        List<OrderItem> orderItemList =  new CopyOnWriteArrayList<>();
+        List<OrderItem> updateOrderItemList = new CopyOnWriteArrayList<>();
+        List<EscrowInfo> escrowInfoList =  new CopyOnWriteArrayList<>();
+        List<EscrowInfo> updateEscrowInfoList = new CopyOnWriteArrayList<>();
+        List<EscrowItem> escrowItemList = new CopyOnWriteArrayList<>();
+        List<EscrowItem> updateEscrowItemList = new CopyOnWriteArrayList<>();
         long shopId;
         String accessToken;
         JSONObject result;
@@ -91,48 +96,113 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             shopId = shop.getShopId();
             accessToken = shop.getAccessToken();
 
-            // todo 优化为集合查询
-            result = ShopeeUtil.getOrderList(accessToken, shopId);
-
-            if (result.getString("error").contains("error")) {
-                continue;
+            List<LocalDate[]> timeList = splitIntoEvery15DaysTimestamp(startTime, endTime);
+            List<String> orderSnList = new ArrayList<>();
+            for (LocalDate[] time : timeList) {
+                long start = time[0].atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000L;
+                long end = time[1].atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000L;
+                List<String> object = ShopeeUtil.getOrderList(accessToken, shopId, 0, new ArrayList<>(), start, end);
+                orderSnList.addAll(object);
+            }
+            List<String> newOrderSnList = new ArrayList<>();
+            for (int i = 0; i < orderSnList.size(); i += 50) {
+                newOrderSnList.add(String.join(",", orderSnList.subList(i, Math.min(i + 50, orderSnList.size()))));
             }
 
-            JSONArray itemArray = result.getJSONObject("response").getJSONArray("order_list");
-            if (itemArray.size() == 0) {
-                continue;
+            CountDownLatch orderCountDownLatch = new CountDownLatch(newOrderSnList.size());
+            // 开线程池，线程数量为要遍历的对象的长度
+            ExecutorService orderExecutor = Executors.newFixedThreadPool(newOrderSnList.size());
+
+            CountDownLatch escrowCountDownLatch = new CountDownLatch(newOrderSnList.size());
+            // 开线程池，线程数量为要遍历的对象的长度
+            ExecutorService escrowExecutor = Executors.newFixedThreadPool(newOrderSnList.size());
+            for (String orderSn : newOrderSnList) {
+                String finalAccessToken = accessToken;
+                long finalShopId = shopId;
+
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        JSONObject orderObject = ShopeeUtil.getOrderDetail(finalAccessToken, finalShopId, orderSn);
+                        JSONArray orderArray = orderObject.getJSONObject("response").getJSONArray("order_list");
+                        JSONObject orderDetailObject;
+                        for (int j = 0; j < orderArray.size(); j++) {
+                            orderDetailObject = orderArray.getJSONObject(j);
+                            getOrderDetail(orderDetailObject, ordertList, finalShopId, updateOrderList);
+                            getOrderItem(orderDetailObject, orderItemList, updateOrderItemList);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        orderCountDownLatch.countDown();
+                        System.out.println("orderCountDownLatch===> " + orderCountDownLatch);
+                    }
+                }, orderExecutor);
+
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        String[] splitOrderSns = orderSn.split(",");
+                        for (String sn : splitOrderSns) {
+                            JSONObject escrowResult = ShopeeUtil.getEscrowDetail(finalAccessToken, finalShopId, sn);
+                            JSONObject escrowInfoObject = escrowResult.getJSONObject("response");
+                            if (escrowResult.getString("error").contains("error") && escrowInfoObject == null) {
+                                return;
+                            }
+                            JSONObject oderIncomeObject = escrowInfoObject.getJSONObject("order_income");
+                            saveEscrowInfoByOrderSn(oderIncomeObject, sn, escrowInfoList, updateEscrowInfoList);
+                            saveEscrowItem(oderIncomeObject, sn, escrowItemList, updateEscrowItemList);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        escrowCountDownLatch.countDown();
+                        System.out.println("escrowCountDownLatch===> " + escrowCountDownLatch);
+                    }
+                }, escrowExecutor);
             }
 
-
-            for (int i = 0; i < itemArray.size(); i++) {
-                String orderSn = itemArray.getJSONObject(i).getString("order_sn");
-                JSONObject orderObject = ShopeeUtil.getOrderDetail(accessToken, shopId, orderSn);
-                if (orderObject.getString("error").contains("error")) {
-                    continue;
-                }
-                JSONArray orderArray = orderObject.getJSONObject("response").getJSONArray("order_list");
-                JSONObject orderDetailObject;
-                for (int j = 0; j < orderArray.size(); j++) {
-                    orderDetailObject = orderArray.getJSONObject(j);
-                    getOrderDetail(orderDetailObject, ordertList, shopId, updateOrderList);
-                    getOrderItem(orderDetailObject, orderItemList, updateOrderItemList);
-                }
-
-                // 保存对应的支付信息
-                saveEscrowInfoByOrderSn(accessToken, shopId, orderSn);
+            try {
+                orderCountDownLatch.await();
+                escrowCountDownLatch.await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
 
-        log.info("更新订单耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
+        log.info("更新订单耗时： {}秒", (System.currentTimeMillis() - logStart) / 1000);
 
         System.out.println("orderList===>" + JSONArray.toJSONString(ordertList));
-        this.saveBatch(ordertList);
+//        this.saveBatch(ordertList);
         System.out.println("updateOrderList===>" + JSONArray.toJSONString(updateOrderList));
-        this.updateBatchById(updateOrderList);
+//        this.updateBatchById(updateOrderList);
         System.out.println("orderItemList===>" + JSONArray.toJSONString(orderItemList));
-        orderItemService.saveBatch(orderItemList);
+//        orderItemService.saveBatch(orderItemList);
         System.out.println("updateOrderItemList===>" + JSONArray.toJSONString(updateOrderItemList));
-        orderItemService.updateBatchById(updateOrderItemList);
+//        orderItemService.updateBatchById(updateOrderItemList);
+        System.out.println("escrowInfoList===>" + JSONArray.toJSONString(escrowInfoList));
+//        escrowItemService.saveBatch(escrowInfoList);
+        System.out.println("updateEscrowInfoList===>" + JSONArray.toJSONString(updateEscrowInfoList));
+//        escrowItemService.updateBatchById(updateEscrowInfoList);
+        System.out.println("escrowItemList===>" + JSONArray.toJSONString(escrowItemList));
+//        escrowItemService.saveBatch(escrowItemList);
+        System.out.println("updateEscrowItemList===>" + JSONArray.toJSONString(updateEscrowItemList));
+//        escrowItemService.updateBatchById(updateEscrowItemList);
+    }
+
+    private List<LocalDate[]> splitIntoEvery15DaysTimestamp(LocalDate startDate, LocalDate endDate) {
+        List<LocalDate[]> timestampPairs = new ArrayList<>();
+        while (!startDate.isAfter(endDate)) {
+            LocalDate endOfSplitDate = startDate.plusDays(14);
+            if (endOfSplitDate.isAfter(endDate)) {
+                endOfSplitDate = endDate;
+            }
+            LocalDate[] pair = new LocalDate[]{
+                    startDate,
+                    endOfSplitDate
+            };
+            timestampPairs.add(pair);
+            startDate = endOfSplitDate.plusDays(1);
+        }
+        return timestampPairs;
     }
 
     private void getOrderDetail(JSONObject orderObject, List<Order> ordertList, Long shopId, List<Order> updateOrderList) {
@@ -198,47 +268,23 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
     }
 
-    public void saveEscrowInfoByOrderSn(String token, Long shopId, String orderSn) {
-        JSONObject result = ShopeeUtil.getEscrowDetail(token, shopId, orderSn);
-        // todo error怎么办
-        JSONObject escrowInfoObject = result.getJSONObject("response");
-        if (escrowInfoObject == null) {
-            return;
-        }
-        JSONObject escrowIncomeObject = escrowInfoObject.getJSONObject("order_income");
+    public void saveEscrowInfoByOrderSn(JSONObject orderIncomeObject, String orderSn, List<EscrowInfo> escrowInfoList, List<EscrowInfo> updateEscrowInfoList) {
 
         EscrowInfo escrowInfo = EscrowInfo.builder()
                 .orderSn(orderSn)
-                .buyerUserName(escrowInfoObject.getString("buyer_user_name"))
-                .buyerTotalAmount(escrowIncomeObject.getBigDecimal("buyer_total_amount"))
-                .buyerPaidShippingFee(escrowIncomeObject.getBigDecimal("buyer_paid_shipping_fee"))
-                .actualShippingFee(escrowIncomeObject.getBigDecimal("actual_shipping_fee"))
-                .escrowAmount(escrowIncomeObject.getBigDecimal("escrow_amount"))
+                .buyerUserName(orderIncomeObject.getString("buyer_user_name"))
+                .buyerTotalAmount(orderIncomeObject.getBigDecimal("buyer_total_amount"))
+                .buyerPaidShippingFee(orderIncomeObject.getBigDecimal("buyer_paid_shipping_fee"))
+                .actualShippingFee(orderIncomeObject.getBigDecimal("actual_shipping_fee"))
+                .escrowAmount(orderIncomeObject.getBigDecimal("escrow_amount"))
                 .build();
 
         String redisKey = ESCROW + orderSn;
-        Object redisResult = redisService.get(redisKey);
-        String newJsonStr = JSON.toJSONString(escrowInfo, SerializerFeature.WriteMapNullValue);
-        if (Objects.isNull(redisResult)) {
-            // 为空保存
-            redisService.set(redisKey, newJsonStr);
-            escrowInfoService.save(escrowInfo);
-        } else {
-            String oldJsonStr = redisResult.toString();
-            // 不为空判断更新
-            if (!newJsonStr.equals(oldJsonStr)) {
-                redisService.set(redisKey, newJsonStr);
-                escrowInfoService.updateById(escrowInfo);
-            }
-        }
-
-        // 保存支付单产品信息
-        saveEscrowItem(escrowIncomeObject.getJSONArray("items"), orderSn);
+        CommonUtil.judgeRedis(redisService, redisKey, escrowInfoList, updateEscrowInfoList, escrowInfo, EscrowInfo.class);
     }
 
-    public void saveEscrowItem(JSONArray items, String orderSn) {
-        List<EscrowItem> escrowItemList = new ArrayList<>();
-        List<EscrowItem> updateEscrowItemList = new ArrayList<>();
+    public void saveEscrowItem(JSONObject oderIncomeObject, String orderSn, List<EscrowItem> escrowItemList, List<EscrowItem> updateEscrowItemList) {
+        JSONArray items = oderIncomeObject.getJSONArray("items");
         JSONObject itemObject;
         for (int i = 0; i < items.size(); i++) {
             itemObject = items.getJSONObject(i);
@@ -264,10 +310,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             CommonUtil.judgeRedis(redisService, ESCROW_ITEM_MODEL + orderSn + "_" + itemId + "_" + modelId, escrowItemList, updateEscrowItemList, escrowItem, EscrowItem.class);
 
         }
-        System.out.println("escrowItemList===>" + JSONArray.toJSONString(escrowItemList));
-        escrowItemService.saveBatch(escrowItemList);
-        System.out.println("updateEscrowItemList===>" + JSONArray.toJSONString(updateEscrowItemList));
-        escrowItemService.updateBatchById(updateEscrowItemList);
     }
 
     public PageResult<OrderEscrowVO> orderListByCondition(ConditionDTO condition) {

@@ -11,6 +11,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 @SpringBootTest
 class BossScreenApplicationTests {
@@ -47,24 +53,23 @@ class BossScreenApplicationTests {
 
     @Test
     void getProductsTest() {
-        String accessToken = "4b64616e46486f63654369776f694247";
-        JSONObject object = ShopeeUtil.getProducts(accessToken, 1017169304);
-        System.out.println(object);
+        String accessToken = "52477748795470596b6b684f4b54486f";
+        List<String> itemList = ShopeeUtil.getProducts(accessToken, 1017169304, 0, new ArrayList<String>());
+        System.out.println(itemList);
     }
 
 
     @Test
     void getProductInfoTest() {
-        String accessToken = "4b64616e46486f63654369776f694247";
-        long itemId = Long.valueOf("25812541180");
-        JSONObject object = ShopeeUtil.getProductInfo(accessToken, 1017169304, itemId);
+        String accessToken = "52477748795470596b6b684f4b54486f";
+        JSONObject object = ShopeeUtil.getProductInfo(accessToken, 1017169304, "24325905585,20287532598");
         System.out.println(object);
     }
 
     @Test
     void getModelListTest() {
-        String accessToken = "4b64616e46486f63654369776f694247";
-        long itemId = Long.valueOf("25812541180");
+        String accessToken = "6e657a574b544f6a72794f6c6e557044";
+        long itemId = Long.valueOf("25302418012");
         JSONObject object = ShopeeUtil.getModelList(accessToken, 1017169304, itemId);
         System.out.println(object);
     }
@@ -95,9 +100,46 @@ class BossScreenApplicationTests {
 
     @Test
     void getOrderList() {
-        String accessToken = "4b64616e46486f63654369776f694247";
-        JSONObject object = ShopeeUtil.getOrderList(accessToken, 1017169304);
-        System.out.println(object);
+        String startTimeStr = "2023-01-01 00:00:00";
+        List<String> orderSnList = new ArrayList<>();
+        // 定义日期格式
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd 00:00:00");
+
+        // 将字符串转换为LocalDate对象
+        LocalDate startTime = LocalDate.parse(startTimeStr, formatter);
+
+        LocalDate endTime = LocalDate.from(LocalDateTime.now());
+
+        List<LocalDate[]> timeList = splitIntoEvery15DaysTimestamp(startTime, endTime);
+        System.out.println(timeList);
+        for (LocalDate[] time : timeList) {
+            System.out.println(time[0] + " ======== " + time[1]);
+            long start = time[0].atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000L;
+            long end = time[1].atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000L;
+            List<String> object = ShopeeUtil.getOrderList("6e657a574b544f6a72794f6c6e557044", 1017169304, 0, new ArrayList<>(), start, end);
+            System.out.println("多少件："+object.size());
+            orderSnList.addAll(object);
+        }
+        System.out.println("多少件："+orderSnList.size());
+
+
+    }
+
+    public static List<LocalDate[]> splitIntoEvery15DaysTimestamp(LocalDate startDate, LocalDate endDate) {
+        List<LocalDate[]> timestampPairs = new ArrayList<>();
+        while (!startDate.isAfter(endDate)) {
+            LocalDate endOfSplitDate = startDate.plusDays(14);
+            if (endOfSplitDate.isAfter(endDate)) {
+                endOfSplitDate = endDate;
+            }
+            LocalDate[] pair = new LocalDate[]{
+                startDate,
+                endOfSplitDate
+            };
+            timestampPairs.add(pair);
+            startDate = endOfSplitDate.plusDays(1);
+        }
+        return timestampPairs;
     }
 
     @Test
@@ -111,7 +153,7 @@ class BossScreenApplicationTests {
 
     @Test
     void saveOrUpdateOrder() {
-        orderService.saveOrUpdateOrder();
+        orderService.saveOrUpdateOrder("2024-01-01 00:00:00");
     }
 
     @Autowired

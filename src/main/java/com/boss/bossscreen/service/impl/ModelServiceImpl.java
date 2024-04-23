@@ -40,75 +40,69 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void getModel(long itemId, String token, long shopId, List<Model> modelList, List<Model> updateModeList) {
-        JSONObject result = ShopeeUtil.getModelList(token, shopId, itemId);
-        if (result.getString("error").contains("error")) {
-            return;
-        }
-
-        JSONArray modelArray = result.getJSONObject("response").getJSONArray("model");
-
-        JSONArray imageInfoArray = result.getJSONObject("response").getJSONArray("tier_variation").getJSONObject(0).getJSONArray("option_list");
-
-        if (modelArray.size() == 0) {
-            return;
-        }
-
-        JSONObject modelObject;
-        Object redisResult;
-        for (int i = 0; i < modelArray.size(); i++) {
-            modelObject = modelArray.getJSONObject(i);
-
-            JSONObject priceInfoObject = modelObject.getJSONArray("price_info").getJSONObject(0);
-
-            if (priceInfoObject.size() == 0) {
-                continue;
+        try {
+            JSONObject result = ShopeeUtil.getModelList(token, shopId, itemId);
+            if (result == null || result.getString("error").contains("error")) {
+                return;
             }
 
-            JSONObject stockObject = modelObject.getJSONObject("stock_info_v2").getJSONArray("seller_stock").getJSONObject(0);
+            JSONArray modelArray = result.getJSONObject("response").getJSONArray("model");
+            JSONArray imageInfoArray = new JSONArray();
+            if (result.getJSONObject("response").getJSONArray("tier_variation").size() != 0) {
+                imageInfoArray = result.getJSONObject("response").getJSONArray("tier_variation").getJSONObject(0).getJSONArray("option_list");
+            }
 
-            // 为了图片
-            String modelName = modelObject.getString("model_name");
-            long modelId = modelObject.getLong("model_id");
-            Model model = Model.builder()
-                    .modelId(modelId)
-                    .modelName(modelName)
-                    .modelSku(modelObject.getString("model_sku"))
-                    .status(modelObject.getString("model_status"))
-                    .currentPrice(priceInfoObject.getBigDecimal("current_price"))
-                    .originalPrice(priceInfoObject.getBigDecimal("original_price"))
-                    .stock(stockObject.getInteger("stock"))
-                    .promotionId(modelObject.getLong("promotion_id"))
-                    .itemId(itemId)
-                    .build();
+            if (modelArray.size() == 0) {
+                return;
+            }
 
-            if (modelName.contains(",")) {
-                String imageKey = modelName.split(",")[0];
-                JSONObject imageObject;
-                for (int j = 0; j < imageInfoArray.size(); j++) {
-                    imageObject = imageInfoArray.getJSONObject(j);
-                    if (imageKey.equals(imageObject.getString("option"))) {
-                        model.setImageId(imageObject.getJSONObject("image").getString("image_id"));
-                        model.setImageUrl(imageObject.getJSONObject("image").getString("image_url"));
+            JSONObject modelObject;
+            for (int i = 0; i < modelArray.size(); i++) {
+                modelObject = modelArray.getJSONObject(i);
+
+                JSONObject priceInfoObject = modelObject.getJSONArray("price_info").getJSONObject(0);
+
+                if (priceInfoObject.size() == 0) {
+                    continue;
+                }
+
+                JSONObject stockObject = modelObject.getJSONObject("stock_info_v2").getJSONArray("seller_stock").getJSONObject(0);
+
+                // 为了图片
+                String modelName = modelObject.getString("model_name");
+                long modelId = modelObject.getLong("model_id");
+                Model model = Model.builder()
+                        .modelId(modelId)
+                        .modelName(modelName)
+                        .modelSku(modelObject.getString("model_sku"))
+                        .status(modelObject.getString("model_status"))
+                        .currentPrice(priceInfoObject.getBigDecimal("current_price"))
+                        .originalPrice(priceInfoObject.getBigDecimal("original_price"))
+                        .stock(stockObject.getInteger("stock"))
+                        .promotionId(modelObject.getLong("promotion_id"))
+                        .itemId(itemId)
+                        .build();
+
+                if (imageInfoArray.size() != 0 && modelName.contains(",")) {
+                    String imageKey = modelName.split(",")[0];
+                    JSONObject imageObject;
+                    for (int j = 0; j < imageInfoArray.size(); j++) {
+                        imageObject = imageInfoArray.getJSONObject(j);
+                        if (imageKey.equals(imageObject.getString("option")) && imageObject.getJSONObject("image") != null) {
+                            model.setImageId(imageObject.getJSONObject("image").getString("image_id"));
+                            model.setImageUrl(imageObject.getJSONObject("image").getString("image_url"));
+                        }
                     }
                 }
+
+                CommonUtil.judgeRedis(redisService, PRODUCT_ITEM_MODEL + itemId + "_" + modelId, modelList, updateModeList, model, Model.class);
             }
-
-            CommonUtil.judgeRedis(redisService, PRODUCT_ITEM_MODEL + modelId, modelList, updateModeList, model, Model.class);
-
-//            redisResult = redisService.get(PRODUCT_ITEM_MODEL + modelId);
-//            String productJsonString = JSON.toJSONString(model, SerializerFeature.WriteMapNullValue);
-//            if (Objects.isNull(redisResult)) {
-//                // 为空入库
-//                redisService.set(PRODUCT_ITEM_MODEL + modelId, productJsonString);
-//                modelList.add(model);
-//            } else {
-//                // 不为空判断更新
-//                if (!productJsonString.equals(redisResult)) {
-//                    updateModeList.add(JSON.parseObject(redisResult.toString(), Model.class));
-//                }
-//            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
     }
+
 
     public List<ModelVO> getModelVOListByItemId(Long itemId) {
         List<ModelVO> modelVOList = modelDao.selectList(new QueryWrapper<Model>().eq("item_id", itemId))

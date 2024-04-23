@@ -55,3 +55,6 @@ shopeeApi:
   partner_key: 636a44756841535751715058756d4173505a5a63495a766f515372447a664a43
   shop_redirect_url: http://localhost:8081/shopee/saveShopToken
   account_redirect_url: http://localhost:8081/shopee/saveAccountToken
+
+orderSn:
+  startTime: 2024-01-01 00:00:00

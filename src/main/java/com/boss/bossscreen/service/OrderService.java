@@ -14,7 +14,7 @@ import com.boss.bossscreen.vo.PageResult;
  */
 public interface OrderService extends IService<Order> {
 
-    void saveOrUpdateOrder();
+    void saveOrUpdateOrder(String orderSnStartTime);
 
     PageResult<OrderEscrowVO> orderListByCondition(ConditionDTO condition);
 

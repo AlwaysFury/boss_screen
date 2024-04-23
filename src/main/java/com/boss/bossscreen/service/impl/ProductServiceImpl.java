@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*;
 
 import static com.boss.bossscreen.constant.RedisPrefixConst.PRODUCT_ITEM;
 
@@ -50,7 +51,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
     @Autowired
     private RedisServiceImpl redisService;
 
-    // todo 优化下拉
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void saveOrUpdateProduct() {
@@ -61,93 +61,130 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         List<Shop> shopList = shopDao.selectList(shopQueryWrapper);
 
         // 根据每个店铺的 token 和 shopId 获取产品
-        List<Product> productList = new ArrayList<>();
-        List<Model> modelList =  new ArrayList<>();
-        List<Product> updateProList = new ArrayList<>();
-        List<Model> updateModelList = new ArrayList<>();
+        List<Product> productList = new CopyOnWriteArrayList<>();
+        List<Product> updateProList = new CopyOnWriteArrayList<>();
+        List<Model> modelList =  new CopyOnWriteArrayList<>();
+        List<Model> updateModelList = new CopyOnWriteArrayList<>();
         long shopId;
-        String accessToken = "";
-        JSONObject result = new JSONObject();
+        String accessToken;
+        List<String> itemIds;
         for (Shop shop : shopList) {
             shopId = shop.getShopId();
             accessToken = shop.getAccessToken();
 
-            result = ShopeeUtil.getProducts(accessToken, shopId);
+            itemIds = ShopeeUtil.getProducts(accessToken, shopId, 0, new ArrayList<>());
 
-            if (result.getString("error").contains("error")) {
-                continue;
+            List<String> itemIdList = new ArrayList<>();
+            for (int i = 0; i < itemIds.size(); i += 50) {
+                itemIdList.add(String.join(",", itemIds.subList(i, Math.min(i + 50, itemIds.size()))));
             }
 
-            JSONArray itemArray = result.getJSONObject("response").getJSONArray("item");
-            if (itemArray.size() == 0) {
-                continue;
+            CountDownLatch productCountDownLatch = new CountDownLatch(itemIdList.size());
+            // 开线程池，线程数量为要遍历的对象的长度
+            ExecutorService productExecutor = Executors.newFixedThreadPool(itemIdList.size());
+
+            CountDownLatch modelCountDownLatch = new CountDownLatch(itemIdList.size());
+            // 开线程池，线程数量为要遍历的对象的长度
+            ExecutorService modelExecutor = Executors.newFixedThreadPool(itemIdList.size());
+            for (String itemId : itemIdList) {
+                String finalAccessToken = accessToken;
+                long finalShopId = shopId;
+
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        getProductDetail(itemId, finalAccessToken, finalShopId, productList, updateProList);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        productCountDownLatch.countDown();
+                        System.out.println("productCountDownLatch===> " + productCountDownLatch);
+                    }
+                }, productExecutor);
+
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        String[] splitIds = itemId.split(",");
+                        for (String splitId : splitIds) {
+                            modelService.getModel(Long.parseLong(splitId), finalAccessToken, finalShopId, modelList, updateModelList);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        modelCountDownLatch.countDown();
+                        System.out.println("modelCountDownLatch===> " + modelCountDownLatch);
+                    }
+                }, modelExecutor);
             }
 
-            for (int i = 0; i < itemArray.size(); i++) {
-                JSONObject itemObject = itemArray.getJSONObject(i);
-                long itemId = itemObject.getLong("item_id");
-                getProductDetail(itemId, accessToken, shopId, productList, updateProList);
-                modelService.getModel(itemId, accessToken, shopId, modelList, updateModelList);
+            try {
+                productCountDownLatch.await();
+                modelCountDownLatch.await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
+
         }
 
-        log.info("更新产品耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
-
-        System.out.println("productList===>" + JSONArray.toJSONString(productList));
         this.saveBatch(productList);
         System.out.println("updateProList===>" + JSONArray.toJSONString(updateProList));
         this.updateBatchById(updateProList);
-        System.out.println("modelList===>" + JSONArray.toJSONString(modelList));
         modelService.saveBatch(modelList);
         System.out.println("updateModelList===>" + JSONArray.toJSONString(updateModelList));
         modelService.updateBatchById(updateModelList);
+
+        log.info("更新产品耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
     }
 
-    private void getProductDetail(long itemId, String token, long shopId, List<Product> productList, List<Product> updateProList) {
-        JSONObject result = ShopeeUtil.getProductInfo(token, shopId, itemId);
+    private void getProductDetail(String itemIds, String token, long shopId, List<Product> productList, List<Product> updateProList) {
+        try {
+            JSONObject result = ShopeeUtil.getProductInfo(token, shopId, itemIds);
 
-        if (result.getString("error").contains("error")) {
-            return;
-        }
-
-        JSONArray itemArray = result.getJSONObject("response").getJSONArray("item_list");
-
-        JSONObject itemObject;
-        JSONArray imgIdArray;
-        JSONArray imgUrlArray;
-        Object redisResult;
-        for (int i = 0; i < itemArray.size(); i++) {
-            itemObject = itemArray.getJSONObject(i);
-
-            imgIdArray = itemObject.getJSONObject("image").getJSONArray("image_id_list");
-            imgUrlArray = itemObject.getJSONObject("image").getJSONArray("image_url_list");
-
-            Product product = Product.builder()
-                    .shopId(shopId)
-                    .itemId(itemId)
-                    .itemName(itemObject.getString("item_name"))
-                    .categoryId(itemObject.getLong("category_id"))
-                    .createTime(itemObject.getLong("create_time"))
-                    .updateTime(itemObject.getLong("update_time"))
-                    .itemSku(itemObject.getString("item_sku"))
-                    .mainImgUrl(imgUrlArray.getString(0))
-                    .mainImgId(imgIdArray.getString(0))
-                    .status(itemObject.getString("item_status"))
-                    .build();
-
-
-            imgIdArray = itemObject.getJSONObject("image").getJSONArray("image_id_list");
-            if (imgIdArray.size() > 0) {
-                product.setMainImgId(imgIdArray.getString(0));
-            }
-            imgUrlArray = itemObject.getJSONObject("image").getJSONArray("image_url_list");
-            if (imgUrlArray.size() > 0) {
-                product.setMainImgUrl(imgUrlArray.getString(0));
+            if (result == null || result.getString("error").contains("error")) {
+                return;
             }
 
+            JSONArray itemArray = result.getJSONObject("response").getJSONArray("item_list");
 
-            CommonUtil.judgeRedis(redisService,PRODUCT_ITEM + itemId, productList, updateProList, product, Product.class);
+            JSONObject itemObject;
+            JSONArray imgIdArray;
+            JSONArray imgUrlArray;
+            for (int i = 0; i < itemArray.size(); i++) {
+                itemObject = itemArray.getJSONObject(i);
+
+                imgIdArray = itemObject.getJSONObject("image").getJSONArray("image_id_list");
+                imgUrlArray = itemObject.getJSONObject("image").getJSONArray("image_url_list");
+
+                long itemId = itemObject.getLong("item_id");
+                Product product = Product.builder()
+                        .shopId(shopId)
+                        .itemId(itemId)
+                        .itemName(itemObject.getString("item_name"))
+                        .categoryId(itemObject.getLong("category_id"))
+                        .createTime(itemObject.getLong("create_time"))
+                        .updateTime(itemObject.getLong("update_time"))
+                        .itemSku(itemObject.getString("item_sku"))
+                        .mainImgUrl(imgUrlArray.getString(0))
+                        .mainImgId(imgIdArray.getString(0))
+                        .status(itemObject.getString("item_status"))
+                        .build();
+
+
+                imgIdArray = itemObject.getJSONObject("image").getJSONArray("image_id_list");
+                if (imgIdArray.size() > 0) {
+                    product.setMainImgId(imgIdArray.getString(0));
+                }
+                imgUrlArray = itemObject.getJSONObject("image").getJSONArray("image_url_list");
+                if (imgUrlArray.size() > 0) {
+                    product.setMainImgUrl(imgUrlArray.getString(0));
+                }
+
+
+                CommonUtil.judgeRedis(redisService,PRODUCT_ITEM + itemId, productList, updateProList, product, Product.class);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
     }
 
     public PageResult<ProductVO> productListByCondition(ConditionDTO condition) {
