@@ -1,8 +1,8 @@
 package com.boss.bossscreen.task;
 
-import com.boss.bossscreen.service.impl.MainAccountServiceImpl;
 import com.boss.bossscreen.service.impl.OrderServiceImpl;
 import com.boss.bossscreen.service.impl.ProductServiceImpl;
+import com.boss.bossscreen.service.impl.ShopServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class RefreshTokenTask {
+public class RefreshTask {
 
     @Autowired
     private ProductServiceImpl productService;
@@ -25,7 +25,7 @@ public class RefreshTokenTask {
     private OrderServiceImpl orderService;
 
     @Autowired
-    private MainAccountServiceImpl mainAccountService;
+    private ShopServiceImpl shopService;
 
     /**
      * corn六个位置参数分别表示：
@@ -36,6 +36,12 @@ public class RefreshTokenTask {
      * 月（0~11）
      * 周几（ 可填1-7 或 SUN/MON/TUE/WED/THU/FRI/SAT）
      */
+    @Scheduled(cron = "0 */10 * * * ?")
+    public void refreshToken() {
+        log.info("======开始刷新产品信息");
+        shopService.refreshShopToken();
+    }
+
     @Scheduled(cron = "0 */10 * * * ?")
     public void refreshProduct() {
         log.info("======开始刷新产品信息");

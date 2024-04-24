@@ -165,7 +165,7 @@ class BossScreenApplicationTests {
 
     @Test
     void getItemPromotionTest() {
-        JSONObject object = ShopeeUtil.getItemPromotion("4b64616e46486f63654369776f694247", 1017169304, "23248487563");
+        JSONObject object = ShopeeUtil.getItemPromotion("7a4e526a4d706679536a69435a4d4e74", 1017169304, "23248487563");
         System.out.println(object);
     }
 

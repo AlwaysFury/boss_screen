@@ -159,7 +159,6 @@ public class ShopeeUtil {
                 .header(Header.CONTENT_TYPE, "application/json")
                 .body(JSON.toJSONString(paramMap))
                 .execute().body();
-        log.info(result);
         return JSONObject.parseObject(result);
     }
 
@@ -268,7 +267,7 @@ public class ShopeeUtil {
 
         int retryCount = 0;
         while (true) {
-            if (result.getString("error").contains("error") && retryCount < 5) {
+            if (result == null || (result.getString("error").contains("error") && retryCount < 5)) {
                 result = getModelListByHttp(accessToken, shopId, itemId);
                 retryCount++;
             } else {

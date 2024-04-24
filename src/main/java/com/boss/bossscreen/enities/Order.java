@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 /**
  * @Description
  * @Author 罗宇航
@@ -83,4 +85,14 @@ public class Order {
      * 买家取消原因
      */
     private String buyerCancelReason;
+
+    /**
+     * 调整交易金额
+     */
+    private BigDecimal adjustmentAmount;
+
+    /**
+     * 调整原因
+     */
+    private String adjustmentReason;
 }

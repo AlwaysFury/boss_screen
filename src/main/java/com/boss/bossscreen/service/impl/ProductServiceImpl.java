@@ -131,10 +131,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         }
 
         this.saveBatch(productList);
-        System.out.println("updateProList===>" + JSONArray.toJSONString(updateProList));
+//        System.out.println("updateProList===>" + JSONArray.toJSONString(updateProList));
         this.updateBatchById(updateProList);
         modelService.saveBatch(modelList);
-        System.out.println("updateModelList===>" + JSONArray.toJSONString(updateModelList));
+//        System.out.println("updateModelList===>" + JSONArray.toJSONString(updateModelList));
         modelService.updateBatchById(updateModelList);
 
         log.info("更新产品耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);

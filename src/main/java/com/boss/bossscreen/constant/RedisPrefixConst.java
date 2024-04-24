@@ -20,4 +20,6 @@ public class RedisPrefixConst {
 
     public static final String ESCROW_ITEM_MODEL = "escrow:item:model:";
 
+    public static final String SHOP_TOKEN = "shop:token:";
+
 }

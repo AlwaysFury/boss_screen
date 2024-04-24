@@ -100,4 +100,14 @@ public class OrderEscrowInfoVO {
      * 订单中的产品
      */
     private List<OrderEscrowItemVO> orderEscrowItemVOList;
+
+    /**
+     * 调整交易金额
+     */
+    private BigDecimal adjustmentAmount;
+
+    /**
+     * 调整原因
+     */
+    private String adjustmentReason;
 }

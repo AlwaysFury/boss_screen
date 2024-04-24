@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -70,6 +71,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
     @Autowired
     private ShopServiceImpl shopService;
+
+    @Autowired
+    private CostDao costDao;
 
     @Autowired
     private RedisServiceImpl redisService;
@@ -184,19 +188,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
 //        System.out.println("orderList===>" + JSONArray.toJSONString(ordertList));
         this.saveBatch(ordertList);
-        System.out.println("updateOrderList===>" + JSONArray.toJSONString(updateOrderList));
+//        System.out.println("updateOrderList===>" + JSONArray.toJSONString(updateOrderList));
         this.updateBatchById(updateOrderList);
 //        System.out.println("orderItemList===>" + JSONArray.toJSONString(orderItemList));
         orderItemService.saveBatch(orderItemList);
-        System.out.println("updateOrderItemList===>" + JSONArray.toJSONString(updateOrderItemList));
+//        System.out.println("updateOrderItemList===>" + JSONArray.toJSONString(updateOrderItemList));
         orderItemService.updateBatchById(updateOrderItemList);
 //        System.out.println("escrowInfoList===>" + JSONArray.toJSONString(escrowInfoList));
         escrowInfoService.saveBatch(escrowInfoList);
-        System.out.println("updateEscrowInfoList===>" + JSONArray.toJSONString(updateEscrowInfoList));
+//        System.out.println("updateEscrowInfoList===>" + JSONArray.toJSONString(updateEscrowInfoList));
         escrowInfoService.updateBatchById(updateEscrowInfoList);
 //        System.out.println("escrowItemList===>" + JSONArray.toJSONString(escrowItemList));
         escrowItemService.saveBatch(escrowItemList);
-        System.out.println("updateEscrowItemList===>" + JSONArray.toJSONString(updateEscrowItemList));
+//        System.out.println("updateEscrowItemList===>" + JSONArray.toJSONString(updateEscrowItemList));
         escrowItemService.updateBatchById(updateEscrowItemList);
 
         log.info("更新订单耗时： {}秒", (System.currentTimeMillis() - logStart) / 1000);
@@ -415,9 +419,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                         orderEscrowItemVO.setSellerDiscount(escrowItem.getSellerDiscount());
                         orderEscrowItemVO.setActivityId(escrowItem.getActivityId());
                         orderEscrowItemVO.setActivityType(escrowItem.getActivityType());
-                    }
+                        orderEscrowItemVO.setCount(escrowItem.getCount());
 
-                    // todo 成本，利润，利润率计算
+                        BigDecimal cost = getCostSingleByType(orderItem.getModelSku().toLowerCase(), orderEscrowInfoVO.getCreateTime()).multiply(BigDecimal.valueOf(orderEscrowItemVO.getCount()));
+                        BigDecimal price = orderEscrowItemVO.getSellerDiscount().multiply(BigDecimal.valueOf(orderEscrowItemVO.getCount()));
+                        BigDecimal profit = price.subtract(cost);
+                        float profitRate = profit.divide(price).floatValue();
+
+                        orderEscrowItemVO.setCost(cost);
+                        orderEscrowItemVO.setProfit(profit);
+                        orderEscrowItemVO.setProfitRate(profitRate);
+                    }
 
                     return orderEscrowItemVO;
                 }
@@ -435,5 +447,34 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         }
         Matcher matcher = ENGLISH_PATTERN.matcher(str);
         return matcher.matches();
+    }
+
+    private BigDecimal getCostSingleByType(String modelSku, long orderCreateTime) {
+        LocalDateTime localDateTime = CommonUtil.timestampToLocalDateTime(orderCreateTime);
+        BigDecimal costSingle = new BigDecimal(0.00);
+        QueryWrapper<Cost> costQueryWrapper = new QueryWrapper<>();
+        costQueryWrapper.select("price", "start_time", "end_time");
+        if (modelSku.contains("100%cotton")) {
+            costQueryWrapper.eq("type", "cotton");
+        } else if (modelSku.contains("short")) {
+            costQueryWrapper.eq("type", "short");
+        } else if (modelSku.contains("hoodie")) {
+            costQueryWrapper.eq("type", "hoodie");
+        } else if (modelSku.contains("成品")) {
+            costQueryWrapper.eq("type", "finish");
+        } else if (modelSku.contains("t-shirt")) {
+            costQueryWrapper.eq("type", "tshirt");
+        } else {
+            costQueryWrapper.eq("type", "cotton");
+        }
+        List<Cost> costList = costDao.selectList(costQueryWrapper);
+        for (Cost cost : costList) {
+            if (localDateTime.isBefore(cost.getCreateTime()) && localDateTime.isAfter(cost.getEndTime())) {
+                costSingle = cost.getPrice();
+                break;
+            }
+        }
+
+        return costSingle;
     }
 }

@@ -21,10 +21,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static com.boss.bossscreen.constant.RedisPrefixConst.SHOP_TOKEN;
 
 /**
  * @Description
@@ -38,6 +39,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopDao, Shop> implements ShopS
 
     @Autowired
     private ShopDao shopDao;
+
+    @Autowired
+    private RedisServiceImpl redisService;
 
 
     @Transactional(rollbackFor = Exception.class)
@@ -58,6 +62,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopDao, Shop> implements ShopS
             BeanUtil.copyProperties(shopDTO, shop);
             this.save(shop);
         }
+
+        redisService.set(SHOP_TOKEN + shopDTO.getShopId(), shopDTO.getAccessToken());
     }
 
     @Override
@@ -84,16 +90,15 @@ public class ShopServiceImpl extends ServiceImpl<ShopDao, Shop> implements ShopS
         this.updateBatchById(shopList);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void refreshShopToken() {
         QueryWrapper<Shop> wrapper = new QueryWrapper<>();
-        wrapper.select("id", "shop_id", "access_token", "refresh_token", "updateTime").isNull("account_id");
+        wrapper.select("id", "shop_id", "access_token", "refresh_token", "update_time");
 
         List<Shop> oldList = shopDao.selectList(wrapper);
         for (Shop shop : oldList) {
             long shopId = shop.getShopId();
-
-            // 四小时刷新token
 
             JSONObject object = ShopeeUtil.refreshToken(shop.getRefreshToken(), shopId, "shop");
             log.info("====={} 的 token：{}", shopId, object);
@@ -110,9 +115,12 @@ public class ShopServiceImpl extends ServiceImpl<ShopDao, Shop> implements ShopS
             shopWrapper.set("refresh_token", newRefreshToken);
             shopWrapper.eq("shop_id", shopId);
             shopDao.update(shopWrapper);
+
+            redisService.del(SHOP_TOKEN + shopId);
         }
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void refreshShopTokenByAccount() {
         QueryWrapper<Shop> wrapper = new QueryWrapper<>();
@@ -142,25 +150,18 @@ public class ShopServiceImpl extends ServiceImpl<ShopDao, Shop> implements ShopS
 
     @Override
     public String getAccessTokenByShopId(String shopId) {
-        QueryWrapper<Shop> wrapper = new QueryWrapper<>();
-        wrapper.select("id", "shop_id", "access_token", "refresh_token","account_id","update_time").eq("shop_id", shopId);
 
-        Shop shop = shopDao.selectOne(wrapper);
-        LocalDateTime updateTime = shop.getUpdateTime();
-        if (LocalDateTime.now().isAfter(updateTime.plusHours(3))) {
-            JSONObject object = ShopeeUtil.refreshToken(shop.getRefreshToken(), Long.parseLong(shopId), "shop");
-            log.info("====={} 的 token：{}", shopId, object);
-            if (!object.getString("error").contains("error")) {
-                UpdateWrapper<Shop> shopWrapper = new UpdateWrapper<>();
-                shopWrapper.set("access_token", object.getString("access_token"));
-                shopWrapper.set("refresh_token", object.getString("refresh_token"));
-                shopWrapper.eq("shop_id", shopId);
-                shopWrapper.eq("update_time", updateTime);
-                this.update(shopWrapper);
-            }
+        String token = (String) redisService.get(SHOP_TOKEN + shopId);
+
+        if (token == null) {
+            QueryWrapper<Shop> queryWrapper = new QueryWrapper<>();
+            queryWrapper.select("access_token" ).eq("shop_id", shopId);
+            token = shopDao.selectOne(queryWrapper).getAccessToken();
+
+            redisService.set(SHOP_TOKEN + shopId, token);
         }
 
-        return shopDao.selectOne(wrapper).getAccessToken();
+        return token;
     }
 
 
