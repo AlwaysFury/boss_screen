@@ -104,7 +104,7 @@ public class ShopeeUtil {
     }
 
     // 生成授权链接
-    public static String getAuthUrl(String type){
+    public static String getAuthUrl(String type, String userId){
         long timest = System.currentTimeMillis() / 1000L;
         String host = ShopAuthDTO.getHost();
         String path = "/api/v2/shop/auth_partner";
@@ -112,7 +112,7 @@ public class ShopeeUtil {
         long partner_id = ShopAuthDTO.getPartnerId();
         String tmp_partner_key = ShopAuthDTO.getTempPartnerKey();
         String sign = getAuthSign(partner_id,path,timest,tmp_partner_key);
-        return host + path + String.format("?partner_id=%s&timestamp=%s&sign=%s&redirect=%s", partner_id,timest, sign, redirect_url);
+        return host + path + String.format("?partner_id=%s&timestamp=%s&sign=%s&redirect=%s", partner_id,timest, sign, redirect_url + "?userId=" + userId);
     }
 
     //shop request for access token for the first time

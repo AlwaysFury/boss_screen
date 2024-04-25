@@ -2,6 +2,7 @@ package com.boss.bossscreen.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.boss.bossscreen.dto.ShopDTO;
+import com.boss.bossscreen.service.WebSocket;
 import com.boss.bossscreen.service.impl.MainAccountServiceImpl;
 import com.boss.bossscreen.service.impl.ProductServiceImpl;
 import com.boss.bossscreen.service.impl.ShopServiceImpl;
@@ -38,8 +39,8 @@ public class ShopeeController {
      * 获取授权链接
      */
     @GetMapping("/getAuthUrl")
-    public Result<String> getAuthUrl(String type) {
-        return Result.ok(ShopeeUtil.getAuthUrl(type));
+    public Result<String> getAuthUrl(String type, String userId) {
+        return Result.ok(ShopeeUtil.getAuthUrl(type, userId));
     }
 
     /**
@@ -49,7 +50,7 @@ public class ShopeeController {
      * @return
      */
     @GetMapping("/saveOrUpdateShop")
-    public Result<JSONObject> saveOrUpdateShop(String code, @RequestParam("shop_id") long shopId) {
+    public Result<JSONObject> saveOrUpdateShop(String code, @RequestParam("shop_id") long shopId, String userId) {
 
         try {
             // 获取access_token
@@ -66,6 +67,8 @@ public class ShopeeController {
 
             shopService.saveOrUpdateToken(shopDTO);
 
+            WebSocket.pushResult(userId, Result.ok());
+
         } catch (Exception e) {
             e.printStackTrace();
             return Result.fail("授权失败：" + e);
@@ -81,12 +84,12 @@ public class ShopeeController {
      * @return
      */
     @GetMapping("/saveOrUpdateAccount")
-    public Result<JSONObject> saveOrUpdateAccount(String code, @RequestParam("main_account_id") long mainAccountId) {
+    public Result<JSONObject> saveOrUpdateAccount(String code, @RequestParam("main_account_id") long mainAccountId, String userId) {
 
         try {
 
             mainAccountService.saveOrUpdateToken(code, mainAccountId);
-
+            WebSocket.pushResult(userId, Result.ok());
         } catch (Exception e) {
             e.printStackTrace();
             return Result.fail("授权失败：" + e);

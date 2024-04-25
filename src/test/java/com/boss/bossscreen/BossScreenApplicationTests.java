@@ -24,7 +24,7 @@ class BossScreenApplicationTests {
 
     @Test
     void contextLoads() {
-        System.out.println(ShopeeUtil.getAuthUrl("shop"));
+        System.out.println(ShopeeUtil.getAuthUrl("shop", "1"));
     }
 
     @Test

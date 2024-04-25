@@ -130,6 +130,12 @@
             <version>4.1.1-RC1-RELEASE</version>
         </dependency>
 
+        <!--websocket-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
 
 
         <!-- swagger文档 -->
