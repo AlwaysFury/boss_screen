@@ -22,4 +22,8 @@ public class RedisPrefixConst {
 
     public static final String SHOP_TOKEN = "shop:token:";
 
+    public static final String RETURN_ORDER = "return:order:";
+
+    public static final String RETURN_ORDER_ITEM_MODEL = "return:order:item:model:";
+
 }

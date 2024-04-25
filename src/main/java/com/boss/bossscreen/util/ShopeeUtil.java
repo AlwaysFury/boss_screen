@@ -501,7 +501,7 @@ public class ShopeeUtil {
         String tmp_partner_key = ShopAuthDTO.getTempPartnerKey();
         BigInteger sign = getShopTokenSign(partner_id, path,timest, accessToken, shopId, tmp_partner_key);
         // "https://partner.shopeemobile.com/api/v2/order/get_order_list?page_size=20&response_optional_fields=order_status&timestamp=timestamp&shop_id=shop_id&order_status=READY_TO_SHIP&partner_id=partner_id&access_token=access_token&cursor=""&time_range_field=create_time&time_from=1607235072&time_to=1608271872&sign=sign"
-        String tmp_url = host + path + String.format("?&partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&page_no=0&page_size=1",
+        String tmp_url = host + path + String.format("?&partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&page_no=0&page_size=100",
                 partner_id, timest, String.format("%032x",sign), accessToken, shopId);
 
         return JSONObject.parseObject(HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8));

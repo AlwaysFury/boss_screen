@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boss.bossscreen.dao.ReturnOrderDao">
+
+
+<!--    <select id="costCount" resultType="java.lang.Integer">-->
+<!--        SELECT-->
+<!--            count(*)-->
+<!--        FROM-->
+<!--            tb_cost as s-->
+<!--        <where>-->
+<!--            <if test="condition.status != null">-->
+<!--                s.status = #{condition.status}-->
+<!--            </if>-->
+<!--        </where>-->
+<!--    </select>-->
+
+
+<!--    <select id="costList" resultType="com.boss.bossscreen.vo.CostVO">-->
+<!--        SELECT-->
+<!--            id,-->
+<!--            name,-->
+<!--            type,-->
+<!--            price,-->
+<!--            startTime,-->
+<!--            endTime-->
+<!--        FROM-->
+<!--            tb_cost as s-->
+<!--        <where>-->
+<!--            <if test="condition.startTime != null">-->
+<!--                s.start_time >= #{condition.startTime}-->
+<!--            </if>-->
+<!--            <if test="condition.endTime != null">-->
+<!--                s.end_time = #{condition.endTime}-->
+<!--            </if>-->
+<!--        </where>-->
+<!--        LIMIT #{current},#{size}-->
+<!--    </select>-->
+
+</mapper>

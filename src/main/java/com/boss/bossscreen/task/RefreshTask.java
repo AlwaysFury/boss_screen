@@ -2,6 +2,7 @@ package com.boss.bossscreen.task;
 
 import com.boss.bossscreen.service.impl.OrderServiceImpl;
 import com.boss.bossscreen.service.impl.ProductServiceImpl;
+import com.boss.bossscreen.service.impl.ReturnOrderServiceImpl;
 import com.boss.bossscreen.service.impl.ShopServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,9 @@ public class RefreshTask {
     @Autowired
     private ShopServiceImpl shopService;
 
+    @Autowired
+    private ReturnOrderServiceImpl returnOrderService;
+
     /**
      * corn六个位置参数分别表示：
      * 秒（0~59） 例如0/5表示每5秒
@@ -38,7 +42,7 @@ public class RefreshTask {
      */
     @Scheduled(cron = "0 0 */2 * * ?")
     public void refreshToken() {
-        log.info("======开始刷新产品信息");
+        log.info("======开始刷新 token");
         shopService.refreshShopToken();
     }
 
@@ -52,5 +56,11 @@ public class RefreshTask {
     public void refreshOrder() {
         log.info("======开始刷新订单信息");
         orderService.saveOrUpdateOrder("2024-01-01 00:00:00");
+    }
+
+    @Scheduled(cron = "0 */10 * * * ?")
+    public void refreshReturnOrder() {
+        log.info("======开始刷新退单信息");
+        returnOrderService.saveOrUpdateReturnOrder();
     }
 }

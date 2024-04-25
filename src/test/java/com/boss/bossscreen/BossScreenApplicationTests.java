@@ -3,6 +3,7 @@ package com.boss.bossscreen;
 import com.alibaba.fastjson.JSONObject;
 import com.boss.bossscreen.service.impl.OrderServiceImpl;
 import com.boss.bossscreen.service.impl.ProductServiceImpl;
+import com.boss.bossscreen.service.impl.ReturnOrderServiceImpl;
 import com.boss.bossscreen.service.impl.ShopServiceImpl;
 import com.boss.bossscreen.util.ShopeeUtil;
 import org.junit.jupiter.api.Test;
@@ -199,6 +200,14 @@ class BossScreenApplicationTests {
     void getReturnListByHttpTest() {
         JSONObject object = ShopeeUtil.getReturnListByHttp("694c786c63794a4441457064416c4152", 1017169304);
         System.out.println(object);
+    }
+
+    @Autowired
+    private ReturnOrderServiceImpl returnOrderService;
+
+    @Test
+    void saveOrUpdateReturnOrderTest() {
+        returnOrderService.saveOrUpdateReturnOrder();
     }
 
 }
