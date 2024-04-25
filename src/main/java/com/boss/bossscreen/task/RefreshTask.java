@@ -36,7 +36,7 @@ public class RefreshTask {
      * 月（0~11）
      * 周几（ 可填1-7 或 SUN/MON/TUE/WED/THU/FRI/SAT）
      */
-    @Scheduled(cron = "0 */10 * * * ?")
+    @Scheduled(cron = "0 0 */2 * * ?")
     public void refreshToken() {
         log.info("======开始刷新产品信息");
         shopService.refreshShopToken();

@@ -1,15 +1,11 @@
 package com.boss.bossscreen.aspect;
 
 import com.boss.bossscreen.annotation.OptLog;
-import com.boss.bossscreen.dao.OperationLogDao;
 import com.boss.bossscreen.enities.OperationLog;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
-import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 
@@ -17,12 +13,12 @@ import java.lang.reflect.Method;
 /**
  * 操作日志切面处理
  */
-@Aspect
-@Component
+//@Aspect
+//@Component
 public class OptLogAspect {
 
-    @Autowired
-    private OperationLogDao operationLogDao;
+//    @Autowired
+//    private OperationLogDao operationLogDao;
 
     /**
      * 设置操作日志切入点 记录操作日志 在注解的位置切入代码
@@ -51,7 +47,7 @@ public class OptLogAspect {
         // 操作描述
         operationLog.setOptDesc(operationLog.getOptDesc());
 
-        operationLogDao.insert(operationLog);
+//        operationLogDao.insert(operationLog);
     }
 
 }

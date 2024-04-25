@@ -1,11 +1,14 @@
 package com.boss.bossscreen.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.bossscreen.dao.ModelDao;
+import com.boss.bossscreen.dao.OperationLogDao;
 import com.boss.bossscreen.enities.Model;
+import com.boss.bossscreen.enities.OperationLog;
 import com.boss.bossscreen.service.ModelService;
 import com.boss.bossscreen.util.BeanCopyUtils;
 import com.boss.bossscreen.util.CommonUtil;
@@ -14,11 +17,12 @@ import com.boss.bossscreen.vo.ModelVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import static com.boss.bossscreen.constant.OptTypeConst.SYSTEM_LOG;
 import static com.boss.bossscreen.constant.RedisPrefixConst.PRODUCT_ITEM_MODEL;
 
 /**
@@ -35,9 +39,11 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
     private ModelDao modelDao;
 
     @Autowired
+    private OperationLogDao operationLogDao;
+
+    @Autowired
     private RedisServiceImpl redisService;
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
     public void getModel(long itemId, String token, long shopId, List<Model> modelList, List<Model> updateModeList) {
         try {
@@ -68,7 +74,6 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
 
                 JSONObject stockObject = modelObject.getJSONObject("stock_info_v2").getJSONArray("seller_stock").getJSONObject(0);
 
-                // 为了图片
                 String modelName = modelObject.getString("model_name");
                 long modelId = modelObject.getLong("model_id");
                 Model model = Model.builder()
@@ -95,7 +100,22 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
                     }
                 }
 
-                CommonUtil.judgeRedis(redisService, PRODUCT_ITEM_MODEL + itemId + "_" + modelId, modelList, updateModeList, model, Model.class);
+                String judgeResult = CommonUtil.judgeRedis(redisService, PRODUCT_ITEM_MODEL + itemId + "_" + modelId, modelList, updateModeList, model, Model.class);
+                if (!"".equals(judgeResult)) {
+                    JSONArray diffArray = JSON.parseObject(judgeResult).getJSONArray("defectsList");
+                    if (diffArray.size() != 0) {
+                        StringJoiner joiner = new StringJoiner(",");
+                        OperationLog operationLog = new OperationLog();
+                        operationLog.setOptType(SYSTEM_LOG);
+                        operationLog.setStatus(1);
+                        for (int j = 0; j < diffArray.size(); j++) {
+                            String key = diffArray.getJSONObject(i).getJSONObject("travelPath").getString("abstractTravelPath");
+                            joiner.add(key.substring(key.indexOf(".") + 1, key.length()));
+                        }
+                        operationLog.setOptDesc("产品 " + itemId + " 规格字段发生变化：" + joiner.toString());
+                        operationLogDao.insert(operationLog);
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

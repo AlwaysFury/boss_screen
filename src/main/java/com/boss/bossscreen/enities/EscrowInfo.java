@@ -66,4 +66,14 @@ public class EscrowInfo {
      * 平台最终金额
      */
     private BigDecimal escrowAmount;
+
+    /**
+     * 调整交易金额
+     */
+    private BigDecimal adjustmentAmount;
+
+    /**
+     * 调整原因
+     */
+    private String adjustmentReason;
 }

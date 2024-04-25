@@ -32,13 +32,13 @@ public class CostServiceImpl extends ServiceImpl<CostDao, Cost> implements CostS
     @Override
     public void saveOrUpdateCost(CostDTO costDTO) {
         Cost cost = BeanCopyUtils.copyObject(costDTO, Cost.class);
-        costService.saveOrUpdate(cost);
+        this.saveOrUpdate(cost);
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void deleteCost(List<Integer> ids) {
-        costService.deleteCost(ids);
+        costDao.deleteBatchIds(ids);
     }
 
     @Override

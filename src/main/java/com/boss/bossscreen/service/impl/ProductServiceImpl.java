@@ -1,13 +1,16 @@
 package com.boss.bossscreen.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.boss.bossscreen.dao.OperationLogDao;
 import com.boss.bossscreen.dao.ProductDao;
 import com.boss.bossscreen.dao.ShopDao;
 import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.enities.Model;
+import com.boss.bossscreen.enities.OperationLog;
 import com.boss.bossscreen.enities.Product;
 import com.boss.bossscreen.enities.Shop;
 import com.boss.bossscreen.service.ProductService;
@@ -25,8 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.concurrent.*;
 
+import static com.boss.bossscreen.constant.OptTypeConst.SYSTEM_LOG;
 import static com.boss.bossscreen.constant.RedisPrefixConst.PRODUCT_ITEM;
 
 /**
@@ -54,6 +59,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
     @Autowired
     private RedisServiceImpl redisService;
 
+    @Autowired
+    private OperationLogDao operationLogDao;
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void saveOrUpdateProduct() {
@@ -76,6 +84,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
             accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
 
             itemIds = ShopeeUtil.getProducts(accessToken, shopId, 0, new ArrayList<>());
+
+            if (itemIds.size() == 0) {
+                continue;
+            }
 
             List<String> itemIdList = new ArrayList<>();
             for (int i = 0; i < itemIds.size(); i += 50) {
@@ -184,7 +196,22 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 }
 
 
-                CommonUtil.judgeRedis(redisService,PRODUCT_ITEM + itemId, productList, updateProList, product, Product.class);
+                String judgeResult = CommonUtil.judgeRedis(redisService,PRODUCT_ITEM + itemId, productList, updateProList, product, Product.class);
+                if (!"".equals(judgeResult)) {
+                    JSONArray diffArray = JSON.parseObject(judgeResult).getJSONArray("defectsList");
+                    if (diffArray.size() != 0) {
+                        StringJoiner joiner = new StringJoiner(",");
+                        OperationLog operationLog = new OperationLog();
+                        operationLog.setOptType(SYSTEM_LOG);
+                        operationLog.setStatus(1);
+                        for (int j = 0; j < diffArray.size(); j++) {
+                            String key = diffArray.getJSONObject(j).getJSONObject("travelPath").getString("abstractTravelPath");
+                            joiner.add(key.substring(key.indexOf(".") + 1, key.length()));
+                        }
+                        operationLog.setOptDesc("产品 " + itemId + " 字段发生变化：" + joiner.toString());
+                        operationLogDao.insert(operationLog);
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -215,5 +242,5 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         return productInfoVO;
     }
 
-    // todo 等级  时间段（订单创建时间），各种衣服种类的成本
+    // todo 等级
 }

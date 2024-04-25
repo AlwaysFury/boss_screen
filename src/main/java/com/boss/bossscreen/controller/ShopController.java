@@ -1,6 +1,5 @@
 package com.boss.bossscreen.controller;
 
-import com.boss.bossscreen.annotation.OptLog;
 import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.dto.UpdateStatusDTO;
 import com.boss.bossscreen.service.impl.ShopServiceImpl;
@@ -11,8 +10,6 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import static com.boss.bossscreen.constant.OptTypeConst.REMOVE;
 
 /**
  * @Description
@@ -42,7 +39,6 @@ public class ShopController {
      * @param updateStatusDTO
      * @return
      */
-    @OptLog(optType = REMOVE)
     @PostMapping("/updateShopStatus")
     public Result<?> updateShopsStatus(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
         shopService.updateShopsStatus(updateStatusDTO);

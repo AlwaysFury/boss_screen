@@ -31,7 +31,7 @@
                 s.start_time >= #{condition.startTime}
             </if>
             <if test="condition.endTime != null">
-                s.end_time <= #{condition.endTime}
+                s.end_time = #{condition.endTime}
             </if>
         </where>
         LIMIT #{current},#{size}

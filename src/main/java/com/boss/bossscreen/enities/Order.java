@@ -86,13 +86,5 @@ public class Order {
      */
     private String buyerCancelReason;
 
-    /**
-     * 调整交易金额
-     */
-    private BigDecimal adjustmentAmount;
 
-    /**
-     * 调整原因
-     */
-    private String adjustmentReason;
 }

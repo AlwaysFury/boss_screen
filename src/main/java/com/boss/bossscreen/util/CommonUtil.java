@@ -31,7 +31,7 @@ public class CommonUtil {
         return instant.atZone(zoneId).toLocalDateTime();
     }
 
-    public static <T> void judgeRedis(RedisServiceImpl redisService, String redisKey, List<T> insertList, List<T> updateList, T t, Class<T> clazz) {
+    public static <T> String judgeRedis(RedisServiceImpl redisService, String redisKey, List<T> insertList, List<T> updateList, T t, Class<T> clazz) {
         // 检测入库
         // 将新旧数据全部数据缓存进入 redis
         // 新数据与旧数据进行比较：时间戳
@@ -41,6 +41,7 @@ public class CommonUtil {
         // 新增：将数据存入新增集合，存入 redis 和 mysql
         // 更新：将更新数据存入更新集合，更新 reids 和 mysql 中的数据
         // 删除：指示标记该条数据被删除！！！不是物理删除，存入删除集合，并在更新 redis 和 mysql 中的数据
+        String result = "";
         Object redisResult = redisService.get(redisKey);
         String newJsonStr = JSON.toJSONString(t, SerializerFeature.WriteMapNullValue);
         if (Objects.isNull(redisResult)) {
@@ -48,7 +49,6 @@ public class CommonUtil {
             redisService.set(redisKey, newJsonStr);
             insertList.add(t);
         } else {
-            // todo json 比对输出日志
             // 不为空判断更新
             String oldJsonStr = redisResult.toString();
             if (!newJsonStr.equals(oldJsonStr)) {
@@ -56,11 +56,13 @@ public class CommonUtil {
                 JsonCompareResult jsonCompareResult = new DefaultJsonDifference()
                         .option(jsonComparedOption)
                         .detectDiff(newJsonStr, oldJsonStr);
-                System.out.println(JSON.toJSONString(jsonCompareResult));
-
+                result = JSON.toJSONString(jsonCompareResult);
+                System.out.println("newJsonStr====>"+newJsonStr);
+                System.out.println("oldJsonStr====>"+oldJsonStr);
                 redisService.set(redisKey, newJsonStr);
                 updateList.add(JSON.parseObject(redisResult.toString(), clazz));
             }
         }
+        return result;
     }
 }

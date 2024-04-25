@@ -160,7 +160,7 @@ class BossScreenApplicationTests {
     private ShopServiceImpl shopService;
     @Test
     void refreshShopToken() {
-        shopService.refreshShopTokenByAccount();
+        shopService.refreshShopToken();
     }
 
     @Test
@@ -172,7 +172,7 @@ class BossScreenApplicationTests {
 
     @Test
     void getEscrowDetailTest() {
-        JSONObject object = ShopeeUtil.getEscrowDetail("4869704e624374516f7957646b747571", 1017169304, "240405UHE0VN3H");
+        JSONObject object = ShopeeUtil.getEscrowDetail("4b456547676671597a5346424f5a6b53", 1017169304, "240102SQ95FRB7");
         System.out.println(object);
     }
 
@@ -193,6 +193,12 @@ class BossScreenApplicationTests {
         for (int i = 0; i < 100; i++) {
             new Thread(shopService.getAccessTokenByShopId("1017169304")).start();
         }
+    }
+
+    @Test
+    void getReturnListByHttpTest() {
+        JSONObject object = ShopeeUtil.getReturnListByHttp("694c786c63794a4441457064416c4152", 1017169304);
+        System.out.println(object);
     }
 
 }

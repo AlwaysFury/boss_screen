@@ -1,6 +1,5 @@
 package com.boss.bossscreen.controller;
 
-import com.boss.bossscreen.annotation.OptLog;
 import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.dto.UpdateStatusDTO;
 import com.boss.bossscreen.service.impl.MainAccountServiceImpl;
@@ -11,8 +10,6 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import static com.boss.bossscreen.constant.OptTypeConst.UPDATE;
 
 /**
  * @Description
@@ -44,7 +41,6 @@ public class MainAccountController {
      * @param updateStatusDTO 店铺id列表
      * @return {@link Result<>}
      */
-    @OptLog(optType = UPDATE)
     @PutMapping("/updateAccountStatus")
     public Result<?> updateAccountStatus(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
         mainAccountService.updateAccountsStatus(updateStatusDTO);

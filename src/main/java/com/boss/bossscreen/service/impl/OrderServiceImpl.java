@@ -120,6 +120,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                 List<String> object = ShopeeUtil.getOrderList(accessToken, shopId, 0, new ArrayList<>(), start, end);
                 orderSnList.addAll(object);
             }
+
+            if (orderSnList.size() == 0) {
+                continue;
+            }
+
             List<String> newOrderSnList = new ArrayList<>();
             for (int i = 0; i < orderSnList.size(); i += 50) {
                 newOrderSnList.add(String.join(",", orderSnList.subList(i, Math.min(i + 50, orderSnList.size()))));
@@ -225,6 +230,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
     private void getOrderDetail(JSONObject orderObject, List<Order> ordertList, Long shopId, List<Order> updateOrderList) {
         String orderSn = orderObject.getString("order_sn");
+
         Order order = Order.builder()
                 .shopId(shopId)
                 .createTime(orderObject.getLong("create_time"))
@@ -295,6 +301,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                 .actualShippingFee(orderIncomeObject.getBigDecimal("actual_shipping_fee"))
                 .escrowAmount(orderIncomeObject.getBigDecimal("escrow_amount"))
                 .build();
+
+        if (orderIncomeObject.containsKey("order_adjustment")) {
+            JSONObject adjustmentObject = orderIncomeObject.getJSONObject("order_adjustment");
+            escrowInfo.setAdjustmentAmount(adjustmentObject.getBigDecimal("amount"));
+            escrowInfo.setAdjustmentReason(adjustmentObject.getString("adjustment_reason"));
+        }
 
         String redisKey = ESCROW + orderSn;
         CommonUtil.judgeRedis(redisService, redisKey, escrowInfoList, updateEscrowInfoList, escrowInfo, EscrowInfo.class);

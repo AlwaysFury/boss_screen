@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class OperationLogDTO {
 
-    private Integer id;
+    private String type;
 
     private String desc;
 
