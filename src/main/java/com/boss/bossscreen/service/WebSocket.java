@@ -1,5 +1,6 @@
 package com.boss.bossscreen.service;
 
+import com.alibaba.fastjson.JSON;
 import com.boss.bossscreen.vo.Result;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
@@ -28,7 +29,7 @@ public class WebSocket {
         try {
             sessionPool.put(userId, session);
             log.info("【系统 WebSocket】有新的连接，总数为:" + sessionPool.size());
-            this.pushMessage(userId,userId + " 与【系统 WebSocket】连接成功！");
+            this.pushMessage(userId, JSON.toJSONString(Result.ok()));
         } catch (Exception e) {
             e.printStackTrace();
         }

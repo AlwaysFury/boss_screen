@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * @Description
@@ -112,13 +111,10 @@ public class MainAccountServiceImpl extends ServiceImpl<MainAccountDao, MainAcco
     @Override
     public void updateAccountsStatus(UpdateStatusDTO updateStatusDTO) {
         // 更新账号状态
-        List<MainAccount> accountList = updateStatusDTO.getIdList().stream()
-                .map(id -> MainAccount.builder()
-                        .id(id)
-                        .status(updateStatusDTO.getStatus())
-                        .build())
-                .collect(Collectors.toList());
-        this.updateBatchById(accountList);
+        UpdateWrapper<MainAccount> accountUpdateWrapper = new UpdateWrapper<>();
+        accountUpdateWrapper.set("status", updateStatusDTO.getStatus());
+        accountUpdateWrapper.in("account_id", updateStatusDTO.getIdList());
+        mainAccountDao.update(accountUpdateWrapper);
 
         // 更新账号下的店铺状态
         UpdateWrapper<Shop> updateWrapper = new UpdateWrapper<>();

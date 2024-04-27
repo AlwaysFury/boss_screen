@@ -48,9 +48,5 @@ public class ProductController {
         return Result.ok(productService.getProductInfo(itemId));
     }
 
-    // todo 下架
-
-
-
 
 }

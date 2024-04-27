@@ -1,19 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.boss.bossscreen.dao.MainAccountDao">
+<mapper namespace="com.boss.bossscreen.dao.OperationLogDao">
 
-    <select id="accountCount" resultType="java.lang.Integer">
+
+    <select id="logCount" resultType="java.lang.Integer">
         SELECT
             count(*)
         FROM
-            tb_main_account s
+            tb_operation_log as s
         <where>
             s.id is not null
-            <if test="condition.account_id != null">
-                and s.account_id like concat('%',#{condition.account_id},'%')
-            </if>
-            <if test="condition.status != null">
-                and s.status = #{condition.status}
+            <if test="condition.opt_type != null">
+                and s.opt_type = #{condition.opt_type}
             </if>
             <if test="condition.start_time != null">
                 and s.create_time >= #{condition.start_time}
@@ -25,21 +23,19 @@
     </select>
 
 
-    <select id="accountList" resultType="com.boss.bossscreen.vo.MainAccountVO">
+    <select id="logList" resultType="com.boss.bossscreen.vo.OperationLogVO">
         SELECT
-            s.id,
-            s.account_id,
-            s.status,
-            s.create_time
+            id,
+            opt_type,
+            opt_desc,
+            create_time,
+            update_time
         FROM
-            tb_main_account s
+            tb_operation_log as s
         <where>
             s.id is not null
-            <if test="condition.account_id != null">
-                and s.account_id like concat('%',#{condition.account_id},'%')
-            </if>
-            <if test="condition.status != null">
-                and s.status = #{condition.status}
+            <if test="condition.opt_type != null">
+                and s.opt_type = #{condition.opt_type}
             </if>
             <if test="condition.start_time != null">
                 and s.create_time >= #{condition.start_time}
@@ -48,8 +44,7 @@
                 and s.create_time &lt;= #{condition.end_time}
             </if>
         </where>
-        ORDER BY
-            s.id DESC
         LIMIT #{current},#{size}
     </select>
+
 </mapper>

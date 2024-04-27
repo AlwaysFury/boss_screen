@@ -203,7 +203,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                         StringJoiner joiner = new StringJoiner(",");
                         OperationLog operationLog = new OperationLog();
                         operationLog.setOptType(SYSTEM_LOG);
-                        operationLog.setStatus(1);
                         for (int j = 0; j < diffArray.size(); j++) {
                             String key = diffArray.getJSONObject(j).getJSONObject("travelPath").getString("abstractTravelPath");
                             joiner.add(key.substring(key.indexOf(".") + 1, key.length()));

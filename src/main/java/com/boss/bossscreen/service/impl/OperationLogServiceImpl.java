@@ -1,7 +1,6 @@
 package com.boss.bossscreen.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.bossscreen.dao.OperationLogDao;
 import com.boss.bossscreen.dto.ConditionDTO;
@@ -13,11 +12,11 @@ import com.boss.bossscreen.util.BeanCopyUtils;
 import com.boss.bossscreen.util.PageUtils;
 import com.boss.bossscreen.vo.OperationLogVO;
 import com.boss.bossscreen.vo.PageResult;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.boss.bossscreen.constant.OptTypeConst.USER_LOG;
 
@@ -27,19 +26,26 @@ import static com.boss.bossscreen.constant.OptTypeConst.USER_LOG;
 @Service
 public class OperationLogServiceImpl extends ServiceImpl<OperationLogDao, OperationLog> implements OperationLogService {
 
+    @Autowired
+    private OperationLogDao operationLogDao;
+
+
     @Override
     public PageResult<OperationLogVO> optLogList(ConditionDTO condition) {
-        Page<OperationLog> page = new Page<>(PageUtils.getCurrent(), PageUtils.getSize());
-        // 查询日志列表
-        Page<OperationLog> operationLogPage = this.page(page, new LambdaQueryWrapper<OperationLog>().orderByDesc(OperationLog::getCreateTime));
-        List<OperationLogVO> operationLogDTOList = BeanCopyUtils.copyList(operationLogPage.getRecords(), OperationLogVO.class);
-        return new PageResult<>(operationLogDTOList, (int) operationLogPage.getTotal());
+        // 查询分类数量
+        Integer count = operationLogDao.logCount(condition);
+        if (count == 0) {
+            return new PageResult<>();
+        }
+        // 分页查询分类列表
+        List<OperationLogVO> logList = operationLogDao.logList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition);
+        return new PageResult<>(logList, count);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void saveOrUpdateLog(OperationLogDTO operationLogDTO) {
         OperationLog operationLog = BeanCopyUtils.copyObject(operationLogDTO, OperationLog.class);
-        operationLog.setStatus(1);
         operationLog.setOptType(USER_LOG);
         this.saveOrUpdate(operationLog);
     }
@@ -47,15 +53,15 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogDao, Operat
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void updateLogStatus(UpdateStatusDTO updateStatusDTO) {
-        // 更新账号状态
-        List<OperationLog> logList = updateStatusDTO.getIdList().stream()
-                .map(id -> OperationLog.builder()
-                        .id(id)
-                        .status(updateStatusDTO.getStatus())
-                        .build())
-                .collect(Collectors.toList());
-        this.updateBatchById(logList);
+    public void delete(UpdateStatusDTO updateStatusDTO) {
+        operationLogDao.deleteBatchIds(updateStatusDTO.getIdList());
+    }
+
+    @Transactional
+    @Override
+    public OperationLogVO getOptLogById(int id) {
+        OperationLog log = operationLogDao.selectOne(new QueryWrapper<OperationLog>().eq("id", id));
+        return BeanCopyUtils.copyObject(log, OperationLogVO.class);
     }
 
 }

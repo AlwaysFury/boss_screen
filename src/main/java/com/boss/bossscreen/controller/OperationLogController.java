@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
  */
 
 @RestController
-@RequestMapping("/product")
+@RequestMapping("/optLog")
 @Slf4j
 public class OperationLogController {
 
@@ -39,10 +39,18 @@ public class OperationLogController {
     }
 
     /**
+     * 根据 id 查询日志
+     */
+    @GetMapping("/getOptLog")
+    public Result<OperationLogVO> getOptLogById(@RequestParam("log_id") int id) {
+        return Result.ok(operationLogService.getOptLogById(id));
+    }
+
+    /**
      * 保存或更新日志
      * @return
      */
-    @PutMapping("/saveOrUpdateLog")
+    @PostMapping("/saveOrUpdateLog")
     public Result<?> saveOrUpdateLog(@Valid @RequestBody OperationLogDTO operationLogDTO) {
         operationLogService.saveOrUpdateLog(operationLogDTO);
         return Result.ok();
@@ -53,9 +61,9 @@ public class OperationLogController {
      * @param updateStatusDTO
      * @return
      */
-    @DeleteMapping("/deleteLog")
+    @PostMapping("/delete")
     public Result<?> deleteLog(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
-        operationLogService.updateLogStatus(updateStatusDTO);
+        operationLogService.delete(updateStatusDTO);
         return Result.ok();
     }
 }

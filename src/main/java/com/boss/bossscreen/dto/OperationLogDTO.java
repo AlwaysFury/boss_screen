@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 /**
  * @Description
  * @Author 罗宇航
@@ -17,9 +15,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class OperationLogDTO {
 
-    private String type;
+    private Integer id;
 
-    private String desc;
+    private String optDesc;
 
-    private LocalDateTime createTime;
+    private String createTime;
 }

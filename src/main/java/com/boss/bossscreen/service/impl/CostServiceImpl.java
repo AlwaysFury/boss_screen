@@ -1,5 +1,6 @@
 package com.boss.bossscreen.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.bossscreen.dao.CostDao;
 import com.boss.bossscreen.dto.ConditionDTO;
@@ -52,5 +53,12 @@ public class CostServiceImpl extends ServiceImpl<CostDao, Cost> implements CostS
         List<CostVO> costList = costDao.costList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition);
 
         return new PageResult<>(costList, count);
+    }
+
+    @Override
+    public CostVO getCostById(int id) {
+        Cost cost = this.getOne(new QueryWrapper<Cost>().eq("id", id));
+
+        return BeanCopyUtils.copyObject(cost, CostVO.class);
     }
 }

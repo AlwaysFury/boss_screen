@@ -8,8 +8,24 @@
         FROM
             tb_order as s
         <where>
+            s.id is not null
             <if test="condition.order_sn != null">
-                s.order_sn like concat('%',#{condition.order_sn},'%')
+                and s.order_sn = #{condition.order_sn}
+            </if>
+            <if test="condition.order_status != null">
+                and s.status = #{condition.order_status}
+            </if>
+            <if test="condition.package_number != null">
+                and s.package_number = #{condition.package_number}
+            </if>
+            <if test="condition.shop_id != null">
+                and s.shop_id = #{condition.shop_id}
+            </if>
+            <if test="condition.start_time != null">
+                and s.create_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                and s.create_time &lt;= #{condition.end_time}
             </if>
         </where>
     </select>
@@ -21,12 +37,29 @@
             order_sn,
             package_number,
             status,
-            shop_id
+            shop_id,
+            create_time
         FROM
             tb_order as s
         <where>
+            s.id is not null
             <if test="condition.order_sn != null">
-                s.order_sn like concat('%',#{condition.order_sn},'%')
+                and s.order_sn = #{condition.order_sn}
+            </if>
+            <if test="condition.order_status != null">
+                and s.status = #{condition.order_status}
+            </if>
+            <if test="condition.package_number != null">
+                and s.package_number = #{condition.package_number}
+            </if>
+            <if test="condition.shop_id != null">
+                and s.shop_id = #{condition.shop_id}
+            </if>
+            <if test="condition.start_time != null">
+                and s.create_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                and s.create_time &lt;= #{condition.end_time}
             </if>
         </where>
         LIMIT #{current},#{size}

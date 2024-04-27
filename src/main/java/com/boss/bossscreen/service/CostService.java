@@ -21,4 +21,6 @@ public interface CostService extends IService<Cost>  {
     void deleteCost(List<Integer> ids);
 
     PageResult<CostVO> costListByCondition(ConditionDTO condition);
+
+    CostVO getCostById(int id);
 }

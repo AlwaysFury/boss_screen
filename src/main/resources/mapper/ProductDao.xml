@@ -9,8 +9,27 @@
         FROM
             tb_product s
         <where>
+            s.id is not null
             <if test="condition.item_id != null">
-                s.item_id like concat('%',#{condition.item_id},'%')
+                and s.item_id = #{condition.item_id}
+            </if>
+            <if test="condition.item_sku != null">
+                and s.item_sku = #{condition.item_sku}
+            </if>
+            <if test="condition.item_status != null">
+                and s.status = #{condition.item_status}
+            </if>
+            <if test="condition.category_id != null">
+                and s.category_id = #{condition.category_id}
+            </if>
+            <if test="condition.shop_id != null">
+                and s.shop_id = #{condition.shop_id}
+            </if>
+            <if test="condition.start_time != null">
+                and s.create_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                and s.create_time &lt;= #{condition.end_time}
             </if>
         </where>
     </select>
@@ -31,8 +50,27 @@
         FROM
             tb_product s
         <where>
+            s.id is not null
             <if test="condition.item_id != null">
-                s.item_id like concat('%',#{condition.item_id},'%')
+                and s.item_id = #{condition.item_id}
+            </if>
+            <if test="condition.item_sku != null">
+                and s.item_sku = #{condition.item_sku}
+            </if>
+            <if test="condition.item_status != null">
+                and s.status = #{condition.item_status}
+            </if>
+            <if test="condition.category_id != null">
+                and s.category_id = #{condition.category_id}
+            </if>
+            <if test="condition.shop_id != null">
+                and s.shop_id = #{condition.shop_id}
+            </if>
+            <if test="condition.start_time != null">
+                and s.create_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                and s.create_time &lt;= #{condition.end_time}
             </if>
         </where>
         LIMIT #{current},#{size}

@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static com.boss.bossscreen.constant.RedisPrefixConst.SHOP_TOKEN;
 
@@ -81,13 +80,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopDao, Shop> implements ShopS
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void updateShopsStatus(UpdateStatusDTO updateStatusDTO) {
-        List<Shop> shopList = updateStatusDTO.getIdList().stream()
-                .map(id -> Shop.builder()
-                        .id(id)
-                        .status(updateStatusDTO.getStatus())
-                        .build())
-                .collect(Collectors.toList());
-        this.updateBatchById(shopList);
+        // 更新账号下的店铺状态
+        UpdateWrapper<Shop> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.set("status", updateStatusDTO.getStatus());
+        updateWrapper.in("shop_id", updateStatusDTO.getIdList());
+        shopDao.update(updateWrapper);
     }
 
     @Transactional(rollbackFor = Exception.class)

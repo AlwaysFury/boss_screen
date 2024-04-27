@@ -2,6 +2,7 @@ package com.boss.bossscreen.controller;
 
 import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.dto.CostDTO;
+import com.boss.bossscreen.dto.UpdateStatusDTO;
 import com.boss.bossscreen.service.impl.CostServiceImpl;
 import com.boss.bossscreen.vo.CostVO;
 import com.boss.bossscreen.vo.PageResult;
@@ -36,7 +37,7 @@ public class CostController {
      * @return
      */
     @GetMapping("/costList")
-    public Result<PageResult<CostVO>> accountList(ConditionDTO condition) {
+    public Result<PageResult<CostVO>> costList(ConditionDTO condition) {
         return Result.ok(costService.costListByCondition(condition));
     }
 
@@ -46,16 +47,21 @@ public class CostController {
      * @param ids 成本 id 列表
      * @return {@link Result<>}
      */
-    @DeleteMapping("/delete")
-    public Result<?> updateAccountStatus(List<Integer> ids) {
-        costService.deleteCost(ids);
+    @PostMapping("/delete")
+    public Result<?> updateAccountStatus(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
+        costService.deleteCost(updateStatusDTO.getIdList());
         return Result.ok();
+    }
+
+    @GetMapping("/getCostInfo")
+    public Result<CostVO> getCostById(@RequestParam("cost_id") int id) {
+        return Result.ok(costService.getCostById(id));
     }
 
     /**
      * 插入或更新
      */
-    @PutMapping("/saveOrUpdate")
+    @PostMapping("/saveOrUpdate")
     public Result<?> saveOrUpdateOrder(@Valid @RequestBody CostDTO costDTO) {
         costService.saveOrUpdateCost(costDTO);
         return Result.ok();

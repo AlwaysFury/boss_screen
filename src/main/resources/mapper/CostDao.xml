@@ -9,8 +9,14 @@
         FROM
             tb_cost as s
         <where>
-            <if test="condition.status != null">
-                s.status = #{condition.status}
+            <if test="condition.cost_type != null">
+                s.type = #{condition.cost_type}
+            </if>
+            <if test="condition.start_time != null">
+                s.start_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                s.end_time = #{condition.end_time}
             </if>
         </where>
     </select>
@@ -22,16 +28,16 @@
             name,
             type,
             price,
-            startTime,
-            endTime
+            start_time,
+            end_time
         FROM
             tb_cost as s
         <where>
-            <if test="condition.startTime != null">
-                s.start_time >= #{condition.startTime}
+            <if test="condition.start_time != null">
+                s.start_time >= #{condition.start_time}
             </if>
-            <if test="condition.endTime != null">
-                s.end_time = #{condition.endTime}
+            <if test="condition.end_time != null">
+                s.end_time = #{condition.end_time}
             </if>
         </where>
         LIMIT #{current},#{size}

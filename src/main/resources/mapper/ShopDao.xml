@@ -9,8 +9,24 @@
         FROM
             tb_shop as s
         <where>
+            id is not null
             <if test="condition.shop_id != null">
-                s.shop_id = #{condition.shop_id}
+                and s.shop_id = #{condition.shop_id}
+            </if>
+            <if test="condition.shop_name != null">
+                and s.name = #{condition.shop_name}
+            </if>
+            <if test="condition.status != null">
+                and s.status = #{condition.status}
+            </if>
+            <if test="condition.start_time != null">
+                and s.create_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                and s.create_time &lt;= #{condition.end_time}
+            </if>
+            <if test="condition.account_id != null">
+                and s.account_id = #{condition.account_id}
             </if>
         </where>
     </select>
@@ -21,12 +37,26 @@
             id,
             shop_id,
             status,
+            create_time,
             account_id
         FROM
             tb_shop as s
         <where>
+            id is not null
             <if test="condition.shop_id != null">
-                s.shop_id = #{condition.shop_id}
+                and s.shop_id = #{condition.shop_id}
+            </if>
+            <if test="condition.shop_name != null">
+                and s.name = #{condition.shop_name}
+            </if>
+            <if test="condition.status != null">
+                and s.status = #{condition.status}
+            </if>
+            <if test="condition.start_time != null">
+                and s.create_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                and s.create_time &lt;= #{condition.end_time}
             </if>
         </where>
         LIMIT #{current},#{size}

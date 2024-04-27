@@ -26,4 +26,8 @@ public class ShopVO {
 
     private Integer status;
 
+    private String createTime;
+
+    private long accountId;
+
 }

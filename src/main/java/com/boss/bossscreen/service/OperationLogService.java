@@ -32,6 +32,8 @@ public interface OperationLogService extends IService<OperationLog> {
      * 批量逻辑删除
      * @param updateStatusDTO
      */
-    void updateLogStatus(UpdateStatusDTO updateStatusDTO);
+    void delete(UpdateStatusDTO updateStatusDTO);
+
+    OperationLogVO getOptLogById(int id);
 
 }

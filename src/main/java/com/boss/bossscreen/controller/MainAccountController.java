@@ -41,7 +41,7 @@ public class MainAccountController {
      * @param updateStatusDTO 店铺id列表
      * @return {@link Result<>}
      */
-    @PutMapping("/updateAccountStatus")
+    @PostMapping("/updateAccountStatus")
     public Result<?> updateAccountStatus(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
         mainAccountService.updateAccountsStatus(updateStatusDTO);
         return Result.ok();

@@ -54,7 +54,7 @@ public class ProductInfoVO {
     /**
      * 等级
      */
-    private String grade;
+//    private String grade;
 
     /**
      * 所属店铺 id

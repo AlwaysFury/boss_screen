@@ -19,7 +19,9 @@ public class MainAccountVO {
 
     private Integer id;
 
-    private long mainAccountId;
+    private long accountId;
 
     private Integer status;
+
+    private String createTime;
 }

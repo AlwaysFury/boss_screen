@@ -107,7 +107,6 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
                         StringJoiner joiner = new StringJoiner(",");
                         OperationLog operationLog = new OperationLog();
                         operationLog.setOptType(SYSTEM_LOG);
-                        operationLog.setStatus(1);
                         for (int j = 0; j < diffArray.size(); j++) {
                             String key = diffArray.getJSONObject(i).getJSONObject("travelPath").getString("abstractTravelPath");
                             joiner.add(key.substring(key.indexOf(".") + 1, key.length()));
