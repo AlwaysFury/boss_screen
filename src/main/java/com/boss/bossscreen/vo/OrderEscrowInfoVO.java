@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -24,7 +25,7 @@ public class OrderEscrowInfoVO {
     /**
      * 创建时间
      */
-    private Long createTime;
+    private String createTime;
 
     /**
      * 订单号
@@ -34,7 +35,7 @@ public class OrderEscrowInfoVO {
     /**
      * 运单号
      */
-    private String packageNumber;
+    private String trackingNumber;
 
     /**
      * 状态
@@ -74,7 +75,7 @@ public class OrderEscrowInfoVO {
     /**
      * 付款时间
      */
-    private Long payTime;
+    private LocalDateTime payTime;
 
     /**
      * 买家最终付款金额

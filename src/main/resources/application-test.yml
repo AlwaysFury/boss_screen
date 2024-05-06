@@ -10,9 +10,9 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://120.25.154.29:3306/boss_screen?serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    username: alwaysfury
-    password: Lyh5201314!
+    url: jdbc:mysql://localhost:3306/boss_screen?serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    username: root
+    password: lyh.5201314
     hikari:
       minimum-idle: 5
       # 空闲连接存活最大时间，默认600000（10分钟）
@@ -53,8 +53,5 @@ shopeeApi:
   host: https://partner.shopeemobile.com/
   partner_id: 2007608
   partner_key: 636a44756841535751715058756d4173505a5a63495a766f515372447a664a43
-  shop_redirect_url: http://localhost:8081/shopee/saveShopToken
-  account_redirect_url: http://localhost:8081/shopee/saveAccountToken
-
-refreshOrder:
-  startTime: 2024-01-01 00:00:00
+  shop_redirect_url: http://localhost:8081/shopee/saveOrUpdateShop
+  account_redirect_url: http://localhost:8081/shopee/saveOrUpdateAccount

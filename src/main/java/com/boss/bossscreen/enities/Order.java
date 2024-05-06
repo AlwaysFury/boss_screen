@@ -8,8 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
 /**
  * @Description
  * @Author 罗宇航
@@ -44,7 +42,7 @@ public class Order {
     /**
      * 运单号
      */
-    private String packageNumber;
+    private String trackingNumber;
 
     /**
      * 所属店铺

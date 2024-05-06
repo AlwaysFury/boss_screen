@@ -29,4 +29,6 @@ public class CostVO {
     private String startTime;
 
     private String endTime;
+
+    private double exchangeRate;
 }

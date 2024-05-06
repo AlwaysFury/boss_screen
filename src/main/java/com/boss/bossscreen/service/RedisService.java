@@ -17,6 +17,12 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("all")
 public interface RedisService {
     /**
+     * 获取指定 key
+     */
+    Set<String> keys(String key);
+
+
+    /**
      * 保存属性
      *
      * @param key   key值

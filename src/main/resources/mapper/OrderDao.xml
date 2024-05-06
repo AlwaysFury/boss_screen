@@ -31,7 +31,7 @@
     </select>
 
 
-    <select id="orderList" resultType="com.boss.bossscreen.vo.OrderEscrowVO">
+    <select id="orderList" resultType="com.boss.bossscreen.enities.Order">
         SELECT
             id,
             order_sn,

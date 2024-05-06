@@ -23,4 +23,6 @@ public interface CostService extends IService<Cost>  {
     PageResult<CostVO> costListByCondition(ConditionDTO condition);
 
     CostVO getCostById(int id);
+
+    List<String> getCostType();
 }

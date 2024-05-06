@@ -12,10 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @Description
@@ -72,15 +69,7 @@ public class CostController {
      * @return
      */
     @GetMapping("/costTypeSelect")
-    public Result<PageResult<Map<String, String>>> costTypeSelect() {
-        Map<String, String> typeMap = new HashMap<>();
-        typeMap.put("tshirt", "聚酯纤维");
-        typeMap.put("cotton", "T恤");
-        typeMap.put("short", "短款");
-        typeMap.put("hoodie", "卫衣");
-        typeMap.put("finish", "成品");
-        List<Map<String, String>> list = new ArrayList<>();
-        list.add(typeMap);
-        return Result.ok(new PageResult<>(list, 5));
+    public Result<List<String>> costTypeSelect() {
+        return Result.ok(costService.getCostType());
     }
 }

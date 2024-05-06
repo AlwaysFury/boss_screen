@@ -15,7 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import static com.boss.bossscreen.constant.RedisPrefixConst.CLOTHES_TYPE;
 
 /**
  * 操作日志服务
@@ -28,6 +32,9 @@ public class CostServiceImpl extends ServiceImpl<CostDao, Cost> implements CostS
 
     @Autowired
     private CostDao costDao;
+
+    @Autowired
+    private RedisServiceImpl redisService;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -60,5 +67,15 @@ public class CostServiceImpl extends ServiceImpl<CostDao, Cost> implements CostS
         Cost cost = this.getOne(new QueryWrapper<Cost>().eq("id", id));
 
         return BeanCopyUtils.copyObject(cost, CostVO.class);
+    }
+
+    @Override
+    public List<String> getCostType() {
+        Set<String> keys = redisService.keys(CLOTHES_TYPE + "*");
+        List<String> types = new ArrayList<>();
+        for (String key : keys) {
+            types.add(key.substring(key.indexOf(":") + 1, key.length()));
+        }
+        return types;
     }
 }

@@ -5,14 +5,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.boss.bossscreen.dao.OperationLogDao;
-import com.boss.bossscreen.dao.ProductDao;
-import com.boss.bossscreen.dao.ShopDao;
+import com.boss.bossscreen.dao.*;
 import com.boss.bossscreen.dto.ConditionDTO;
-import com.boss.bossscreen.enities.Model;
-import com.boss.bossscreen.enities.OperationLog;
-import com.boss.bossscreen.enities.Product;
-import com.boss.bossscreen.enities.Shop;
+import com.boss.bossscreen.enities.*;
 import com.boss.bossscreen.service.ProductService;
 import com.boss.bossscreen.util.BeanCopyUtils;
 import com.boss.bossscreen.util.CommonUtil;
@@ -27,9 +22,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import static com.boss.bossscreen.constant.OptTypeConst.SYSTEM_LOG;
 import static com.boss.bossscreen.constant.RedisPrefixConst.PRODUCT_ITEM;
@@ -51,6 +48,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
     private ProductDao productDao;
 
     @Autowired
+    private OrderItemDao orderItemDao;
+
+    @Autowired
     private ModelServiceImpl modelService;
 
     @Autowired
@@ -61,6 +61,18 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
     @Autowired
     private OperationLogDao operationLogDao;
+
+
+    private static final HashMap<String, String> productStatusMap = new HashMap<>();
+
+    static {
+        productStatusMap.put("NORMAL", "已上架");
+        productStatusMap.put("BANNED", "禁止");
+        productStatusMap.put("UNLIST", "未上架");
+        productStatusMap.put("SELLER_DELETE", "卖家删除");
+        productStatusMap.put("SHOPEE_DELETE", "平台删除");
+        productStatusMap.put("REVIEWING", "审查中");
+    }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -185,7 +197,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                         .status(itemObject.getString("item_status"))
                         .build();
 
-
                 imgIdArray = itemObject.getJSONObject("image").getJSONArray("image_id_list");
                 if (imgIdArray.size() > 0) {
                     product.setMainImgId(imgIdArray.getString(0));
@@ -225,7 +236,17 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
             return new PageResult<>();
         }
         // 分页查询分类列表
-        List<ProductVO> productList = productDao.productList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition);
+        List<ProductVO> productList = productDao.productList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition)
+                .stream().map(product -> {
+                    ProductVO productVO = BeanCopyUtils.copyObject(product, ProductVO.class);
+                    productVO.setCreateTime(CommonUtil.timestampToLocalDateTime(product.getCreateTime()));
+                    productVO.setStatus(productStatusMap.get(product.getStatus()));
+
+                    int salesVolume = Math.toIntExact(orderItemDao.selectCount(new QueryWrapper<OrderItem>().eq("item_id", product.getItemId())));
+                    productVO.setSalesVolume(salesVolume);
+
+                    return productVO;
+                }).collect(Collectors.toList());
         return new PageResult<>(productList, count);
     }
 
@@ -235,6 +256,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         Product product = productDao.selectOne(new QueryWrapper<Product>().eq("item_id", itemId));
 
         ProductInfoVO productInfoVO = BeanCopyUtils.copyObject(product, ProductInfoVO.class);
+
+        productInfoVO.setCreateTime(CommonUtil.timestampToLocalDateTime(product.getCreateTime()));
+        productInfoVO.setStatus(productStatusMap.get(product.getStatus()));
 
         productInfoVO.setModelVOList(modelService.getModelVOListByItemId(itemId));
 

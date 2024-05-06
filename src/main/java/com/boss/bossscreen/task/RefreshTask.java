@@ -6,6 +6,7 @@ import com.boss.bossscreen.service.impl.ReturnOrderServiceImpl;
 import com.boss.bossscreen.service.impl.ShopServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
@@ -39,25 +40,25 @@ public class RefreshTask {
      * 月（0~11）
      * 周几（ 可填1-7 或 SUN/MON/TUE/WED/THU/FRI/SAT）
      */
-//    @Scheduled(cron = "0 0 */2 * * ?")
+    @Scheduled(cron = "0 0 */2 * * ?")
     public void refreshToken() {
         log.info("======开始刷新 token");
         shopService.refreshShopToken();
     }
 
-//    @Scheduled(cron = "0 */10 * * * ?")
+    @Scheduled(cron = "0 */1 * * * ?")
     public void refreshProduct() {
         log.info("======开始刷新产品信息");
         productService.saveOrUpdateProduct();
     }
 
-//    @Scheduled(cron = "0 */10 * * * ?")
+    @Scheduled(cron = "0 */30 * * * ?")
     public void refreshOrder() {
         log.info("======开始刷新订单信息");
         orderService.saveOrUpdateOrder("2024-01-01 00:00:00");
     }
 
-//    @Scheduled(cron = "0 */10 * * * ?")
+    @Scheduled(cron = "0 */30 * * * ?")
     public void refreshReturnOrder() {
         log.info("======开始刷新退单信息");
         returnOrderService.saveOrUpdateReturnOrder();

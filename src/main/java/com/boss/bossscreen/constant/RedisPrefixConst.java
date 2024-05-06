@@ -26,4 +26,6 @@ public class RedisPrefixConst {
 
     public static final String RETURN_ORDER_ITEM_MODEL = "return:order:item:model:";
 
+    public static final String CLOTHES_TYPE = "clothes_type:";
+
 }

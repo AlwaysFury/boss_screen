@@ -10,6 +10,7 @@ import me.codeleep.jsondiff.core.config.JsonComparedOption;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
@@ -20,15 +21,19 @@ import java.util.Objects;
  */
 public class CommonUtil {
 
-    public static LocalDateTime timestampToLocalDateTime(long timestamp) {
+    public static String timestampToLocalDateTime(long timestamp) {
         // 使用Instant从时间戳创建时间点
         Instant instant = Instant.ofEpochSecond(timestamp);
 
         // 使用ZoneId定义时区（可以根据需要选择不同的时区）
         ZoneId zoneId = ZoneId.of("Asia/Shanghai");
 
+        LocalDateTime dateTime = instant.atZone(zoneId).toLocalDateTime();
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
         // 将Instant转换为LocalDateTime
-        return instant.atZone(zoneId).toLocalDateTime();
+        return dateTime.format(formatter);
     }
 
     public static <T> String judgeRedis(RedisServiceImpl redisService, String redisKey, List<T> insertList, List<T> updateList, T t, Class<T> clazz) {
@@ -57,8 +62,8 @@ public class CommonUtil {
                         .option(jsonComparedOption)
                         .detectDiff(newJsonStr, oldJsonStr);
                 result = JSON.toJSONString(jsonCompareResult);
-                System.out.println("newJsonStr====>"+newJsonStr);
-                System.out.println("oldJsonStr====>"+oldJsonStr);
+//                System.out.println("newJsonStr====>"+newJsonStr);
+//                System.out.println("oldJsonStr====>"+oldJsonStr);
                 redisService.set(redisKey, newJsonStr);
                 updateList.add(JSON.parseObject(redisResult.toString(), clazz));
             }

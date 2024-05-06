@@ -1,10 +1,7 @@
 package com.boss.bossscreen;
 
 import com.alibaba.fastjson.JSONObject;
-import com.boss.bossscreen.service.impl.OrderServiceImpl;
-import com.boss.bossscreen.service.impl.ProductServiceImpl;
-import com.boss.bossscreen.service.impl.ReturnOrderServiceImpl;
-import com.boss.bossscreen.service.impl.ShopServiceImpl;
+import com.boss.bossscreen.service.impl.*;
 import com.boss.bossscreen.util.ShopeeUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +15,9 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import static com.boss.bossscreen.constant.RedisPrefixConst.CLOTHES_TYPE;
 
 @SpringBootTest
 class BossScreenApplicationTests {
@@ -145,7 +145,7 @@ class BossScreenApplicationTests {
 
     @Test
     void getOrderDetail() {
-        JSONObject object = ShopeeUtil.getOrderDetail("4b64616e46486f63654369776f694247", 1017169304, "240409APT11HFB");
+        JSONObject object = ShopeeUtil.getOrderDetail("5a576f4a704979657953745051435149", 1017169304, "2405029EFSMHJ1");
         System.out.println(object);
     }
 
@@ -173,13 +173,13 @@ class BossScreenApplicationTests {
 
     @Test
     void getEscrowDetailTest() {
-        JSONObject object = ShopeeUtil.getEscrowDetail("4b456547676671597a5346424f5a6b53", 1017169304, "240102SQ95FRB7");
+        JSONObject object = ShopeeUtil.getEscrowDetail("5a576f4a704979657953745051435149", 1017169304, "2405029EFSMHJ1");
         System.out.println(object);
     }
 
     @Test
     void getTrackingNumberTest() {
-        JSONObject object = ShopeeUtil.getTrackingNumber("42756d4753794544747a595673537671", 1017169304, "240405UHE0VN3H");
+        JSONObject object = ShopeeUtil.getTrackingNumber("5a576f4a704979657953745051435149", 1017169304, "2405029EFSMHJ1");
         System.out.println(object);
     }
 
@@ -208,6 +208,17 @@ class BossScreenApplicationTests {
     @Test
     void saveOrUpdateReturnOrderTest() {
         returnOrderService.saveOrUpdateReturnOrder();
+    }
+
+    @Autowired
+    private RedisServiceImpl redisService;
+    @Test
+    void getCostType() {
+        Set<String> keys = redisService.keys(CLOTHES_TYPE + "*");
+        List<String> types = new ArrayList<>();
+        for (String key : keys) {
+            System.out.println(key.substring(key.indexOf(CLOTHES_TYPE) + 1, key.length()));
+        }
     }
 
 }

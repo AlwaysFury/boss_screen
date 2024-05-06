@@ -75,4 +75,9 @@ public class ModelVO {
      * 图片 url
      */
     private String imageUrl;
+
+    /**
+     * 销量
+     */
+    private int salesVolume;
 }

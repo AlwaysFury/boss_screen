@@ -31,6 +31,11 @@ public class RedisServiceImpl implements RedisService {
     private RedisTemplate<String, Object> redisTemplate;
 
     @Override
+    public Set<String> keys(String key) {
+        return redisTemplate.keys(key);
+    }
+
+    @Override
     public void set(String key, Object value, long time, TimeUnit unit) {
         redisTemplate.opsForValue().set(key, value, time, unit);
     }

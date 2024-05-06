@@ -62,5 +62,10 @@ public class ProductVO {
     /**
      * 创建时间
      */
-    private Long createTime;
+    private String createTime;
+
+    /**
+     * 总销量
+     */
+    private int salesVolume;
 }

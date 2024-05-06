@@ -10,9 +10,9 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/boss_screen?serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    username: root
-    password: lyh.5201314
+    url: jdbc:mysql://120.25.154.29:3306/boss_screen?serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    username: alwaysfury
+    password: Lyh5201314!
     hikari:
       minimum-idle: 5
       # 空闲连接存活最大时间，默认600000（10分钟）
@@ -32,8 +32,9 @@ spring:
   data:
     redis:
       database: 1
-      host: 127.0.0.1
+      host: 120.25.154.29
       port: 6379
+      password: Lyh.5201314!
       lettuce:
         pool:
           max-active: 8

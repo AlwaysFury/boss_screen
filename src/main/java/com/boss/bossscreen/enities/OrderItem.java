@@ -45,7 +45,7 @@ public class OrderItem {
     /**
      * 运单号
      */
-    private String packageNumber;
+    private String trackingNumber;
 
     /**
      * 产品 id

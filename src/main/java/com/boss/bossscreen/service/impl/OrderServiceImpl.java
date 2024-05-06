@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
@@ -77,6 +78,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
     @Autowired
     private RedisServiceImpl redisService;
+
+    private static final HashMap<String, String> orderStatusMap = new HashMap<>();
+
+    static {
+        orderStatusMap.put("UNPAID", "未支付");
+        orderStatusMap.put("READY_TO_SHIP", "待出货");
+        orderStatusMap.put("PROCESSED", "已处理");
+        orderStatusMap.put("SHIPPED", "运送中");
+        orderStatusMap.put("COMPLETED", "已完成");
+        orderStatusMap.put("IN_CANCEL", "取消中");
+        orderStatusMap.put("CANCELLED", "已取消");
+        orderStatusMap.put("INVOICE_PENDING", "等待退款");
+    }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -245,9 +259,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                 .buyerCancelReason(orderObject.getString("buyer_cancel_reason"))
                 .build();
 
-        JSONArray packageArray = orderObject.getJSONArray("package_list");
-        if (packageArray != null && packageArray.size() > 0) {
-            order.setPackageNumber(packageArray.getJSONObject(0).getString("package_number"));
+//        JSONArray packageArray = orderObject.getJSONArray("package_list");
+//        if (packageArray != null && packageArray.size() > 0) {
+//            order.setTrackingNumber(packageArray.getJSONObject(0).getString("package_number"));
+//        }
+        if (!"UNPAID".equals(order.getStatus()) && !"READY_TO_SHIP".equals(order.getStatus()) && !"PROCESSED".equals(order.getStatus()) && !"CANCELLED".equals(order.getStatus())) {
+            String token = shopService.getAccessTokenByShopId(String.valueOf(shopId));
+            String trackingNumber = ShopeeUtil.getTrackingNumber(token, shopId, orderSn).getJSONObject("response").getString("tracking_number");
+            order.setTrackingNumber(trackingNumber);
         }
 
         CommonUtil.judgeRedis(redisService, ORDER + orderSn, ordertList,updateOrderList, order, Order.class);
@@ -276,10 +295,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                     .promotionType(itemObject.getString("promotion_type"))
                     .build();
 
-            JSONArray packageArray = orderObject.getJSONArray("package_list");
-            if (packageArray != null && packageArray.size() > 0) {
-                orderItem.setPackageNumber(packageArray.getJSONObject(0).getString("package_number"));
-            }
+//            JSONArray packageArray = orderObject.getJSONArray("package_list");
+//            if (packageArray != null && packageArray.size() > 0) {
+//                orderItem.setPackageNumber(packageArray.getJSONObject(0).getString("package_number"));
+//            }
 
             JSONObject imageInfoArray = itemObject.getJSONObject("image_info");
             if (imageInfoArray != null && imageInfoArray.size() > 0) {
@@ -348,8 +367,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             return new PageResult<>();
         }
         // 分页查询分类列表
-        List<OrderEscrowVO> orderEscrowVOList = orderDao.orderList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition).stream().map(object -> {
-            List<OrderItem> orderItemList = orderItemDao.selectList(new QueryWrapper<OrderItem>().eq("order_sn", object.getOrderSn()));
+        List<OrderEscrowVO> orderEscrowVOList = orderDao.orderList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition).stream().map(order -> {
+            OrderEscrowVO orderEscrowVO = BeanCopyUtils.copyObject(order, OrderEscrowVO.class);
+            orderEscrowVO.setCreateTime(CommonUtil.timestampToLocalDateTime(order.getCreateTime()));
+            orderEscrowVO.setStatus(orderStatusMap.get(order.getStatus()));
+
+            List<OrderItem> orderItemList = orderItemDao.selectList(new QueryWrapper<OrderItem>().eq("order_sn", order.getOrderSn()));
             // T恤数量
             int tShirtCount = 0;
             // 双面数量
@@ -390,14 +413,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                     doubleCount += 1;
                 }
             }
-            object.setTShirtCount(tShirtCount);
-            object.setDoubleCount(doubleCount);
-            object.setShortCount(shortCount);
-            object.setHoodieCount(hoodieCount);
-            object.setFinishCount(finishCount);
-            object.setFiberCount(fiberCount);
+            orderEscrowVO.setTShirtCount(tShirtCount);
+            orderEscrowVO.setDoubleCount(doubleCount);
+            orderEscrowVO.setShortCount(shortCount);
+            orderEscrowVO.setHoodieCount(hoodieCount);
+            orderEscrowVO.setFinishCount(finishCount);
+            orderEscrowVO.setFiberCount(fiberCount);
 
-            return object;
+            return orderEscrowVO;
         }).collect(Collectors.toList());
         return new PageResult<>(orderEscrowVOList, count);
     }
@@ -407,6 +430,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         Order order = orderDao.selectOne(new QueryWrapper<Order>().eq("order_sn", orderSn));
 
         OrderEscrowInfoVO orderEscrowInfoVO = BeanCopyUtils.copyObject(order, OrderEscrowInfoVO.class);
+        orderEscrowInfoVO.setCreateTime(CommonUtil.timestampToLocalDateTime(order.getCreateTime()));
+        orderEscrowInfoVO.setStatus(orderStatusMap.get(order.getStatus()));
 
         EscrowInfo escrowInfo = escrowInfoDao.selectOne(new QueryWrapper<EscrowInfo>().eq("order_sn", orderSn));
         if (escrowInfo != null) {
@@ -433,7 +458,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                         orderEscrowItemVO.setActivityType(escrowItem.getActivityType());
                         orderEscrowItemVO.setCount(escrowItem.getCount());
 
-                        BigDecimal cost = getCostSingleByType(orderItem.getModelSku().toLowerCase(), orderEscrowInfoVO.getCreateTime()).multiply(BigDecimal.valueOf(orderEscrowItemVO.getCount()));
+                        BigDecimal cost = getCostSingleByType(orderItem.getModelSku().toLowerCase(), orderItem.getCreateTime()).multiply(BigDecimal.valueOf(orderEscrowItemVO.getCount()));
                         BigDecimal price = orderEscrowItemVO.getSellerDiscount().multiply(BigDecimal.valueOf(orderEscrowItemVO.getCount()));
                         BigDecimal profit = price.subtract(cost);
                         float profitRate = profit.divide(price).floatValue();
@@ -461,8 +486,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         return matcher.matches();
     }
 
-    private BigDecimal getCostSingleByType(String modelSku, long orderCreateTime) {
-        LocalDateTime localDateTime = CommonUtil.timestampToLocalDateTime(orderCreateTime);
+    private BigDecimal getCostSingleByType(String modelSku, LocalDateTime orderCreateTime) {
         BigDecimal costSingle = new BigDecimal(0.00);
         QueryWrapper<Cost> costQueryWrapper = new QueryWrapper<>();
         costQueryWrapper.select("price", "start_time", "end_time");
@@ -481,7 +505,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         }
         List<Cost> costList = costDao.selectList(costQueryWrapper);
         for (Cost cost : costList) {
-            if (localDateTime.isBefore(cost.getCreateTime()) && localDateTime.isAfter(cost.getEndTime())) {
+            if (orderCreateTime.isBefore(cost.getCreateTime()) && orderCreateTime.isAfter(cost.getEndTime())) {
                 costSingle = cost.getPrice();
                 break;
             }

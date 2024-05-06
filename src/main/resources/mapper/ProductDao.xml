@@ -35,7 +35,7 @@
     </select>
 
 
-    <select id="productList" resultType="com.boss.bossscreen.vo.ProductVO">
+    <select id="productList" resultType="com.boss.bossscreen.enities.Product">
         SELECT
             id,
             item_id,

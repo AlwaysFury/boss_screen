@@ -21,7 +21,7 @@ public class OrderEscrowVO {
     /**
      * 创建时间
      */
-    private Long createTime;
+    private String createTime;
 
     /**
      * 订单号
@@ -31,7 +31,7 @@ public class OrderEscrowVO {
     /**
      * 运单号
      */
-    private String packageNumber;
+    private String trackingNumber;
 
     /**
      * 状态

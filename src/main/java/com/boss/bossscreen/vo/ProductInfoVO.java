@@ -24,7 +24,7 @@ public class ProductInfoVO {
     /**
      * 创建时间
      */
-    private Long createTime;
+    private String createTime;
 
     /**
      * 修改时间

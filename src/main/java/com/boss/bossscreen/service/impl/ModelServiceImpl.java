@@ -7,8 +7,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.bossscreen.dao.ModelDao;
 import com.boss.bossscreen.dao.OperationLogDao;
+import com.boss.bossscreen.dao.OrderItemDao;
 import com.boss.bossscreen.enities.Model;
 import com.boss.bossscreen.enities.OperationLog;
+import com.boss.bossscreen.enities.OrderItem;
 import com.boss.bossscreen.service.ModelService;
 import com.boss.bossscreen.util.BeanCopyUtils;
 import com.boss.bossscreen.util.CommonUtil;
@@ -23,6 +25,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import static com.boss.bossscreen.constant.OptTypeConst.SYSTEM_LOG;
+import static com.boss.bossscreen.constant.RedisPrefixConst.CLOTHES_TYPE;
 import static com.boss.bossscreen.constant.RedisPrefixConst.PRODUCT_ITEM_MODEL;
 
 /**
@@ -40,6 +43,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
 
     @Autowired
     private OperationLogDao operationLogDao;
+
+    @Autowired
+    private OrderItemDao orderItemDao;
 
     @Autowired
     private RedisServiceImpl redisService;
@@ -76,10 +82,11 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
 
                 String modelName = modelObject.getString("model_name");
                 long modelId = modelObject.getLong("model_id");
+                String modelSku = modelObject.getString("model_sku");
                 Model model = Model.builder()
                         .modelId(modelId)
                         .modelName(modelName)
-                        .modelSku(modelObject.getString("model_sku"))
+                        .modelSku(modelSku)
                         .status(modelObject.getString("model_status"))
                         .currentPrice(priceInfoObject.getBigDecimal("current_price"))
                         .originalPrice(priceInfoObject.getBigDecimal("original_price"))
@@ -115,6 +122,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
                         operationLogDao.insert(operationLog);
                     }
                 }
+
+                // 统计衣服种类
+                saveClothesType(modelSku.toLowerCase());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -125,9 +135,35 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
 
     public List<ModelVO> getModelVOListByItemId(Long itemId) {
         List<ModelVO> modelVOList = modelDao.selectList(new QueryWrapper<Model>().eq("item_id", itemId))
-                .stream().map(model ->
-                        BeanCopyUtils.copyObject(model, ModelVO.class)
-                ).collect(Collectors.toList());
+                .stream().map(model -> {
+                    ModelVO modelVO = BeanCopyUtils.copyObject(model, ModelVO.class);
+                    int salesVolume = Math.toIntExact(orderItemDao.selectCount(new QueryWrapper<OrderItem>().eq("model_id", model.getModelId())));
+                    modelVO.setSalesVolume(salesVolume);
+                    return modelVO;
+                }).collect(Collectors.toList());
         return modelVOList;
+    }
+
+    /**
+     * 获取衣服类型
+     * @param modelSku
+     */
+    private void saveClothesType(String modelSku) {
+        if (modelSku.contains("t-shirt")) {
+            // 如果包含 t-shirt 就直接添加
+            redisService.set(CLOTHES_TYPE + "t-shirt", "t-shirt");
+        } else {
+            String[] skuSplit = modelSku.substring(0, modelSku.indexOf('(')).split("-");
+            if (skuSplit.length == 3) {
+                // 如果只有三段，默认为 100%cotton
+                redisService.set(CLOTHES_TYPE + "100%cotton", "100%cotton");
+            } else {
+                // 其他直接获取第二个 - 的值
+                redisService.set(CLOTHES_TYPE + skuSplit[1], skuSplit[1]);
+                if (skuSplit[1].equals("black")) {
+                    System.out.println(modelSku);
+                }
+            }
+        }
     }
 }
