@@ -16,7 +16,7 @@
                 s.start_time >= #{condition.start_time}
             </if>
             <if test="condition.end_time != null">
-                s.end_time = #{condition.end_time}
+                s.end_time &lt;= #{condition.end_time}
             </if>
         </where>
     </select>
@@ -37,7 +37,7 @@
                 s.start_time >= #{condition.start_time}
             </if>
             <if test="condition.end_time != null">
-                s.end_time = #{condition.end_time}
+                s.end_time &lt;= #{condition.end_time}
             </if>
         </where>
         LIMIT #{current},#{size}

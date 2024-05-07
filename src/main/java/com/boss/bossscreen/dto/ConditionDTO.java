@@ -84,7 +84,7 @@ public class ConditionDTO {
     /**
      * 运单号
      */
-    private String package_number;
+    private String tracking_number;
 
     /**
      * 订单状态

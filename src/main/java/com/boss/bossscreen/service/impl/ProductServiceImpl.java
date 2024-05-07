@@ -239,7 +239,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         List<ProductVO> productList = productDao.productList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition)
                 .stream().map(product -> {
                     ProductVO productVO = BeanCopyUtils.copyObject(product, ProductVO.class);
-                    productVO.setCreateTime(CommonUtil.timestampToLocalDateTime(product.getCreateTime()));
+                    productVO.setCreateTime(CommonUtil.timestamp2LocalDateTime(product.getCreateTime()));
                     productVO.setStatus(productStatusMap.get(product.getStatus()));
 
                     int salesVolume = Math.toIntExact(orderItemDao.selectCount(new QueryWrapper<OrderItem>().eq("item_id", product.getItemId())));
@@ -257,7 +257,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
         ProductInfoVO productInfoVO = BeanCopyUtils.copyObject(product, ProductInfoVO.class);
 
-        productInfoVO.setCreateTime(CommonUtil.timestampToLocalDateTime(product.getCreateTime()));
+        productInfoVO.setCreateTime(CommonUtil.timestamp2LocalDateTime(product.getCreateTime()));
         productInfoVO.setStatus(productStatusMap.get(product.getStatus()));
 
         productInfoVO.setModelVOList(modelService.getModelVOListByItemId(itemId));

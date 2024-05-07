@@ -29,7 +29,7 @@ public class CostController {
     private CostServiceImpl costService;
 
     /**
-     * 获取账号列表
+     * 获取成本列表
      * @param condition
      * @return
      */

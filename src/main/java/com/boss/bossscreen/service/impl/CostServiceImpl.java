@@ -8,6 +8,7 @@ import com.boss.bossscreen.dto.CostDTO;
 import com.boss.bossscreen.enities.Cost;
 import com.boss.bossscreen.service.CostService;
 import com.boss.bossscreen.util.BeanCopyUtils;
+import com.boss.bossscreen.util.CommonUtil;
 import com.boss.bossscreen.util.PageUtils;
 import com.boss.bossscreen.vo.CostVO;
 import com.boss.bossscreen.vo.PageResult;
@@ -40,6 +41,8 @@ public class CostServiceImpl extends ServiceImpl<CostDao, Cost> implements CostS
     @Override
     public void saveOrUpdateCost(CostDTO costDTO) {
         Cost cost = BeanCopyUtils.copyObject(costDTO, Cost.class);
+        cost.setStartTime(CommonUtil.string2LocalDateTime(costDTO.getStartTime()));
+        cost.setEndTime(CommonUtil.string2LocalDateTime(costDTO.getEndTime()));
         this.saveOrUpdate(cost);
     }
 

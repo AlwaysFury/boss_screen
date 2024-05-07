@@ -36,8 +36,6 @@ public class Cost {
     @TableField(fill = FieldFill.UPDATE)
     private LocalDateTime updateTime;
 
-    private String name;
-
     private String type;
 
     private BigDecimal price;
@@ -45,4 +43,6 @@ public class Cost {
     private LocalDateTime startTime;
 
     private LocalDateTime endTime;
+
+    private double exchangeRate;
 }

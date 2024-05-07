@@ -15,8 +15,8 @@
             <if test="condition.order_status != null">
                 and s.status = #{condition.order_status}
             </if>
-            <if test="condition.package_number != null">
-                and s.package_number = #{condition.package_number}
+            <if test="condition.tracking_number != null">
+                and s.tracking_number = #{condition.tracking_number}
             </if>
             <if test="condition.shop_id != null">
                 and s.shop_id = #{condition.shop_id}
@@ -35,7 +35,7 @@
         SELECT
             id,
             order_sn,
-            package_number,
+            tracking_number,
             status,
             shop_id,
             create_time
@@ -49,8 +49,8 @@
             <if test="condition.order_status != null">
                 and s.status = #{condition.order_status}
             </if>
-            <if test="condition.package_number != null">
-                and s.package_number = #{condition.package_number}
+            <if test="condition.tracking_number != null">
+                and s.tracking_number = #{condition.tracking_number}
             </if>
             <if test="condition.shop_id != null">
                 and s.shop_id = #{condition.shop_id}

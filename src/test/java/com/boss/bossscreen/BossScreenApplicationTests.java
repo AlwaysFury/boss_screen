@@ -145,7 +145,7 @@ class BossScreenApplicationTests {
 
     @Test
     void getOrderDetail() {
-        JSONObject object = ShopeeUtil.getOrderDetail("5a576f4a704979657953745051435149", 1017169304, "2405029EFSMHJ1");
+        JSONObject object = ShopeeUtil.getOrderDetail("64757a6748704a6f5a5350715a4a446a", 1017169304, "240102SQ95FRB7");
         System.out.println(object);
     }
 

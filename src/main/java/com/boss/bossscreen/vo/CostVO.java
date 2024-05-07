@@ -20,8 +20,6 @@ import java.math.BigDecimal;
 public class CostVO {
     private Integer id;
 
-    private String name;
-
     private BigDecimal price;
 
     private String type;

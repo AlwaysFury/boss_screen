@@ -21,7 +21,7 @@ import java.util.Objects;
  */
 public class CommonUtil {
 
-    public static String timestampToLocalDateTime(long timestamp) {
+    public static String timestamp2LocalDateTime(long timestamp) {
         // 使用Instant从时间戳创建时间点
         Instant instant = Instant.ofEpochSecond(timestamp);
 
@@ -34,6 +34,11 @@ public class CommonUtil {
 
         // 将Instant转换为LocalDateTime
         return dateTime.format(formatter);
+    }
+
+    public static LocalDateTime string2LocalDateTime(String timeStr) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return LocalDateTime.parse(timeStr, formatter);
     }
 
     public static <T> String judgeRedis(RedisServiceImpl redisService, String redisKey, List<T> insertList, List<T> updateList, T t, Class<T> clazz) {
@@ -62,8 +67,8 @@ public class CommonUtil {
                         .option(jsonComparedOption)
                         .detectDiff(newJsonStr, oldJsonStr);
                 result = JSON.toJSONString(jsonCompareResult);
-//                System.out.println("newJsonStr====>"+newJsonStr);
-//                System.out.println("oldJsonStr====>"+oldJsonStr);
+                System.out.println("newJsonStr====>"+newJsonStr);
+                System.out.println("oldJsonStr====>"+oldJsonStr);
                 redisService.set(redisKey, newJsonStr);
                 updateList.add(JSON.parseObject(redisResult.toString(), clazz));
             }

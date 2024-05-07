@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -265,8 +266,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 //        }
         if (!"UNPAID".equals(order.getStatus()) && !"READY_TO_SHIP".equals(order.getStatus()) && !"PROCESSED".equals(order.getStatus()) && !"CANCELLED".equals(order.getStatus())) {
             String token = shopService.getAccessTokenByShopId(String.valueOf(shopId));
-            String trackingNumber = ShopeeUtil.getTrackingNumber(token, shopId, orderSn).getJSONObject("response").getString("tracking_number");
-            order.setTrackingNumber(trackingNumber);
+            JSONObject responseObject = ShopeeUtil.getTrackingNumber(token, shopId, orderSn).getJSONObject("response");
+            if (responseObject != null) {
+                order.setTrackingNumber(responseObject.getString("tracking_number"));
+            }
         }
 
         CommonUtil.judgeRedis(redisService, ORDER + orderSn, ordertList,updateOrderList, order, Order.class);
@@ -369,7 +372,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         // 分页查询分类列表
         List<OrderEscrowVO> orderEscrowVOList = orderDao.orderList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition).stream().map(order -> {
             OrderEscrowVO orderEscrowVO = BeanCopyUtils.copyObject(order, OrderEscrowVO.class);
-            orderEscrowVO.setCreateTime(CommonUtil.timestampToLocalDateTime(order.getCreateTime()));
+            orderEscrowVO.setCreateTime(CommonUtil.timestamp2LocalDateTime(order.getCreateTime()));
             orderEscrowVO.setStatus(orderStatusMap.get(order.getStatus()));
 
             List<OrderItem> orderItemList = orderItemDao.selectList(new QueryWrapper<OrderItem>().eq("order_sn", order.getOrderSn()));
@@ -430,7 +433,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         Order order = orderDao.selectOne(new QueryWrapper<Order>().eq("order_sn", orderSn));
 
         OrderEscrowInfoVO orderEscrowInfoVO = BeanCopyUtils.copyObject(order, OrderEscrowInfoVO.class);
-        orderEscrowInfoVO.setCreateTime(CommonUtil.timestampToLocalDateTime(order.getCreateTime()));
+        orderEscrowInfoVO.setCreateTime(CommonUtil.timestamp2LocalDateTime(order.getCreateTime()));
+        orderEscrowInfoVO.setPayTime(CommonUtil.timestamp2LocalDateTime(order.getPayTime()));
         orderEscrowInfoVO.setStatus(orderStatusMap.get(order.getStatus()));
 
         EscrowInfo escrowInfo = escrowInfoDao.selectOne(new QueryWrapper<EscrowInfo>().eq("order_sn", orderSn));
@@ -458,10 +462,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                         orderEscrowItemVO.setActivityType(escrowItem.getActivityType());
                         orderEscrowItemVO.setCount(escrowItem.getCount());
 
-                        BigDecimal cost = getCostSingleByType(orderItem.getModelSku().toLowerCase(), orderItem.getCreateTime()).multiply(BigDecimal.valueOf(orderEscrowItemVO.getCount()));
-                        BigDecimal price = orderEscrowItemVO.getSellerDiscount().multiply(BigDecimal.valueOf(orderEscrowItemVO.getCount()));
+                        // 计算成本利润
+                        JSONObject costObject = getCostObject(getClothesType(orderItem.getModelSku().toLowerCase()), orderItem.getCreateTime());
+                        // 成本
+                        BigDecimal costPrice = costObject.getBigDecimal("cost");
+                        // 利率
+                        double rate = costObject.getDouble("rate");
+
+                        BigDecimal cost = costPrice.multiply(BigDecimal.valueOf(orderEscrowItemVO.getCount())).divide(BigDecimal.valueOf(rate), 2, RoundingMode.HALF_UP);
+                        BigDecimal price = orderEscrowItemVO.getSellerDiscount().multiply(BigDecimal.valueOf(orderEscrowItemVO.getCount())).divide(BigDecimal.valueOf(rate), 2, RoundingMode.HALF_UP);
                         BigDecimal profit = price.subtract(cost);
-                        float profitRate = profit.divide(price).floatValue();
+                        float profitRate = profit.divide(price, 2, RoundingMode.HALF_UP).floatValue();
 
                         orderEscrowItemVO.setCost(cost);
                         orderEscrowItemVO.setProfit(profit);
@@ -486,31 +497,48 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         return matcher.matches();
     }
 
-    private BigDecimal getCostSingleByType(String modelSku, LocalDateTime orderCreateTime) {
-        BigDecimal costSingle = new BigDecimal(0.00);
+    private JSONObject getCostObject(String type, LocalDateTime orderCreateTime) {
+        BigDecimal costPrice = new BigDecimal(0.00);
+        double rate = 1.00;
         QueryWrapper<Cost> costQueryWrapper = new QueryWrapper<>();
-        costQueryWrapper.select("price", "start_time", "end_time");
-        if (modelSku.contains("100%cotton")) {
-            costQueryWrapper.eq("type", "cotton");
-        } else if (modelSku.contains("short")) {
-            costQueryWrapper.eq("type", "short");
-        } else if (modelSku.contains("hoodie")) {
-            costQueryWrapper.eq("type", "hoodie");
-        } else if (modelSku.contains("成品")) {
-            costQueryWrapper.eq("type", "finish");
-        } else if (modelSku.contains("t-shirt")) {
-            costQueryWrapper.eq("type", "tshirt");
-        } else {
-            costQueryWrapper.eq("type", "cotton");
-        }
+        costQueryWrapper.select("price", "start_time", "end_time", "exchange_rate").eq("type", type);
         List<Cost> costList = costDao.selectList(costQueryWrapper);
         for (Cost cost : costList) {
-            if (orderCreateTime.isBefore(cost.getCreateTime()) && orderCreateTime.isAfter(cost.getEndTime())) {
-                costSingle = cost.getPrice();
-                break;
+            if (orderCreateTime.isBefore(cost.getEndTime()) && orderCreateTime.isAfter(cost.getStartTime())) {
+                costPrice = cost.getPrice();
+                rate = cost.getExchangeRate();
             }
         }
 
-        return costSingle;
+        JSONObject object = new JSONObject();
+        object.put("cost", costPrice);
+        object.put("rate", rate);
+
+        return object;
+    }
+
+    /**
+     * 获取衣服类型
+     * @param modelSku
+     */
+    private String getClothesType(String modelSku) {
+        String type = "";
+        if (modelSku.contains("t-shirt")) {
+            // 如果包含 t-shirt 就直接添加
+            type = "t-shirt";
+        } else {
+            String[] skuSplit = modelSku.substring(0, modelSku.indexOf('(')).split("-");
+            if (skuSplit.length == 3) {
+                // 如果只有三段，默认为 100%cotton
+                type = "100%cotton";
+            } else {
+                // 其他直接获取第二个 - 的值
+                redisService.set(CLOTHES_TYPE + skuSplit[1], skuSplit[1]);
+                if (skuSplit[1].equals("black")) {
+                    type = modelSku;
+                }
+            }
+        }
+        return type;
     }
 }
