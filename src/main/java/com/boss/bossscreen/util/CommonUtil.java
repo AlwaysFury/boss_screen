@@ -41,6 +41,11 @@ public class CommonUtil {
         return LocalDateTime.parse(timeStr, formatter);
     }
 
+    public static String localDateTime2String(LocalDateTime timeStr) {
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return timeStr.format(fmt);
+    }
+
     public static <T> String judgeRedis(RedisServiceImpl redisService, String redisKey, List<T> insertList, List<T> updateList, T t, Class<T> clazz) {
         // 检测入库
         // 将新旧数据全部数据缓存进入 redis

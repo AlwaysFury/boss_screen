@@ -1,5 +1,6 @@
 package com.boss.bossscreen;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.boss.bossscreen.service.impl.*;
 import com.boss.bossscreen.util.ShopeeUtil;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static com.boss.bossscreen.constant.RedisPrefixConst.CATEGORY;
 import static com.boss.bossscreen.constant.RedisPrefixConst.CLOTHES_TYPE;
 
 @SpringBootTest
@@ -80,14 +82,6 @@ class BossScreenApplicationTests {
         String accessToken = "4b64616e46486f63654369776f694247";
         long category_id = Long.valueOf("100352");
         JSONObject object = ShopeeUtil.getAttributes(accessToken, 1017169304, category_id);
-        System.out.println(object);
-    }
-
-    @Test
-    void getCategoryTest() {
-        String accessToken = "4b64616e46486f63654369776f694247";
-        long category_id = Long.valueOf("100352");
-        JSONObject object = ShopeeUtil.getCategory(accessToken, 1017169304, category_id);
         System.out.println(object);
     }
 
@@ -162,6 +156,23 @@ class BossScreenApplicationTests {
     @Test
     void refreshShopToken() {
         shopService.refreshShopToken();
+    }
+
+    @Test
+    void getShopInfoTest() {
+        JSONObject object = ShopeeUtil.getShopInfoByHttp("425a566776797646527873684e637643", 1017169304);
+        System.out.println(object);
+    }
+
+    @Test
+    void getCategoryTest() {
+        JSONObject object = ShopeeUtil.getCategoryByHttp("425a566776797646527873684e637643", 1017169304);
+        JSONArray array = object.getJSONObject("response").getJSONArray("category_list");
+        for (int i = 0; i < array.size(); i++) {
+            JSONObject categoryObject = array.getJSONObject(i);
+            redisService.set(CATEGORY + categoryObject.getLong("category_id"), categoryObject.toJSONString());
+        }
+        System.out.println(object);
     }
 
     @Test

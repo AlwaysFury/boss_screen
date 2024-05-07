@@ -1,6 +1,7 @@
 package com.boss.bossscreen.controller;
 
 import com.boss.bossscreen.dto.ConditionDTO;
+import com.boss.bossscreen.dto.ShopDTO;
 import com.boss.bossscreen.dto.UpdateStatusDTO;
 import com.boss.bossscreen.service.impl.ShopServiceImpl;
 import com.boss.bossscreen.vo.PageResult;
@@ -10,6 +11,8 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 /**
  * @Description
@@ -42,6 +45,23 @@ public class ShopController {
     @PostMapping("/updateShopStatus")
     public Result<?> updateShopsStatus(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
         shopService.updateShopsStatus(updateStatusDTO);
+        return Result.ok();
+    }
+
+    /**
+     * 获取店铺
+     */
+    @GetMapping("/shopSelect")
+    public Result<Map<Long, String>> getShopSelect() {
+        return Result.ok(shopService.getShopSelect());
+    }
+
+    /**
+     * 自定义店铺名称
+     */
+    @PostMapping("/saveName")
+    public Result<?> saveName(@Valid @RequestBody ShopDTO shopDTO) {
+        shopService.saveName(shopDTO.getShopId(), shopDTO.getName());
         return Result.ok();
     }
 }

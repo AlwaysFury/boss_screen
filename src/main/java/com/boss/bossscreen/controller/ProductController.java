@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 /**
  * @Description
  * @Author 罗宇航
@@ -46,6 +48,22 @@ public class ProductController {
     public Result<ProductInfoVO> getProductInfo(@RequestParam("item_id") Long itemId) {
 
         return Result.ok(productService.getProductInfo(itemId));
+    }
+
+    /**
+     * 获取分类
+     */
+    @GetMapping("/categorySelect")
+    public Result<Map<Long, String>> getCategorySelect() {
+        return Result.ok(productService.getCategorySelect());
+    }
+
+    /**
+     * 获取状态
+     */
+    @GetMapping("/statusSelect")
+    public Result<Map<String, String>> getStatusSelect() {
+        return Result.ok(productService.getStatusSelect());
     }
 
 

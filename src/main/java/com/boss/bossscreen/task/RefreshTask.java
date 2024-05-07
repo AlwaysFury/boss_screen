@@ -46,19 +46,19 @@ public class RefreshTask {
         shopService.refreshShopToken();
     }
 
-    @Scheduled(cron = "0 */1 * * * ?")
+//    @Scheduled(cron = "0 */1 * * * ?")
     public void refreshProduct() {
         log.info("======开始刷新产品信息");
         productService.saveOrUpdateProduct();
     }
 
-    @Scheduled(cron = "0 */30 * * * ?")
+//    @Scheduled(cron = "0 */1 * * * ?")
     public void refreshOrder() {
         log.info("======开始刷新订单信息");
         orderService.saveOrUpdateOrder("2024-01-01 00:00:00");
     }
 
-    @Scheduled(cron = "0 */30 * * * ?")
+//    @Scheduled(cron = "0 */1 * * * ?")
     public void refreshReturnOrder() {
         log.info("======开始刷新退单信息");
         returnOrderService.saveOrUpdateReturnOrder();

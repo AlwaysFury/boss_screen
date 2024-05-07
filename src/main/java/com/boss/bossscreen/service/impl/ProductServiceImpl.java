@@ -21,14 +21,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static com.boss.bossscreen.constant.OptTypeConst.SYSTEM_LOG;
+import static com.boss.bossscreen.constant.RedisPrefixConst.CATEGORY;
 import static com.boss.bossscreen.constant.RedisPrefixConst.PRODUCT_ITEM;
 
 /**
@@ -239,8 +237,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         List<ProductVO> productList = productDao.productList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition)
                 .stream().map(product -> {
                     ProductVO productVO = BeanCopyUtils.copyObject(product, ProductVO.class);
+                    productVO.setCategoryName(JSONObject.parseObject(redisService.get(CATEGORY + product.getCategoryId()).toString()).getString("display_category_name"));
                     productVO.setCreateTime(CommonUtil.timestamp2LocalDateTime(product.getCreateTime()));
                     productVO.setStatus(productStatusMap.get(product.getStatus()));
+
+                    productVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().eq("shop_id", product.getShopId())).getName());
 
                     int salesVolume = Math.toIntExact(orderItemDao.selectCount(new QueryWrapper<OrderItem>().eq("item_id", product.getItemId())));
                     productVO.setSalesVolume(salesVolume);
@@ -256,14 +257,34 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         Product product = productDao.selectOne(new QueryWrapper<Product>().eq("item_id", itemId));
 
         ProductInfoVO productInfoVO = BeanCopyUtils.copyObject(product, ProductInfoVO.class);
-
+        productInfoVO.setCategoryName(JSONObject.parseObject(redisService.get(CATEGORY + product.getCategoryId()).toString()).getString("display_category_name"));
         productInfoVO.setCreateTime(CommonUtil.timestamp2LocalDateTime(product.getCreateTime()));
         productInfoVO.setStatus(productStatusMap.get(product.getStatus()));
+
+        productInfoVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().eq("shop_id", product.getShopId())).getName());
 
         productInfoVO.setModelVOList(modelService.getModelVOListByItemId(itemId));
 
         return productInfoVO;
     }
+
+    @Override
+    public Map<Long, String> getCategorySelect() {
+        Map<Long, String> map = new HashMap<>();
+        List<Product> categoryId = productDao.selectList(new QueryWrapper<Product>().select("category_id").groupBy("category_id"));
+        for (Product product : categoryId) {
+            Long id = product.getCategoryId();
+            String name = JSONObject.parseObject(redisService.get(CATEGORY + product.getCategoryId()).toString()).getString("display_category_name");
+            map.put(id, name);
+        }
+        return map;
+    }
+
+    @Override
+    public Map<String, String> getStatusSelect() {
+        return productStatusMap;
+    }
+
 
     // todo 等级
 }

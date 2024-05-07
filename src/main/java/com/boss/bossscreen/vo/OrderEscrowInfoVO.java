@@ -47,6 +47,11 @@ public class OrderEscrowInfoVO {
     private Long shopId;
 
     /**
+     * 所属店铺名称
+     */
+    private String shopName;
+
+    /**
      * 买家 id
      */
     private Long buyerUerId;

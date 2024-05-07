@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 /**
  * @Description
  * @Author 罗宇航
@@ -46,6 +48,14 @@ public class OrderController {
     public Result<OrderEscrowInfoVO> getOrderInfo(@RequestParam("order_sn") String orderSn) {
 
         return Result.ok(orderService.getOrderInfo(orderSn));
+    }
+
+    /**
+     * 获取状态
+     */
+    @GetMapping("/statusSelect")
+    public Result<Map<String, String>> getStatusSelect() {
+        return Result.ok(orderService.getStatusSelect());
     }
 
 

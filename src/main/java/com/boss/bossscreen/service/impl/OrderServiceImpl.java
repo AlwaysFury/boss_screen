@@ -30,6 +30,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -423,6 +424,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             orderEscrowVO.setFinishCount(finishCount);
             orderEscrowVO.setFiberCount(fiberCount);
 
+            orderEscrowVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().eq("shop_id", order.getShopId())).getName());
+
             return orderEscrowVO;
         }).collect(Collectors.toList());
         return new PageResult<>(orderEscrowVOList, count);
@@ -436,6 +439,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         orderEscrowInfoVO.setCreateTime(CommonUtil.timestamp2LocalDateTime(order.getCreateTime()));
         orderEscrowInfoVO.setPayTime(CommonUtil.timestamp2LocalDateTime(order.getPayTime()));
         orderEscrowInfoVO.setStatus(orderStatusMap.get(order.getStatus()));
+
+        orderEscrowInfoVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().eq("shop_id", order.getShopId())).getName());
 
         EscrowInfo escrowInfo = escrowInfoDao.selectOne(new QueryWrapper<EscrowInfo>().eq("order_sn", orderSn));
         if (escrowInfo != null) {
@@ -540,5 +545,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             }
         }
         return type;
+    }
+
+    @Override
+    public Map<String, String> getStatusSelect() {
+        return orderStatusMap;
     }
 }

@@ -7,6 +7,8 @@ import com.boss.bossscreen.vo.OrderEscrowInfoVO;
 import com.boss.bossscreen.vo.OrderEscrowVO;
 import com.boss.bossscreen.vo.PageResult;
 
+import java.util.Map;
+
 /**
  * @Description
  * @Author 罗宇航
@@ -19,4 +21,6 @@ public interface OrderService extends IService<Order> {
     PageResult<OrderEscrowVO> orderListByCondition(ConditionDTO condition);
 
     OrderEscrowInfoVO getOrderInfo(String orderSn);
+
+    Map<String, String> getStatusSelect();
 }

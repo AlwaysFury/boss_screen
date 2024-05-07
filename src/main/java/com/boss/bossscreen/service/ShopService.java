@@ -8,6 +8,8 @@ import com.boss.bossscreen.enities.Shop;
 import com.boss.bossscreen.vo.PageResult;
 import com.boss.bossscreen.vo.ShopVO;
 
+import java.util.Map;
+
 /**
  * @Description
  * @Author 罗宇航
@@ -26,4 +28,8 @@ public interface ShopService extends IService<Shop>  {
     void refreshShopTokenByAccount();
 
     String getAccessTokenByShopId(String shopId);
+
+    Map<Long, String> getShopSelect();
+
+    void saveName(long shopId, String name);
 }

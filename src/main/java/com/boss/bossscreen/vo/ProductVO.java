@@ -27,7 +27,7 @@ public class ProductVO {
     /**
      * 类目 id
      */
-    private Long categoryId;
+    private String categoryName;
 
     /**
      * 名称
@@ -47,12 +47,17 @@ public class ProductVO {
     /**
      * 等级
      */
-//    private String grade;
+    private String grade;
 
     /**
      * 所属店铺 id
      */
     private long shopId;
+
+    /**
+     * 所属店铺名称
+     */
+    private String shopName;
 
     /**
      * 状态

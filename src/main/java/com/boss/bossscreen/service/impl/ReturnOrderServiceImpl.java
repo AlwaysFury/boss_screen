@@ -181,27 +181,4 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
         }
     }
 
-//    public PageResult<ProductVO> productListByCondition(ConditionDTO condition) {
-//        // 查询分类数量
-//        Integer count = productDao.productCount(condition);
-//        if (count == 0) {
-//            return new PageResult<>();
-//        }
-//        // 分页查询分类列表
-//        List<ProductVO> productList = productDao.productList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition);
-//        return new PageResult<>(productList, count);
-//    }
-//
-//    @Override
-//    public ProductInfoVO getProductInfo(Long itemId) {
-//
-//        Product product = productDao.selectOne(new QueryWrapper<Product>().eq("item_id", itemId));
-//
-//        ProductInfoVO productInfoVO = BeanCopyUtils.copyObject(product, ProductInfoVO.class);
-//
-//        productInfoVO.setModelVOList(modelService.getModelVOListByItemId(itemId));
-//
-//        return productInfoVO;
-//    }
-//
 }

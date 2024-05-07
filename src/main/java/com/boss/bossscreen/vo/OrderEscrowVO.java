@@ -44,6 +44,11 @@ public class OrderEscrowVO {
     private Long shopId;
 
     /**
+     * 所属店铺名称
+     */
+    private String shopName;
+
+    /**
      * T恤数量
      */
     private int tShirtCount = 0;

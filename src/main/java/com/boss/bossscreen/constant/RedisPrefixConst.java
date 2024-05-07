@@ -28,4 +28,6 @@ public class RedisPrefixConst {
 
     public static final String CLOTHES_TYPE = "clothes_type:";
 
+    public static final String CATEGORY = "category:";
+
 }

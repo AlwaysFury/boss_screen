@@ -21,7 +21,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.boss.bossscreen.constant.RedisPrefixConst.SHOP_TOKEN;
@@ -159,6 +161,22 @@ public class ShopServiceImpl extends ServiceImpl<ShopDao, Shop> implements ShopS
         }
 
         return token;
+    }
+
+    @Override
+    public Map<Long, String> getShopSelect() {
+        Map<Long, String> map = new HashMap<>();
+        List<Shop> shopList = shopDao.selectList(new QueryWrapper<Shop>().select("name", "shop_id").eq("status", 1));
+        for (Shop shop : shopList) {
+            map.put(shop.getShopId(), shop.getName());
+        }
+        return map;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void saveName(long shopId, String name) {
+        shopDao.update(new UpdateWrapper<Shop>().set("name", name).eq("shop_id", shopId));
     }
 
 

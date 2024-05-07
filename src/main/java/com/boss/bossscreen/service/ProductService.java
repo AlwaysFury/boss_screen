@@ -7,6 +7,8 @@ import com.boss.bossscreen.vo.PageResult;
 import com.boss.bossscreen.vo.ProductInfoVO;
 import com.boss.bossscreen.vo.ProductVO;
 
+import java.util.Map;
+
 /**
  * @Description
  * @Author 罗宇航
@@ -20,6 +22,10 @@ public interface ProductService extends IService<Product> {
 
 
     ProductInfoVO getProductInfo(Long itemId);
+
+    Map<Long, String> getCategorySelect();
+
+    Map<String, String> getStatusSelect();
 //
 //    void updateAccountsStatus(UpdateStatusDTO updateStatusDTO);
 

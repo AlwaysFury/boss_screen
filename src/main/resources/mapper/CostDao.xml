@@ -25,7 +25,6 @@
     <select id="costList" resultType="com.boss.bossscreen.vo.CostVO">
         SELECT
             id,
-            name,
             type,
             price,
             start_time,

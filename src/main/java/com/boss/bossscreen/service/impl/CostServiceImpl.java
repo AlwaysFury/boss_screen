@@ -68,8 +68,10 @@ public class CostServiceImpl extends ServiceImpl<CostDao, Cost> implements CostS
     @Override
     public CostVO getCostById(int id) {
         Cost cost = this.getOne(new QueryWrapper<Cost>().eq("id", id));
-
-        return BeanCopyUtils.copyObject(cost, CostVO.class);
+        CostVO costVO = BeanCopyUtils.copyObject(cost, CostVO.class);
+        costVO.setStartTime(CommonUtil.localDateTime2String(cost.getStartTime()));
+        costVO.setEndTime(CommonUtil.localDateTime2String(cost.getEndTime()));
+        return costVO;
     }
 
     @Override
