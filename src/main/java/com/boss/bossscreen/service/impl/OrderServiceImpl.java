@@ -76,6 +76,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
     private ShopServiceImpl shopService;
 
     @Autowired
+    private CostServiceImpl costService;
+
+    @Autowired
     private CostDao costDao;
 
     @Autowired
@@ -377,52 +380,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             orderEscrowVO.setStatus(orderStatusMap.get(order.getStatus()));
 
             List<OrderItem> orderItemList = orderItemDao.selectList(new QueryWrapper<OrderItem>().eq("order_sn", order.getOrderSn()));
-            // T恤数量
-            int tShirtCount = 0;
-            // 双面数量
-            int doubleCount = 0;
-            // 短款T恤数量
-            int shortCount = 0;
-            // 卫衣数量
-            int hoodieCount = 0;
-            // 成品数量
-            int finishCount = 0;
-            // 聚酯纤维数量
-            int fiberCount = 0;
-
-            String modelSku;
-            String modelName;
             int clothesCount = 0;
-            OrderItem orderItem;
             for (int i = 0; i < orderItemList.size(); i++) {
-                orderItem = orderItemList.get(i);
-                modelSku = orderItem.getModelSku().toLowerCase();
-                clothesCount = orderItem.getCount();
-                if (modelSku.contains("100%cotton")) {
-                    tShirtCount += clothesCount;
-                } else if (modelSku.contains("short")) {
-                    shortCount += clothesCount;
-                } else if (modelSku.contains("hoodie")) {
-                    hoodieCount += clothesCount;
-                } else if (modelSku.contains("成品")) {
-                    finishCount += clothesCount;
-                } else if (modelSku.contains("t-shirt")) {
-                    fiberCount += clothesCount;
-                } else {
-                    tShirtCount += clothesCount;
-                }
-
-                modelName = orderItem.getModelName();
-                if (!"notsure".equals(modelName) && isEnglish(modelName.substring(0, 1)) && isEnglish(modelName.substring(1, 2))) {
-                    doubleCount += 1;
-                }
+                clothesCount += orderItemList.get(i).getCount();
             }
-            orderEscrowVO.setTShirtCount(tShirtCount);
-            orderEscrowVO.setDoubleCount(doubleCount);
-            orderEscrowVO.setShortCount(shortCount);
-            orderEscrowVO.setHoodieCount(hoodieCount);
-            orderEscrowVO.setFinishCount(finishCount);
-            orderEscrowVO.setFiberCount(fiberCount);
+            orderEscrowVO.setTotalCount(clothesCount);
 
             orderEscrowVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().eq("shop_id", order.getShopId())).getName());
 
@@ -448,11 +410,31 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             orderEscrowInfoVO.setBuyerPaidShippingFee(escrowInfo.getBuyerPaidShippingFee());
             orderEscrowInfoVO.setActualShippingFee(escrowInfo.getActualShippingFee());
             orderEscrowInfoVO.setEscrowAmount(escrowInfo.getEscrowAmount());
+            orderEscrowInfoVO.setAdjustmentAmount(escrowInfo.getAdjustmentAmount());
+            orderEscrowInfoVO.setAdjustmentReason(escrowInfo.getAdjustmentReason());
         }
+
+        // 初始化衣服数量 map
+        Map<String, Integer> clothesCountMap = new HashMap<>();
+        // 双面
+        clothesCountMap.put("double", 0);
+        for (String type : costService.getCostType()) {
+            clothesCountMap.put(type, 0);
+        }
+
 
         List<OrderEscrowItemVO> orderEscrowItemVOList = orderItemDao.selectList(new QueryWrapper<OrderItem>().eq("order_sn", orderSn)).stream().map(
                 orderItem -> {
                     OrderEscrowItemVO orderEscrowItemVO = BeanCopyUtils.copyObject(orderItem, OrderEscrowItemVO.class);
+
+                    // 计算衣服数量
+                    String clothesType = getClothesType(orderItem.getModelSku().toLowerCase());
+                    clothesCountMap.put(clothesType, clothesCountMap.get(clothesType) + 1);
+                    // 计算双面
+                    String itemSku = orderItem.getItemSku();
+                    if (!"notsure".equals(itemSku) && isEnglish(itemSku.substring(0, 1)) && isEnglish(itemSku.substring(1, 2))) {
+                        clothesCountMap.put("double", clothesCountMap.get("double") + 1);
+                    }
 
                     EscrowItem escrowItem = escrowItemDao.selectOne(new QueryWrapper<EscrowItem>()
                             .eq("order_sn", orderSn)
@@ -468,7 +450,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                         orderEscrowItemVO.setCount(escrowItem.getCount());
 
                         // 计算成本利润
-                        JSONObject costObject = getCostObject(getClothesType(orderItem.getModelSku().toLowerCase()), orderItem.getCreateTime());
+                        JSONObject costObject = getCostObject(clothesType, orderItem.getCreateTime());
                         // 成本
                         BigDecimal costPrice = costObject.getBigDecimal("cost");
                         // 利率
@@ -489,6 +471,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         ).collect(Collectors.toList());
 
         orderEscrowInfoVO.setOrderEscrowItemVOList(orderEscrowItemVOList);
+        orderEscrowInfoVO.setClothesCountMap(clothesCountMap);
 
         return orderEscrowInfoVO;
     }
@@ -538,10 +521,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                 type = "100%cotton";
             } else {
                 // 其他直接获取第二个 - 的值
-                redisService.set(CLOTHES_TYPE + skuSplit[1], skuSplit[1]);
-                if (skuSplit[1].equals("black")) {
-                    type = modelSku;
-                }
+                type = skuSplit[1];
             }
         }
         return type;

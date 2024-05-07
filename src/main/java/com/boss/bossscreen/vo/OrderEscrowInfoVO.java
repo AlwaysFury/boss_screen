@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Description
@@ -115,4 +116,9 @@ public class OrderEscrowInfoVO {
      * 调整原因
      */
     private String adjustmentReason;
+
+    /**
+     * 统计衣服数量
+     */
+    private Map<String, Integer> clothesCountMap;
 }

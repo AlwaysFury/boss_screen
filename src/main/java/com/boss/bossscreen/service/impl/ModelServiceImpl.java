@@ -160,9 +160,6 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
             } else {
                 // 其他直接获取第二个 - 的值
                 redisService.set(CLOTHES_TYPE + skuSplit[1], skuSplit[1]);
-                if (skuSplit[1].equals("black")) {
-                    System.out.println(modelSku);
-                }
             }
         }
     }
