@@ -12,10 +12,7 @@ import com.boss.bossscreen.util.BeanCopyUtils;
 import com.boss.bossscreen.util.CommonUtil;
 import com.boss.bossscreen.util.PageUtils;
 import com.boss.bossscreen.util.ShopeeUtil;
-import com.boss.bossscreen.vo.OrderEscrowInfoVO;
-import com.boss.bossscreen.vo.OrderEscrowItemVO;
-import com.boss.bossscreen.vo.OrderEscrowVO;
-import com.boss.bossscreen.vo.PageResult;
+import com.boss.bossscreen.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -418,8 +415,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         Map<String, Integer> clothesCountMap = new HashMap<>();
         // 双面
         clothesCountMap.put("double", 0);
-        for (String type : costService.getCostType()) {
-            clothesCountMap.put(type, 0);
+        for (SelectVO vo : costService.getCostType()) {
+            clothesCountMap.put(vo.getValue(), 0);
         }
 
 
@@ -528,7 +525,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
     }
 
     @Override
-    public Map<String, String> getStatusSelect() {
-        return orderStatusMap;
+    public List<SelectVO> getStatusSelect() {
+        List<SelectVO> list = new ArrayList<>();
+        for(String key : orderStatusMap.keySet()){
+            SelectVO vo = SelectVO.builder()
+                    .key(key)
+                    .value(orderStatusMap.get(key)).build();
+            list.add(vo);
+        }
+        return list;
     }
 }

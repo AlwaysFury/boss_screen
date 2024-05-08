@@ -2,10 +2,7 @@ package com.boss.bossscreen.controller;
 
 import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.service.impl.OrderServiceImpl;
-import com.boss.bossscreen.vo.OrderEscrowInfoVO;
-import com.boss.bossscreen.vo.OrderEscrowVO;
-import com.boss.bossscreen.vo.PageResult;
-import com.boss.bossscreen.vo.Result;
+import com.boss.bossscreen.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -54,7 +52,7 @@ public class OrderController {
      * 获取状态
      */
     @GetMapping("/statusSelect")
-    public Result<Map<String, String>> getStatusSelect() {
+    public Result<List<SelectVO>> getStatusSelect() {
         return Result.ok(orderService.getStatusSelect());
     }
 

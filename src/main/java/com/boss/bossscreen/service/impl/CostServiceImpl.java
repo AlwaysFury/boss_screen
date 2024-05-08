@@ -12,6 +12,7 @@ import com.boss.bossscreen.util.CommonUtil;
 import com.boss.bossscreen.util.PageUtils;
 import com.boss.bossscreen.vo.CostVO;
 import com.boss.bossscreen.vo.PageResult;
+import com.boss.bossscreen.vo.SelectVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,12 +76,16 @@ public class CostServiceImpl extends ServiceImpl<CostDao, Cost> implements CostS
     }
 
     @Override
-    public List<String> getCostType() {
+    public List<SelectVO> getCostType() {
+        List<SelectVO> list = new ArrayList<>();
         Set<String> keys = redisService.keys(CLOTHES_TYPE + "*");
-        List<String> types = new ArrayList<>();
         for (String key : keys) {
-            types.add(key.substring(key.indexOf(":") + 1, key.length()));
+            String value = key.substring(key.indexOf(":") + 1, key.length());
+            SelectVO vo = SelectVO.builder()
+                    .key(value)
+                    .value(value).build();
+            list.add(vo);
         }
-        return types;
+        return list;
     }
 }

@@ -6,8 +6,9 @@ import com.boss.bossscreen.enities.Order;
 import com.boss.bossscreen.vo.OrderEscrowInfoVO;
 import com.boss.bossscreen.vo.OrderEscrowVO;
 import com.boss.bossscreen.vo.PageResult;
+import com.boss.bossscreen.vo.SelectVO;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * @Description
@@ -22,5 +23,5 @@ public interface OrderService extends IService<Order> {
 
     OrderEscrowInfoVO getOrderInfo(String orderSn);
 
-    Map<String, String> getStatusSelect();
+    List<SelectVO> getStatusSelect();
 }

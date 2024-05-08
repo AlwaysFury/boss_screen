@@ -16,6 +16,7 @@ import com.boss.bossscreen.util.ShopeeUtil;
 import com.boss.bossscreen.vo.PageResult;
 import com.boss.bossscreen.vo.ProductInfoVO;
 import com.boss.bossscreen.vo.ProductVO;
+import com.boss.bossscreen.vo.SelectVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -269,20 +270,30 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
     }
 
     @Override
-    public Map<Long, String> getCategorySelect() {
-        Map<Long, String> map = new HashMap<>();
+    public List<SelectVO> getCategorySelect() {
+        List<SelectVO> list = new ArrayList<>();
         List<Product> categoryId = productDao.selectList(new QueryWrapper<Product>().select("category_id").groupBy("category_id"));
         for (Product product : categoryId) {
             Long id = product.getCategoryId();
             String name = JSONObject.parseObject(redisService.get(CATEGORY + product.getCategoryId()).toString()).getString("display_category_name");
-            map.put(id, name);
+            SelectVO vo = SelectVO.builder()
+                    .key(id)
+                    .value(name).build();
+            list.add(vo);
         }
-        return map;
+        return list;
     }
 
     @Override
-    public Map<String, String> getStatusSelect() {
-        return productStatusMap;
+    public List<SelectVO> getStatusSelect() {
+        List<SelectVO> list = new ArrayList<>();
+        for(String key : productStatusMap.keySet()){
+            SelectVO vo = SelectVO.builder()
+                    .key(key)
+                    .value(productStatusMap.get(key)).build();
+            list.add(vo);
+        }
+        return list;
     }
 
 

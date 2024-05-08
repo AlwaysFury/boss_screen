@@ -15,16 +15,14 @@ import com.boss.bossscreen.service.ShopService;
 import com.boss.bossscreen.util.PageUtils;
 import com.boss.bossscreen.util.ShopeeUtil;
 import com.boss.bossscreen.vo.PageResult;
+import com.boss.bossscreen.vo.SelectVO;
 import com.boss.bossscreen.vo.ShopVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static com.boss.bossscreen.constant.RedisPrefixConst.SHOP_TOKEN;
 
@@ -164,13 +162,16 @@ public class ShopServiceImpl extends ServiceImpl<ShopDao, Shop> implements ShopS
     }
 
     @Override
-    public Map<Long, String> getShopSelect() {
-        Map<Long, String> map = new HashMap<>();
+    public List<SelectVO> getShopSelect() {
+        List<SelectVO> list = new ArrayList<>();
         List<Shop> shopList = shopDao.selectList(new QueryWrapper<Shop>().select("name", "shop_id").eq("status", 1));
         for (Shop shop : shopList) {
-            map.put(shop.getShopId(), shop.getName());
+            SelectVO vo = SelectVO.builder()
+                    .key(shop.getShopId())
+                    .value(shop.getName()).build();
+            list.add(vo);
         }
-        return map;
+        return list;
     }
 
     @Transactional(rollbackFor = Exception.class)

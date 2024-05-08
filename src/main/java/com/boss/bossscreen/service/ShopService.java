@@ -6,9 +6,10 @@ import com.boss.bossscreen.dto.ShopDTO;
 import com.boss.bossscreen.dto.UpdateStatusDTO;
 import com.boss.bossscreen.enities.Shop;
 import com.boss.bossscreen.vo.PageResult;
+import com.boss.bossscreen.vo.SelectVO;
 import com.boss.bossscreen.vo.ShopVO;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * @Description
@@ -29,7 +30,7 @@ public interface ShopService extends IService<Shop>  {
 
     String getAccessTokenByShopId(String shopId);
 
-    Map<Long, String> getShopSelect();
+    List<SelectVO> getShopSelect();
 
     void saveName(long shopId, String name);
 }

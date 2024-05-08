@@ -6,8 +6,9 @@ import com.boss.bossscreen.enities.Product;
 import com.boss.bossscreen.vo.PageResult;
 import com.boss.bossscreen.vo.ProductInfoVO;
 import com.boss.bossscreen.vo.ProductVO;
+import com.boss.bossscreen.vo.SelectVO;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * @Description
@@ -23,9 +24,9 @@ public interface ProductService extends IService<Product> {
 
     ProductInfoVO getProductInfo(Long itemId);
 
-    Map<Long, String> getCategorySelect();
+    List<SelectVO> getCategorySelect();
 
-    Map<String, String> getStatusSelect();
+    List<SelectVO> getStatusSelect();
 //
 //    void updateAccountsStatus(UpdateStatusDTO updateStatusDTO);
 

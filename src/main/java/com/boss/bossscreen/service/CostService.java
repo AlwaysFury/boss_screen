@@ -6,6 +6,7 @@ import com.boss.bossscreen.dto.CostDTO;
 import com.boss.bossscreen.enities.Cost;
 import com.boss.bossscreen.vo.CostVO;
 import com.boss.bossscreen.vo.PageResult;
+import com.boss.bossscreen.vo.SelectVO;
 
 import java.util.List;
 
@@ -24,5 +25,5 @@ public interface CostService extends IService<Cost>  {
 
     CostVO getCostById(int id);
 
-    List<String> getCostType();
+    List<SelectVO> getCostType();
 }

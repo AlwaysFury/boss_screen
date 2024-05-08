@@ -7,6 +7,7 @@ import com.boss.bossscreen.service.impl.CostServiceImpl;
 import com.boss.bossscreen.vo.CostVO;
 import com.boss.bossscreen.vo.PageResult;
 import com.boss.bossscreen.vo.Result;
+import com.boss.bossscreen.vo.SelectVO;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +70,7 @@ public class CostController {
      * @return
      */
     @GetMapping("/costTypeSelect")
-    public Result<List<String>> costTypeSelect() {
+    public Result<List<SelectVO>> costTypeSelect() {
         return Result.ok(costService.getCostType());
     }
 }

@@ -6,12 +6,14 @@ import com.boss.bossscreen.dto.UpdateStatusDTO;
 import com.boss.bossscreen.service.impl.ShopServiceImpl;
 import com.boss.bossscreen.vo.PageResult;
 import com.boss.bossscreen.vo.Result;
+import com.boss.bossscreen.vo.SelectVO;
 import com.boss.bossscreen.vo.ShopVO;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -52,7 +54,7 @@ public class ShopController {
      * 获取店铺
      */
     @GetMapping("/shopSelect")
-    public Result<Map<Long, String>> getShopSelect() {
+    public Result<List<SelectVO>> getShopSelect() {
         return Result.ok(shopService.getShopSelect());
     }
 
