@@ -30,4 +30,6 @@ public class RedisPrefixConst {
 
     public static final String CATEGORY = "category:";
 
+    public static final String RULE = "rule:";
+
 }

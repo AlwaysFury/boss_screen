@@ -46,7 +46,7 @@ public class CostController {
      * @return {@link Result<>}
      */
     @PostMapping("/delete")
-    public Result<?> updateAccountStatus(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
+    public Result<?> updateCostStatus(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
         costService.deleteCost(updateStatusDTO.getIdList());
         return Result.ok();
     }
@@ -60,7 +60,7 @@ public class CostController {
      * 插入或更新
      */
     @PostMapping("/saveOrUpdate")
-    public Result<?> saveOrUpdateOrder(@Valid @RequestBody CostDTO costDTO) {
+    public Result<?> saveOrUpdateCost(@Valid @RequestBody CostDTO costDTO) {
         costService.saveOrUpdateCost(costDTO);
         return Result.ok();
     }

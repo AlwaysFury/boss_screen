@@ -492,6 +492,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             if (orderCreateTime.isBefore(cost.getEndTime()) && orderCreateTime.isAfter(cost.getStartTime())) {
                 costPrice = cost.getPrice();
                 rate = cost.getExchangeRate();
+                break;
             }
         }
 

@@ -100,4 +100,14 @@ public class ConditionDTO {
      * 成本类型
      */
     private String cost_type;
+
+    /**
+     * 等级
+     */
+    private String rule_grade;
+
+    /**
+     * 规则名称
+     */
+    private String rule_name;
 }
