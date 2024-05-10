@@ -373,7 +373,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         // 分页查询分类列表
         List<OrderEscrowVO> orderEscrowVOList = orderDao.orderList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition).stream().map(order -> {
             OrderEscrowVO orderEscrowVO = BeanCopyUtils.copyObject(order, OrderEscrowVO.class);
-            orderEscrowVO.setCreateTime(CommonUtil.timestamp2LocalDateTime(order.getCreateTime()));
+            orderEscrowVO.setCreateTime(CommonUtil.timestamp2String(order.getCreateTime()));
             orderEscrowVO.setStatus(orderStatusMap.get(order.getStatus()));
 
             List<OrderItem> orderItemList = orderItemDao.selectList(new QueryWrapper<OrderItem>().eq("order_sn", order.getOrderSn()));
@@ -395,8 +395,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         Order order = orderDao.selectOne(new QueryWrapper<Order>().eq("order_sn", orderSn));
 
         OrderEscrowInfoVO orderEscrowInfoVO = BeanCopyUtils.copyObject(order, OrderEscrowInfoVO.class);
-        orderEscrowInfoVO.setCreateTime(CommonUtil.timestamp2LocalDateTime(order.getCreateTime()));
-        orderEscrowInfoVO.setPayTime(CommonUtil.timestamp2LocalDateTime(order.getPayTime()));
+        orderEscrowInfoVO.setCreateTime(CommonUtil.timestamp2String(order.getCreateTime()));
+        orderEscrowInfoVO.setPayTime(CommonUtil.timestamp2String(order.getPayTime()));
         orderEscrowInfoVO.setStatus(orderStatusMap.get(order.getStatus()));
 
         orderEscrowInfoVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().eq("shop_id", order.getShopId())).getName());

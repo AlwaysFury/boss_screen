@@ -1,11 +1,15 @@
 package com.boss.bossscreen.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.boss.bossscreen.dao.*;
+import com.boss.bossscreen.dao.OperationLogDao;
+import com.boss.bossscreen.dao.OrderItemDao;
+import com.boss.bossscreen.dao.ProductDao;
+import com.boss.bossscreen.dao.ShopDao;
 import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.enities.*;
 import com.boss.bossscreen.service.ProductService;
@@ -22,13 +26,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static com.boss.bossscreen.constant.OptTypeConst.SYSTEM_LOG;
-import static com.boss.bossscreen.constant.RedisPrefixConst.CATEGORY;
-import static com.boss.bossscreen.constant.RedisPrefixConst.PRODUCT_ITEM;
+import static com.boss.bossscreen.constant.RedisPrefixConst.*;
 
 /**
  * @Description
@@ -64,6 +69,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
     private static final HashMap<String, String> productStatusMap = new HashMap<>();
 
+    private static final List<String> ruleKeys = new ArrayList<>();
+
     static {
         productStatusMap.put("NORMAL", "已上架");
         productStatusMap.put("BANNED", "禁止");
@@ -71,6 +78,17 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         productStatusMap.put("SELLER_DELETE", "卖家删除");
         productStatusMap.put("SHOPEE_DELETE", "平台删除");
         productStatusMap.put("REVIEWING", "审查中");
+
+        ruleKeys.add("itemId");
+        ruleKeys.add("itemSku");
+        ruleKeys.add("categoryId");
+        ruleKeys.add("status");
+        ruleKeys.add("createTime");
+        ruleKeys.add("price");
+        ruleKeys.add("salesVolume");
+        ruleKeys.add("salesVolumeOneDays");
+        ruleKeys.add("salesVolume7days");
+        ruleKeys.add("salesVolume30days");
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -239,13 +257,18 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 .stream().map(product -> {
                     ProductVO productVO = BeanCopyUtils.copyObject(product, ProductVO.class);
                     productVO.setCategoryName(JSONObject.parseObject(redisService.get(CATEGORY + product.getCategoryId()).toString()).getString("display_category_name"));
-                    productVO.setCreateTime(CommonUtil.timestamp2LocalDateTime(product.getCreateTime()));
+                    productVO.setCreateTime(CommonUtil.timestamp2String(product.getCreateTime()));
                     productVO.setStatus(productStatusMap.get(product.getStatus()));
 
                     productVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().eq("shop_id", product.getShopId())).getName());
 
-                    int salesVolume = Math.toIntExact(orderItemDao.selectCount(new QueryWrapper<OrderItem>().eq("item_id", product.getItemId())));
+                    // 设置销量
+                    Integer tempCount = orderItemDao.salesVolumeByItemId(product.getItemId());
+                    int salesVolume = tempCount == null ? 0 : tempCount;
                     productVO.setSalesVolume(salesVolume);
+
+                    // 判断规则设置产品等级
+                    productVO.setGrade(getGrade(product, salesVolume));
 
                     return productVO;
                 }).collect(Collectors.toList());
@@ -259,7 +282,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
         ProductInfoVO productInfoVO = BeanCopyUtils.copyObject(product, ProductInfoVO.class);
         productInfoVO.setCategoryName(JSONObject.parseObject(redisService.get(CATEGORY + product.getCategoryId()).toString()).getString("display_category_name"));
-        productInfoVO.setCreateTime(CommonUtil.timestamp2LocalDateTime(product.getCreateTime()));
+        productInfoVO.setCreateTime(CommonUtil.timestamp2String(product.getCreateTime()));
         productInfoVO.setStatus(productStatusMap.get(product.getStatus()));
 
         productInfoVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().eq("shop_id", product.getShopId())).getName());
@@ -297,5 +320,217 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
     }
 
 
-    // todo 等级
+    public String getGrade(Product product, int salesVolume) {
+
+        String grade = "";
+        boolean allOrNot;
+        JSONObject ruleData;
+        // 满足规则次数
+        int ruleCount = 0;
+        Set<String> keys = redisService.keys(RULE + "*");
+        for (String key : keys) {
+            JSONObject object = JSONObject.parseObject(redisService.get(key).toString());
+
+            ruleData = object.getJSONObject("ruleData");
+            if (ruleData == null || ruleData.keySet().size() == 0) {
+                continue;
+            }
+            grade = object.getString("grade");
+            allOrNot = object.getBoolean("allOrNot");
+
+            // true：全部满足
+            // false：满足任一条件
+            // 满足条件次数
+            int count = getSatisfactionCount(product, ruleData, allOrNot, salesVolume);
+            // 全部满足：满足条件次数 = 全部条件个数
+            if (allOrNot && count == ruleData.keySet().size()) {
+                ruleCount ++;
+            } else if (!allOrNot && count > 0) {
+                // 满足任一条件：满足条件次数 > 0
+                ruleCount ++;
+            }
+
+            // 满足超过一个规则直接 break
+            if (ruleCount > 1) {
+                grade = "!";
+                break;
+            }
+        }
+
+        return grade;
+    }
+
+    private int getSatisfactionCount(Product product, JSONObject ruleData, boolean allOrNot, int salesVolume) {
+        Date nowDate = new Date();
+
+        int count = 0;
+
+        if (ruleData.containsKey("itemId") && ruleData.getJSONObject("itemId") != null) {
+            if (ruleData.getJSONObject("itemId").getString("value").equals(String.valueOf(product.getItemId()))) {
+                count ++;
+            }
+
+            if (returnOrNot(allOrNot, count)) {
+                return count;
+            }
+        }
+
+        if (ruleData.containsKey("itemSku") && ruleData.getJSONObject("itemSku") != null) {
+            if (ruleData.getJSONObject("itemSku").getString("value").equals(String.valueOf(product.getItemSku()))) {
+                count ++;
+            }
+
+            if (returnOrNot(allOrNot, count)) {
+                return count;
+            }
+        }
+
+        if (ruleData.containsKey("categoryId") && ruleData.getJSONObject("categoryId") != null) {
+            if (ruleData.getJSONObject("categoryId").getString("value").equals(String.valueOf(product.getCategoryId()))) {
+                count ++;
+            }
+
+            if (returnOrNot(allOrNot, count)) {
+                return count;
+            }
+        }
+
+        if (ruleData.containsKey("status") && ruleData.getJSONObject("status") != null) {
+            if (ruleData.getJSONObject("status").getString("value").equals(String.valueOf(product.getStatus()))) {
+                count ++;
+            }
+
+            if (returnOrNot(allOrNot, count)) {
+                return count;
+            }
+        }
+
+        if (ruleData.containsKey("createTime") && ruleData.getJSONObject("createTime") != null) {
+            JSONObject object = ruleData.getJSONObject("createTime");
+            LocalDateTime createTime = CommonUtil.timestamp2LocalDateTime(product.getCreateTime());
+            LocalDateTime startTime = CommonUtil.string2LocalDateTime(object.getString("startTime"));
+            LocalDateTime endTime = CommonUtil.string2LocalDateTime(object.getString("endTime"));
+
+            if ((createTime.isAfter(startTime) && createTime.isBefore(endTime)) || createTime.equals(startTime) || createTime.equals(endTime)) {
+                count ++;
+            }
+
+            if (returnOrNot(allOrNot, count)) {
+                return count;
+            }
+        }
+
+        if (ruleData.containsKey("price") && ruleData.getJSONObject("price") != null) {
+            JSONObject object = ruleData.getJSONObject("price");
+            // 最小价格
+            BigDecimal minPrice = new BigDecimal(object.getString("minPrice"));
+            // 最大价格
+            BigDecimal maxPrice = new BigDecimal(object.getString("maxPrice"));
+
+            BigDecimal itemMinPrice = orderItemDao.itemMinPrice(product.getItemId());
+
+            if (itemMinPrice.compareTo(minPrice) >= 0 && itemMinPrice.compareTo(maxPrice) <= 0) {
+                count++;
+            }
+
+            if (returnOrNot(allOrNot, count)) {
+                return count;
+            }
+        }
+
+        if (ruleData.containsKey("salesVolume") && ruleData.getJSONObject("salesVolume") != null) {
+            JSONObject object = ruleData.getJSONObject("salesVolume");
+            int ruleValue = Integer.valueOf(object.getString("value"));
+            String ruleType = object.getString("type");
+
+            count = judgeIntegerRange(salesVolume, ruleValue, ruleType, count);
+
+            if (returnOrNot(allOrNot, count)) {
+                return count;
+            }
+        }
+
+        if (ruleData.containsKey("salesVolumeOneDays") && ruleData.getJSONObject("salesVolumeOneDays") != null) {
+            JSONObject object = ruleData.getJSONObject("salesVolumeOneDays");
+            int ruleValue = Integer.valueOf(object.getString("value"));
+            String date = object.getString("date");
+            String ruleType = object.getString("type");
+
+            long time = CommonUtil.string2Timestamp(date);
+
+            Integer tempCount = orderItemDao.itemCountByCreateTime(product.getItemId(), time);
+            int salesVolumeOneDaysCount = tempCount == null ? 0 : tempCount;
+
+            count = judgeIntegerRange(salesVolumeOneDaysCount, ruleValue, ruleType, count);
+
+            if (returnOrNot(allOrNot, count)) {
+                return count;
+            }
+        }
+
+        if (ruleData.containsKey("salesVolume7days") && ruleData.getJSONObject("salesVolume7days") != null) {
+            JSONObject object = ruleData.getJSONObject("salesVolume7days");
+            // 值
+            int ruleValue = Integer.valueOf(object.getString("value"));
+            // 符号类型
+            String ruleType = object.getString("type");
+
+            // 当前时间 - 7 天的时间戳
+            long startTime = DateUtil.offsetDay(nowDate, -7).getTime();
+            long endTime = nowDate.getTime();
+
+            Integer tempCount = orderItemDao.itemCountByCreateTimeRange(product.getItemId(), startTime, endTime);
+            int salesVolume7daysCount = tempCount == null ? 0 : tempCount;
+
+            count = judgeIntegerRange(salesVolume7daysCount, ruleValue, ruleType, count);
+
+            if (returnOrNot(allOrNot, count)) {
+                return count;
+            }
+        }
+
+        if (ruleData.containsKey("salesVolume30days") && ruleData.getJSONObject("salesVolume30days") != null) {
+            JSONObject object = ruleData.getJSONObject("salesVolume30days");
+            int ruleValue = Integer.valueOf(object.getString("value"));
+            String ruleType = object.getString("type");
+
+            // 当前时间 - 30 天的时间戳
+            long startTime = DateUtil.offsetDay(nowDate, -30).getTime();
+            long endTime = nowDate.getTime();
+
+            Integer tempCount = orderItemDao.itemCountByCreateTimeRange(product.getItemId(), startTime, endTime);
+            int salesVolume30daysCount = tempCount == null ? 0 : tempCount;
+
+            count = judgeIntegerRange(salesVolume30daysCount, ruleValue, ruleType, count);
+
+            if (returnOrNot(allOrNot, count)) {
+                return count;
+            }
+        }
+
+        return count;
+    }
+
+    private int judgeIntegerRange(int salesVolume, int ruleValue, String type, int count) {
+        if ("=".equals(type) && salesVolume == ruleValue) {
+            count++;
+        } else if ("<=".equals(type) && salesVolume <= ruleValue) {
+            count++;
+        } else if (">=".equals(type) && salesVolume >= ruleValue) {
+            count++;
+        } else if (">".equals(type) && salesVolume > ruleValue) {
+            count++;
+        } else if ("<".equals(type) && salesVolume < ruleValue) {
+            count++;
+        }
+
+        return count;
+    }
+
+    private boolean returnOrNot(boolean allOrNot, int count) {
+        if (!allOrNot && count > 0) {
+            return true;
+        }
+        return false;
+    }
 }

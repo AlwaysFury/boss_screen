@@ -10,6 +10,7 @@ import me.codeleep.jsondiff.core.config.JsonComparedOption;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
@@ -21,7 +22,7 @@ import java.util.Objects;
  */
 public class CommonUtil {
 
-    public static String timestamp2LocalDateTime(long timestamp) {
+    public static String timestamp2String(long timestamp) {
         // 使用Instant从时间戳创建时间点
         Instant instant = Instant.ofEpochSecond(timestamp);
 
@@ -36,6 +37,10 @@ public class CommonUtil {
         return dateTime.format(formatter);
     }
 
+    public static LocalDateTime timestamp2LocalDateTime(long timestamp) {
+        return string2LocalDateTime(timestamp2String(timestamp));
+    }
+
     public static LocalDateTime string2LocalDateTime(String timeStr) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return LocalDateTime.parse(timeStr, formatter);
@@ -44,6 +49,12 @@ public class CommonUtil {
     public static String localDateTime2String(LocalDateTime timeStr) {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return timeStr.format(fmt);
+    }
+
+    public static long string2Timestamp(String time) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime dateTime = LocalDateTime.parse(time, formatter);
+        return dateTime.toInstant(ZoneOffset.UTC).toEpochMilli() / 1000;
     }
 
     public static <T> String judgeRedis(RedisServiceImpl redisService, String redisKey, List<T> insertList, List<T> updateList, T t, Class<T> clazz) {

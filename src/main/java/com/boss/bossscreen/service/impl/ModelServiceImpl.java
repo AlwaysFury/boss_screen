@@ -10,7 +10,6 @@ import com.boss.bossscreen.dao.OperationLogDao;
 import com.boss.bossscreen.dao.OrderItemDao;
 import com.boss.bossscreen.enities.Model;
 import com.boss.bossscreen.enities.OperationLog;
-import com.boss.bossscreen.enities.OrderItem;
 import com.boss.bossscreen.service.ModelService;
 import com.boss.bossscreen.util.BeanCopyUtils;
 import com.boss.bossscreen.util.CommonUtil;
@@ -137,7 +136,8 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
         List<ModelVO> modelVOList = modelDao.selectList(new QueryWrapper<Model>().eq("item_id", itemId))
                 .stream().map(model -> {
                     ModelVO modelVO = BeanCopyUtils.copyObject(model, ModelVO.class);
-                    int salesVolume = Math.toIntExact(orderItemDao.selectCount(new QueryWrapper<OrderItem>().eq("model_id", model.getModelId())));
+                    Integer tempCount = orderItemDao.salesVolumeByModelId(model.getModelId());
+                    int salesVolume = tempCount == null ? 0 : tempCount;
                     modelVO.setSalesVolume(salesVolume);
                     return modelVO;
                 }).collect(Collectors.toList());
