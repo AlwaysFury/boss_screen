@@ -1,5 +1,6 @@
 package com.boss.bossscreen.vo;
 
+import com.alibaba.fastjson.JSONArray;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -7,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @Description
@@ -120,5 +120,5 @@ public class OrderEscrowInfoVO {
     /**
      * 统计衣服数量
      */
-    private Map<String, Integer> clothesCountMap;
+    private JSONArray clothesCountMap;
 }

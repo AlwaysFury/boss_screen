@@ -256,7 +256,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         List<ProductVO> productList = productDao.productList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition)
                 .stream().map(product -> {
                     ProductVO productVO = BeanCopyUtils.copyObject(product, ProductVO.class);
-                    productVO.setCategoryName(JSONObject.parseObject(redisService.get(CATEGORY + product.getCategoryId()).toString()).getString("display_category_name"));
+                    Object redisCategoryObj = redisService.get(CATEGORY + product.getCategoryId());
+                    if (redisCategoryObj != null) {
+                        productVO.setCategoryName(JSONObject.parseObject(redisCategoryObj.toString()).getString("display_category_name"));
+                    }
                     productVO.setCreateTime(CommonUtil.timestamp2String(product.getCreateTime()));
                     productVO.setStatus(productStatusMap.get(product.getStatus()));
 
@@ -281,11 +284,21 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         Product product = productDao.selectOne(new QueryWrapper<Product>().eq("item_id", itemId));
 
         ProductInfoVO productInfoVO = BeanCopyUtils.copyObject(product, ProductInfoVO.class);
-        productInfoVO.setCategoryName(JSONObject.parseObject(redisService.get(CATEGORY + product.getCategoryId()).toString()).getString("display_category_name"));
+        Object redisCategoryObj = redisService.get(CATEGORY + product.getCategoryId());
+        if (redisCategoryObj != null) {
+            productInfoVO.setCategoryName(JSONObject.parseObject(redisCategoryObj.toString()).getString("display_category_name"));
+        }
+
         productInfoVO.setCreateTime(CommonUtil.timestamp2String(product.getCreateTime()));
         productInfoVO.setStatus(productStatusMap.get(product.getStatus()));
 
         productInfoVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().eq("shop_id", product.getShopId())).getName());
+
+        // 判断规则设置产品等级
+        // 设置销量
+        Integer tempCount = orderItemDao.salesVolumeByItemId(product.getItemId());
+        int salesVolume = tempCount == null ? 0 : tempCount;
+        productInfoVO.setGrade(getGrade(product, salesVolume));
 
         productInfoVO.setModelVOList(modelService.getModelVOListByItemId(itemId));
 
@@ -298,7 +311,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         List<Product> categoryId = productDao.selectList(new QueryWrapper<Product>().select("category_id").groupBy("category_id"));
         for (Product product : categoryId) {
             Long id = product.getCategoryId();
-            String name = JSONObject.parseObject(redisService.get(CATEGORY + product.getCategoryId()).toString()).getString("display_category_name");
+            Object redisCategoryObj = redisService.get(CATEGORY + product.getCategoryId());
+            if (redisCategoryObj == null) {
+                continue;
+            }
+            String name = JSONObject.parseObject(redisCategoryObj.toString()).getString("display_category_name");
             SelectVO vo = SelectVO.builder()
                     .key(id)
                     .value(name).build();

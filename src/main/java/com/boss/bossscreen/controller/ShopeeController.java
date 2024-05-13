@@ -40,6 +40,8 @@ public class ShopeeController {
      */
     @GetMapping("/getAuthUrl")
     public Result<String> getAuthUrl(String type, String userId) {
+        log.info("type======>{}", type);
+        log.info("userId======>{}", userId);
         return Result.ok(ShopeeUtil.getAuthUrl(type, userId));
     }
 

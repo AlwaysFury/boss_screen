@@ -27,6 +27,11 @@ public class ModelVO {
     private Long modelId;
 
     /**
+     * 名称用于判断
+     */
+    private String name;
+
+    /**
      * 名称
      */
     private String modelName;

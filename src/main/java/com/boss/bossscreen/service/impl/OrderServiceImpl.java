@@ -396,7 +396,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
         OrderEscrowInfoVO orderEscrowInfoVO = BeanCopyUtils.copyObject(order, OrderEscrowInfoVO.class);
         orderEscrowInfoVO.setCreateTime(CommonUtil.timestamp2String(order.getCreateTime()));
-        orderEscrowInfoVO.setPayTime(CommonUtil.timestamp2String(order.getPayTime()));
+        if (order.getPayTime() != null) {
+            orderEscrowInfoVO.setPayTime(CommonUtil.timestamp2String(order.getPayTime()));
+        }
         orderEscrowInfoVO.setStatus(orderStatusMap.get(order.getStatus()));
 
         orderEscrowInfoVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().eq("shop_id", order.getShopId())).getName());
@@ -426,7 +428,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
                     // 计算衣服数量
                     String clothesType = getClothesType(orderItem.getModelSku().toLowerCase());
-                    clothesCountMap.put(clothesType, clothesCountMap.get(clothesType) + 1);
+                    if (clothesCountMap.get(clothesType) != null) {
+                        clothesCountMap.put(clothesType, clothesCountMap.get(clothesType) + 1);
+                    }
+
                     // 计算双面
                     String itemSku = orderItem.getItemSku();
                     if (!"notsure".equals(itemSku) && isEnglish(itemSku.substring(0, 1)) && isEnglish(itemSku.substring(1, 2))) {
@@ -468,7 +473,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         ).collect(Collectors.toList());
 
         orderEscrowInfoVO.setOrderEscrowItemVOList(orderEscrowItemVOList);
-        orderEscrowInfoVO.setClothesCountMap(clothesCountMap);
+
+        JSONArray clothesCounts = new JSONArray();
+        for (String s : clothesCountMap.keySet()) {
+            JSONObject object = new JSONObject();
+            object.put("key", s);
+            object.put("value", clothesCountMap.get(s));
+            clothesCounts.add(object);
+        }
+        orderEscrowInfoVO.setClothesCountMap(clothesCounts);
 
         return orderEscrowInfoVO;
     }

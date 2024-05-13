@@ -35,6 +35,7 @@
     <select id="shopList" resultType="com.boss.bossscreen.vo.ShopVO">
         SELECT
             id,
+            name,
             shop_id,
             status,
             create_time,

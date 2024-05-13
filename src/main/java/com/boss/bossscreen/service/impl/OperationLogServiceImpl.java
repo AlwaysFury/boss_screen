@@ -9,6 +9,7 @@ import com.boss.bossscreen.dto.UpdateStatusDTO;
 import com.boss.bossscreen.enities.OperationLog;
 import com.boss.bossscreen.service.OperationLogService;
 import com.boss.bossscreen.util.BeanCopyUtils;
+import com.boss.bossscreen.util.CommonUtil;
 import com.boss.bossscreen.util.PageUtils;
 import com.boss.bossscreen.vo.OperationLogVO;
 import com.boss.bossscreen.vo.PageResult;
@@ -61,7 +62,9 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogDao, Operat
     @Override
     public OperationLogVO getOptLogById(int id) {
         OperationLog log = operationLogDao.selectOne(new QueryWrapper<OperationLog>().eq("id", id));
-        return BeanCopyUtils.copyObject(log, OperationLogVO.class);
+        OperationLogVO operationLogVO = BeanCopyUtils.copyObject(log, OperationLogVO.class);
+        operationLogVO.setCreateTime(CommonUtil.localDateTime2String(log.getCreateTime()));
+        return operationLogVO;
     }
 
 }

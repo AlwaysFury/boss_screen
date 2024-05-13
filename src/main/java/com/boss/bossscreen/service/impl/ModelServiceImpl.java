@@ -139,6 +139,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
                     Integer tempCount = orderItemDao.salesVolumeByModelId(model.getModelId());
                     int salesVolume = tempCount == null ? 0 : tempCount;
                     modelVO.setSalesVolume(salesVolume);
+                    modelVO.setName(model.getModelName().split(",")[0]);
                     return modelVO;
                 }).collect(Collectors.toList());
         return modelVOList;

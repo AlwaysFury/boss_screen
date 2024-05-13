@@ -144,6 +144,25 @@ public class ShopeeUtil {
      * @throws IOException
      */
     public static JSONObject refreshToken(String refresh_token, long id, String type) {
+        JSONObject result = refreshTokenByHttp(refresh_token, id, type);
+
+        int retryCount = 0;
+        while (true) {
+            if (result.getString("error").contains("error") && retryCount < 5) {
+                result = refreshTokenByHttp(refresh_token, id, type);
+                retryCount++;
+            } else {
+                break;
+            }
+        }
+
+        return result;
+    }
+
+
+
+
+    public static JSONObject refreshTokenByHttp(String refresh_token, long id, String type) {
 
         long timest = System.currentTimeMillis() / 1000L;
         String host = ShopAuthDTO.getHost();

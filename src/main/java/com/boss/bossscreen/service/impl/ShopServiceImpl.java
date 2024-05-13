@@ -100,7 +100,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopDao, Shop> implements ShopS
             JSONObject object = ShopeeUtil.refreshToken(shop.getRefreshToken(), shopId, "shop");
             log.info("====={} 的 token：{}", shopId, object);
 
-            if ("error".equals(object.getString("error"))) {
+            if (object.getString("error").contains("error")) {
                 continue;
             }
 

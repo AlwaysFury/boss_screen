@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
 import java.time.LocalDate;
@@ -16,10 +18,8 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import static com.boss.bossscreen.constant.RedisPrefixConst.CATEGORY;
-import static com.boss.bossscreen.constant.RedisPrefixConst.CLOTHES_TYPE;
 
 @SpringBootTest
 class BossScreenApplicationTests {
@@ -225,11 +225,64 @@ class BossScreenApplicationTests {
     private RedisServiceImpl redisService;
     @Test
     void getCostType() {
-        Set<String> keys = redisService.keys(CLOTHES_TYPE + "*");
-        List<String> types = new ArrayList<>();
-        for (String key : keys) {
-            System.out.println(key.substring(key.indexOf(CLOTHES_TYPE) + 1, key.length()));
+        String str = "[[\"clothes_type:short\",\"short\"],[\"clothes_type:100%cotton\",\"100%cotton\"],[\"clothes_type:hoodie\",\"hoodie\"],[\"clothes_type:s\",\"s\"]]";
+//        Set<String> keys = redisService.keys(CLOTHES_TYPE + "*");
+//        JSONArray array = new JSONArray();
+//        for (String key : keys) {
+//            JSONArray tempArray = new JSONArray();
+//            tempArray.add(key);
+//            tempArray.add(redisService.get(key));
+//            array.add(tempArray);
+////            System.out.println(key.substring(key.indexOf(CLOTHES_TYPE) + 1, key.length()));
+//        }
+//        System.out.println(array.toJSONString());
+
+        JSONArray array = JSONArray.parseArray(str);
+        for (int i = 0; i < array.size(); i++) {
+            JSONArray jsonArray = array.getJSONArray(i);
+            for (int j = 0; j < jsonArray.size(); j++) {
+                redisService.set(jsonArray.getString(0), jsonArray.getString(1));
+            }
         }
+    }
+
+    @Test
+    void getCategoryType() {
+        //StringBuilder str = new StringBuilder("");
+//        Set<String> keys = redisService.keys(CATEGORY + "*");
+//        JSONArray array = new JSONArray();
+//        for (String key : keys) {
+//            JSONArray tempArray = new JSONArray();
+//            tempArray.add(key);
+//            tempArray.add(redisService.get(key));
+//            array.add(tempArray);
+//        }
+//        System.out.println(array.toJSONString());
+
+        String str = readFile("/Users/fury/workspace/ca.txt");
+        JSONArray array = JSONArray.parseArray(str);
+        for (int i = 0; i < array.size(); i++) {
+            JSONArray jsonArray = array.getJSONArray(i);
+            for (int j = 0; j < jsonArray.size(); j++) {
+                redisService.set(jsonArray.getString(0), jsonArray.getString(1));
+            }
+        }
+
+    }
+
+    public String readFile(String path) {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append(System.lineSeparator());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String tempContent = content.toString();
+        return tempContent;
     }
 
 }
