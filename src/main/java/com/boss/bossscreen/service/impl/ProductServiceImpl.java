@@ -142,7 +142,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                         e.printStackTrace();
                     } finally {
                         productCountDownLatch.countDown();
-                        System.out.println("productCountDownLatch===> " + productCountDownLatch);
+                        log.info("productCountDownLatch===> " + productCountDownLatch);
                     }
                 }, productExecutor);
 
@@ -157,7 +157,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                         e.printStackTrace();
                     } finally {
                         modelCountDownLatch.countDown();
-                        System.out.println("modelCountDownLatch===> " + modelCountDownLatch);
+                        log.info("modelCountDownLatch===> " + modelCountDownLatch);
                     }
                 }, modelExecutor);
             }

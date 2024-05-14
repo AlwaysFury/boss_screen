@@ -27,6 +27,7 @@
             id,
             type,
             price,
+            exchange_rate,
             start_time,
             end_time
         FROM

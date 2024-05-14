@@ -471,6 +471,22 @@ public class ShopeeUtil {
     }
 
     public static JSONObject getTrackingNumber(String accessToken, long shopId, String orderSn) {
+        JSONObject result = getTrackingNumberByHttp(accessToken, shopId, orderSn);
+
+        int retryCount = 0;
+        while (true) {
+            if (result.getString("error").contains("error") && retryCount < 5) {
+                result = getTrackingNumberByHttp(accessToken, shopId, orderSn);
+                retryCount++;
+            } else {
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    public static JSONObject getTrackingNumberByHttp(String accessToken, long shopId, String orderSn) {
         long timest = System.currentTimeMillis() / 1000L;
         String host = ShopAuthDTO.getHost();
         String path = "/api/v2/logistics/get_tracking_number";

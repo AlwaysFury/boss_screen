@@ -3,6 +3,7 @@ package com.boss.bossscreen.util;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.boss.bossscreen.service.impl.RedisServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import me.codeleep.jsondiff.DefaultJsonDifference;
 import me.codeleep.jsondiff.common.model.JsonCompareResult;
 import me.codeleep.jsondiff.core.config.JsonComparedOption;
@@ -20,6 +21,7 @@ import java.util.Objects;
  * @Author 罗宇航
  * @Date 2024/4/16
  */
+@Slf4j
 public class CommonUtil {
 
     public static String timestamp2String(long timestamp) {
@@ -69,6 +71,7 @@ public class CommonUtil {
         // 删除：指示标记该条数据被删除！！！不是物理删除，存入删除集合，并在更新 redis 和 mysql 中的数据
         String result = "";
         Object redisResult = redisService.get(redisKey);
+        log.info("key:{} ===> value:{}" , redisKey, redisResult);
         String newJsonStr = JSON.toJSONString(t, SerializerFeature.WriteMapNullValue);
         if (Objects.isNull(redisResult)) {
             // 为空入库
@@ -83,8 +86,8 @@ public class CommonUtil {
                         .option(jsonComparedOption)
                         .detectDiff(newJsonStr, oldJsonStr);
                 result = JSON.toJSONString(jsonCompareResult);
-                System.out.println("newJsonStr====>"+newJsonStr);
-                System.out.println("oldJsonStr====>"+oldJsonStr);
+                log.info("newJsonStr====>"+newJsonStr);
+                log.info("oldJsonStr====>"+oldJsonStr);
                 redisService.set(redisKey, newJsonStr);
                 updateList.add(JSON.parseObject(redisResult.toString(), clazz));
             }

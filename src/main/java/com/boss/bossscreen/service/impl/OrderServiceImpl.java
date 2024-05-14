@@ -24,10 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -161,6 +158,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                     try {
                         String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
                         JSONObject orderObject = ShopeeUtil.getOrderDetail(finalAccessToken, finalShopId, orderSn);
+                        if (orderObject.getString("error").contains("error") && orderObject == null) {
+                            return;
+                        }
                         JSONArray orderArray = orderObject.getJSONObject("response").getJSONArray("order_list");
                         JSONObject orderDetailObject;
                         for (int j = 0; j < orderArray.size(); j++) {
@@ -270,10 +270,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             JSONObject responseObject = ShopeeUtil.getTrackingNumber(token, shopId, orderSn).getJSONObject("response");
             if (responseObject != null) {
                 order.setTrackingNumber(responseObject.getString("tracking_number"));
+            } else {
+                Object redisResult = redisService.get(ORDER + orderSn);
+                if (!Objects.isNull(redisResult)) {
+                    order.setTrackingNumber(JSONObject.parseObject(redisResult.toString()).getString("trackingNumber"));
+                }
             }
         }
 
-        CommonUtil.judgeRedis(redisService, ORDER + orderSn, ordertList,updateOrderList, order, Order.class);
+        CommonUtil.judgeRedis(redisService, ORDER + orderSn, ordertList, updateOrderList, order, Order.class);
 
     }
 
@@ -309,7 +314,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                 orderItem.setImageUrl(imageInfoArray.getString("image_url"));
             }
 
-            CommonUtil.judgeRedis(redisService, ORDER_ITEM_MODEL + orderSn + "_" + itemId + "_" + modelId, orderItemList, updateOrderItemList, orderItem, OrderItem.class);
+            CommonUtil.judgeRedis(redisService, ORDER_ITEM_MODEL + orderSn + "_" + itemId + "_" + modelId + "_" + i, orderItemList, updateOrderItemList, orderItem, OrderItem.class);
         }
 
     }
@@ -331,12 +336,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             escrowInfo.setAdjustmentReason(adjustmentObject.getString("adjustment_reason"));
         }
 
-        String redisKey = ESCROW + orderSn;
-        CommonUtil.judgeRedis(redisService, redisKey, escrowInfoList, updateEscrowInfoList, escrowInfo, EscrowInfo.class);
+        CommonUtil.judgeRedis(redisService, ESCROW + orderSn, escrowInfoList, updateEscrowInfoList, escrowInfo, EscrowInfo.class);
     }
 
     public void saveEscrowItem(JSONObject oderIncomeObject, String orderSn, List<EscrowItem> escrowItemList, List<EscrowItem> updateEscrowItemList) {
         JSONArray items = oderIncomeObject.getJSONArray("items");
+
         JSONObject itemObject;
         for (int i = 0; i < items.size(); i++) {
             itemObject = items.getJSONObject(i);
@@ -359,7 +364,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                     .activityType(itemObject.getString("activity_type"))
                     .build();
 
-            CommonUtil.judgeRedis(redisService, ESCROW_ITEM_MODEL + orderSn + "_" + itemId + "_" + modelId, escrowItemList, updateEscrowItemList, escrowItem, EscrowItem.class);
+            CommonUtil.judgeRedis(redisService, ESCROW_ITEM_MODEL + orderSn + "_" + itemId + "_" + modelId + "_" + i, escrowItemList, updateEscrowItemList, escrowItem, EscrowItem.class);
 
         }
     }
@@ -459,9 +464,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                         double rate = costObject.getDouble("rate");
 
                         BigDecimal cost = costPrice.multiply(BigDecimal.valueOf(orderEscrowItemVO.getCount())).divide(BigDecimal.valueOf(rate), 2, RoundingMode.HALF_UP);
-                        BigDecimal price = orderEscrowItemVO.getSellerDiscount().multiply(BigDecimal.valueOf(orderEscrowItemVO.getCount())).divide(BigDecimal.valueOf(rate), 2, RoundingMode.HALF_UP);
+                        BigDecimal oldPrice = orderEscrowItemVO.getSellerDiscount();
+                        if (oldPrice.compareTo(BigDecimal.valueOf(0.0)) == 0) {
+                            oldPrice = orderEscrowItemVO.getSellingPrice();
+                        }
+                        BigDecimal price = oldPrice.multiply(BigDecimal.valueOf(orderEscrowItemVO.getCount())).divide(BigDecimal.valueOf(rate), 2, RoundingMode.HALF_UP);
                         BigDecimal profit = price.subtract(cost);
-                        float profitRate = profit.divide(price, 2, RoundingMode.HALF_UP).floatValue();
+                        float profitRate = 1;
+                        if (price.compareTo(BigDecimal.valueOf(0.0)) != 0) {
+                            profitRate = profit.divide(price, 2, RoundingMode.HALF_UP).floatValue();
+                        }
 
                         orderEscrowItemVO.setCost(cost);
                         orderEscrowItemVO.setProfit(profit);

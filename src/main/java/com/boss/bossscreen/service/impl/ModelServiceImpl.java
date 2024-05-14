@@ -133,7 +133,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
 
 
     public List<ModelVO> getModelVOListByItemId(Long itemId) {
-        List<ModelVO> modelVOList = modelDao.selectList(new QueryWrapper<Model>().eq("item_id", itemId))
+        List<ModelVO> modelVOList = modelDao.selectList(new QueryWrapper<Model>().eq("item_id", itemId).orderByAsc("model_id"))
                 .stream().map(model -> {
                     ModelVO modelVO = BeanCopyUtils.copyObject(model, ModelVO.class);
                     Integer tempCount = orderItemDao.salesVolumeByModelId(model.getModelId());

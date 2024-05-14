@@ -40,7 +40,7 @@ spring:
           max-active: 8
           min-idle: 8
           max-idle: 0
-          max-wait: 1000
+          max-wait: -1
 
 # 配置MybatisPlus
 mybatis-plus:

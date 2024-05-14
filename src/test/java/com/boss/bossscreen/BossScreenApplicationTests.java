@@ -4,9 +4,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.boss.bossscreen.service.impl.*;
 import com.boss.bossscreen.util.ShopeeUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.retry.annotation.EnableRetry;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -22,6 +24,8 @@ import java.util.List;
 import static com.boss.bossscreen.constant.RedisPrefixConst.CATEGORY;
 
 @SpringBootTest
+@Slf4j
+@EnableRetry
 class BossScreenApplicationTests {
 
     @Test

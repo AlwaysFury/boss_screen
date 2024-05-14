@@ -62,6 +62,7 @@
                 and s.create_time &lt;= #{condition.end_time}
             </if>
         </where>
+        order by create_time desc
         LIMIT #{current},#{size}
     </select>
 </mapper>
