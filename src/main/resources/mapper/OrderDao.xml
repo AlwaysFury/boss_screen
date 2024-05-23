@@ -31,16 +31,15 @@
     </select>
 
 
-    <select id="orderList" resultType="com.boss.bossscreen.enities.Order">
+    <select id="orderList" resultType="com.boss.bossscreen.vo.OrderEscrowVO">
         SELECT
-            id,
-            order_sn,
-            tracking_number,
-            status,
-            shop_id,
-            create_time
+            s.id, s.order_sn, s.tracking_number, s.status, s.shop_id, s.create_time, IFNULL(d.num, 0) as totalCount
         FROM
             tb_order as s
+        left join
+            (select order_sn, sum(count) as num from tb_order_item GROUP BY order_sn) as d
+        on
+            s.order_sn = d.order_sn
         <where>
             s.id is not null
             <if test="condition.order_sn != null">
@@ -62,7 +61,9 @@
                 and s.create_time &lt;= #{condition.end_time}
             </if>
         </where>
-        order by create_time desc
+        <if test="condition.orderBy_name != null">
+            order by ${condition.orderBy_name}
+        </if>
         LIMIT #{current},#{size}
     </select>
 </mapper>

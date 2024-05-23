@@ -3,7 +3,6 @@ package com.boss.bossscreen.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.bossscreen.dao.ModelDao;
 import com.boss.bossscreen.dao.OperationLogDao;
@@ -11,7 +10,6 @@ import com.boss.bossscreen.dao.OrderItemDao;
 import com.boss.bossscreen.enities.Model;
 import com.boss.bossscreen.enities.OperationLog;
 import com.boss.bossscreen.service.ModelService;
-import com.boss.bossscreen.util.BeanCopyUtils;
 import com.boss.bossscreen.util.CommonUtil;
 import com.boss.bossscreen.util.ShopeeUtil;
 import com.boss.bossscreen.vo.ModelVO;
@@ -50,7 +48,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
     private RedisServiceImpl redisService;
 
     @Override
-    public void getModel(long itemId, String token, long shopId, List<Model> modelList, List<Model> updateModeList) {
+    public void getModel(long itemId, String token, long shopId, List<Model> modelList) {
         try {
             JSONObject result = ShopeeUtil.getModelList(token, shopId, itemId);
             if (result == null || result.getString("error").contains("error")) {
@@ -83,6 +81,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
                 long modelId = modelObject.getLong("model_id");
                 String modelSku = modelObject.getString("model_sku");
                 Model model = Model.builder()
+                        .id(modelId)
                         .modelId(modelId)
                         .modelName(modelName)
                         .modelSku(modelSku)
@@ -106,7 +105,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
                     }
                 }
 
-                String judgeResult = CommonUtil.judgeRedis(redisService, PRODUCT_ITEM_MODEL + itemId + "_" + modelId, modelList, updateModeList, model, Model.class);
+                String judgeResult = CommonUtil.judgeRedis(redisService, PRODUCT_ITEM_MODEL + itemId + "_" + modelId, modelList, model, Model.class);
                 if (!"".equals(judgeResult)) {
                     JSONArray diffArray = JSON.parseObject(judgeResult).getJSONArray("defectsList");
                     if (diffArray.size() != 0) {
@@ -133,15 +132,21 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
 
 
     public List<ModelVO> getModelVOListByItemId(Long itemId) {
-        List<ModelVO> modelVOList = modelDao.selectList(new QueryWrapper<Model>().eq("item_id", itemId).orderByAsc("model_id"))
-                .stream().map(model -> {
-                    ModelVO modelVO = BeanCopyUtils.copyObject(model, ModelVO.class);
-                    Integer tempCount = orderItemDao.salesVolumeByModelId(model.getModelId());
-                    int salesVolume = tempCount == null ? 0 : tempCount;
-                    modelVO.setSalesVolume(salesVolume);
-                    modelVO.setName(model.getModelName().split(",")[0]);
-                    return modelVO;
-                }).collect(Collectors.toList());
+        List<ModelVO> modelVOList = modelDao.getModelVOListByItemId(itemId).stream().map(modelVO -> {
+            modelVO.setName(modelVO.getModelName().split(",")[0]);
+            return modelVO;
+        }).collect(Collectors.toList());
+
+
+//        List<ModelVO> modelVOList = modelDao.selectList(new QueryWrapper<Model>().eq("item_id", itemId).orderByAsc("model_id"))
+//                .stream().map(model -> {
+//                    ModelVO modelVO = BeanCopyUtils.copyObject(model, ModelVO.class);
+//                    Integer tempCount = orderItemDao.salesVolumeByModelId(model.getModelId());
+//                    int salesVolume = tempCount == null ? 0 : tempCount;
+//                    modelVO.setSalesVolume(salesVolume);
+//                    modelVO.setName(model.getModelName().split(",")[0]);
+//                    return modelVO;
+//                }).collect(Collectors.toList());
         return modelVOList;
     }
 

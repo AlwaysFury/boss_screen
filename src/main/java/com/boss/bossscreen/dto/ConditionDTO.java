@@ -110,4 +110,10 @@ public class ConditionDTO {
      * 规则名称
      */
     private String rule_name;
+
+
+    /**
+     * 排序名称
+     */
+    private String orderBy_name = "s.create_time desc";
 }

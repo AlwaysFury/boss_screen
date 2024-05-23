@@ -99,7 +99,7 @@ class BossScreenApplicationTests {
 
     @Test
     void getOrderList() {
-        String startTimeStr = "2023-01-01 00:00:00";
+        String startTimeStr = "2024-01-01 00:00:00";
         List<String> orderSnList = new ArrayList<>();
         // 定义日期格式
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd 00:00:00");
@@ -115,7 +115,8 @@ class BossScreenApplicationTests {
             System.out.println(time[0] + " ======== " + time[1]);
             long start = time[0].atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000L;
             long end = time[1].atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000L;
-            List<String> object = ShopeeUtil.getOrderList("6e657a574b544f6a72794f6c6e557044", 1017169304, 0, new ArrayList<>(), start, end);
+            List<String> object = ShopeeUtil.getOrderList("685875684c5a4c576d5a4f7665657143", 874244879, 0, new ArrayList<>(), start, end);
+            System.out.println(object.toString());
             System.out.println("多少件："+object.size());
             orderSnList.addAll(object);
         }
@@ -143,7 +144,7 @@ class BossScreenApplicationTests {
 
     @Test
     void getOrderDetail() {
-        JSONObject object = ShopeeUtil.getOrderDetail("64757a6748704a6f5a5350715a4a446a", 1017169304, "240102SQ95FRB7");
+        JSONObject object = ShopeeUtil.getOrderDetail("6a565561557961446d6f697973504843", 1017169304, "240102SQ95FRB7");
         System.out.println(object);
     }
 
@@ -188,7 +189,7 @@ class BossScreenApplicationTests {
 
     @Test
     void getEscrowDetailTest() {
-        JSONObject object = ShopeeUtil.getEscrowDetail("5a576f4a704979657953745051435149", 1017169304, "2405029EFSMHJ1");
+        JSONObject object = ShopeeUtil.getEscrowDetail("685875684c5a4c576d5a4f7665657143", 874244879, "240114UGWCQHFX");
         System.out.println(object);
     }
 

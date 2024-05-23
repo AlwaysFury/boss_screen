@@ -22,7 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.concurrent.*;
 
-import static com.boss.bossscreen.constant.RedisPrefixConst.*;
+import static com.boss.bossscreen.constant.RedisPrefixConst.RETURN_ORDER;
+import static com.boss.bossscreen.constant.RedisPrefixConst.RETURN_ORDER_ITEM_MODEL;
 
 /**
  * @Description
@@ -63,9 +64,9 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
 
         // 根据每个店铺的 token 和 shopId 获取产品
         List<ReturnOrder> returnOrdertList = new CopyOnWriteArrayList<>();
-        List<ReturnOrder> updateReturnOrderList = new CopyOnWriteArrayList<>();
+//        List<ReturnOrder> updateReturnOrderList = new CopyOnWriteArrayList<>();
         List<ReturnOrderItem> returnOrderItemList =  new CopyOnWriteArrayList<>();
-        List<ReturnOrderItem> updateReturnOrderItemList = new CopyOnWriteArrayList<>();
+//        List<ReturnOrderItem> updateReturnOrderItemList = new CopyOnWriteArrayList<>();
         long shopId;
         String accessToken;
         JSONObject result;
@@ -97,7 +98,7 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
 
                 CompletableFuture.runAsync(() -> {
                     try {
-                        getReturnOrderDetail(tempObject, returnOrdertList, updateReturnOrderList);
+                        getReturnOrderDetail(tempObject, returnOrdertList);
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
@@ -108,7 +109,7 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
 
                 CompletableFuture.runAsync(() -> {
                     try {
-                        getReturnOrderItem(tempObject, returnOrderItemList, updateReturnOrderItemList);
+                        getReturnOrderItem(tempObject, returnOrderItemList);
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
@@ -120,20 +121,21 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
 
         }
 
-        this.saveBatch(returnOrdertList);
+        this.saveOrUpdateBatch(returnOrdertList);
 //        System.out.println("updateProList===>" + JSONArray.toJSONString(updateProList));
-        this.updateBatchById(updateReturnOrderList);
-        returnOrderItemService.saveBatch(returnOrderItemList);
+//        this.updateBatchById(updateReturnOrderList);
+        returnOrderItemService.saveOrUpdateBatch(returnOrderItemList);
 //        System.out.println("updateModelList===>" + JSONArray.toJSONString(updateModelList));
-        returnOrderItemService.updateBatchById(updateReturnOrderItemList);
+//        returnOrderItemService.updateBatchById(updateReturnOrderItemList);
 
         log.info("更新退单耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
     }
 
-    private void getReturnOrderDetail(JSONObject tempObject, List<ReturnOrder> returnOrdertList, List<ReturnOrder> updateReturnOrderList) {
+    private void getReturnOrderDetail(JSONObject tempObject, List<ReturnOrder> returnOrdertList) {
         try {
             String returnSn = tempObject.getString("return_sn");
             ReturnOrder returnOrder = ReturnOrder.builder()
+                    .id(CommonUtil.createNo())
                     .returnSn(returnSn)
                     .orderSn(tempObject.getString("order_sn"))
                     .reason(tempObject.getString("reason"))
@@ -145,14 +147,14 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
                     .amountBeforeDiscount(tempObject.getBigDecimal("amount_before_discount"))
                     .build();
 
-            CommonUtil.judgeRedis(redisService,RETURN_ORDER + returnSn, returnOrdertList, updateReturnOrderList, returnOrder, ReturnOrder.class);
+            CommonUtil.judgeRedis(redisService,RETURN_ORDER + returnSn, returnOrdertList, returnOrder, ReturnOrder.class);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
     }
 
-    private void getReturnOrderItem(JSONObject tempObject, List<ReturnOrderItem> returnOrderItemList, List<ReturnOrderItem> updateReturnOrderItemList) {
+    private void getReturnOrderItem(JSONObject tempObject, List<ReturnOrderItem> returnOrderItemList) {
         try {
             JSONArray itemArray = tempObject.getJSONArray("item");
             if (itemArray.size() == 0) {
@@ -165,6 +167,7 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
                 long itemId = itemObject.getLong("item_id");
                 long modelId = itemObject.getLong("model_id");
                 ReturnOrderItem returnOrderItem = ReturnOrderItem.builder()
+                        .id(CommonUtil.createNo())
                         .returnSn(returnSn)
                         .name(itemObject.getString("name"))
                         .itemId(itemId)
@@ -174,7 +177,7 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
                         .modelId(modelId)
                         .build();
 
-                CommonUtil.judgeRedis(redisService,RETURN_ORDER_ITEM_MODEL + returnSn + "_" + itemId + "_" + modelId, returnOrderItemList, updateReturnOrderItemList, returnOrderItem, ReturnOrderItem.class);
+                CommonUtil.judgeRedis(redisService,RETURN_ORDER_ITEM_MODEL + returnSn + "_" + itemId + "_" + modelId, returnOrderItemList, returnOrderItem, ReturnOrderItem.class);
             }
         } catch (Exception e) {
             e.printStackTrace();

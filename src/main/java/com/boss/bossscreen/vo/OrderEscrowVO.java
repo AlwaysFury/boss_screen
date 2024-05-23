@@ -21,7 +21,7 @@ public class OrderEscrowVO {
     /**
      * 创建时间
      */
-    private String createTime;
+    private Object createTime;
 
     /**
      * 订单号

@@ -11,7 +11,10 @@ import com.boss.bossscreen.dao.OrderItemDao;
 import com.boss.bossscreen.dao.ProductDao;
 import com.boss.bossscreen.dao.ShopDao;
 import com.boss.bossscreen.dto.ConditionDTO;
-import com.boss.bossscreen.enities.*;
+import com.boss.bossscreen.enities.Model;
+import com.boss.bossscreen.enities.OperationLog;
+import com.boss.bossscreen.enities.Product;
+import com.boss.bossscreen.enities.Shop;
 import com.boss.bossscreen.service.ProductService;
 import com.boss.bossscreen.util.BeanCopyUtils;
 import com.boss.bossscreen.util.CommonUtil;
@@ -91,7 +94,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         ruleKeys.add("salesVolume30days");
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
     public void saveOrUpdateProduct() {
         long startTime =  System.currentTimeMillis();
@@ -100,21 +102,16 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         shopQueryWrapper.select("shop_id").eq("status", "1");
         List<Shop> shopList = shopDao.selectList(shopQueryWrapper);
 
-        // 根据每个店铺的 token 和 shopId 获取产品
-        List<Product> productList = new CopyOnWriteArrayList<>();
-        List<Product> updateProList = new CopyOnWriteArrayList<>();
-        List<Model> modelList =  new CopyOnWriteArrayList<>();
-        List<Model> updateModelList = new CopyOnWriteArrayList<>();
         long shopId;
         String accessToken;
-        List<String> itemIds;
+
         for (Shop shop : shopList) {
             shopId = shop.getShopId();
             accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
 
-            itemIds = ShopeeUtil.getProducts(accessToken, shopId, 0, new ArrayList<>());
+            List<String> itemIds = ShopeeUtil.getProducts(accessToken, shopId, 0, new ArrayList<>());
 
-            if (itemIds.size() == 0) {
+            if (itemIds == null || itemIds.isEmpty()) {
                 continue;
             }
 
@@ -123,65 +120,75 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 itemIdList.add(String.join(",", itemIds.subList(i, Math.min(i + 50, itemIds.size()))));
             }
 
-            CountDownLatch productCountDownLatch = new CountDownLatch(itemIdList.size());
-            // 开线程池，线程数量为要遍历的对象的长度
-            ExecutorService productExecutor = Executors.newFixedThreadPool(itemIdList.size());
-
-            CountDownLatch modelCountDownLatch = new CountDownLatch(itemIdList.size());
-            // 开线程池，线程数量为要遍历的对象的长度
-            ExecutorService modelExecutor = Executors.newFixedThreadPool(itemIdList.size());
-            for (String itemId : itemIdList) {
-
-                long finalShopId = shopId;
-
-                CompletableFuture.runAsync(() -> {
-                    try {
-                        String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
-                        getProductDetail(itemId, finalAccessToken, finalShopId, productList, updateProList);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        productCountDownLatch.countDown();
-                        log.info("productCountDownLatch===> " + productCountDownLatch);
-                    }
-                }, productExecutor);
-
-                CompletableFuture.runAsync(() -> {
-                    try {
-                        String[] splitIds = itemId.split(",");
-                        for (String splitId : splitIds) {
-                            String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
-                            modelService.getModel(Long.parseLong(splitId), finalAccessToken, finalShopId, modelList, updateModelList);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        modelCountDownLatch.countDown();
-                        log.info("modelCountDownLatch===> " + modelCountDownLatch);
-                    }
-                }, modelExecutor);
-            }
-
-            try {
-                productCountDownLatch.await();
-                modelCountDownLatch.await();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
+            refreshProductByItemId(itemIdList, shopId);
         }
-
-        this.saveBatch(productList);
-//        System.out.println("updateProList===>" + JSONArray.toJSONString(updateProList));
-        this.updateBatchById(updateProList);
-        modelService.saveBatch(modelList);
-//        System.out.println("updateModelList===>" + JSONArray.toJSONString(updateModelList));
-        modelService.updateBatchById(updateModelList);
 
         log.info("更新产品耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
     }
 
-    private void getProductDetail(String itemIds, String token, long shopId, List<Product> productList, List<Product> updateProList) {
+    @Transactional(rollbackFor = Exception.class)
+    public void refreshProductByItemId(List<String> itemIdList, long shopId) {
+        // 根据每个店铺的 token 和 shopId 获取产品
+        List<Product> productList = new CopyOnWriteArrayList<>();
+//        List<Product> updateProList = new CopyOnWriteArrayList<>();
+        List<Model> modelList =  new CopyOnWriteArrayList<>();
+//        List<Model> updateModelList = new CopyOnWriteArrayList<>();
+
+        CountDownLatch productCountDownLatch = new CountDownLatch(itemIdList.size());
+        // 开线程池，线程数量为要遍历的对象的长度
+        ExecutorService productExecutor = Executors.newFixedThreadPool(itemIdList.size());
+
+        CountDownLatch modelCountDownLatch = new CountDownLatch(itemIdList.size());
+        // 开线程池，线程数量为要遍历的对象的长度
+        ExecutorService modelExecutor = Executors.newFixedThreadPool(itemIdList.size());
+        for (String itemId : itemIdList) {
+
+            long finalShopId = shopId;
+
+            CompletableFuture.runAsync(() -> {
+                try {
+                    String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
+                    getProductDetail(itemId, finalAccessToken, finalShopId, productList);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    productCountDownLatch.countDown();
+                    log.info("productCountDownLatch===> {}", productCountDownLatch);
+                }
+            }, productExecutor);
+
+            CompletableFuture.runAsync(() -> {
+                try {
+                    String[] splitIds = itemId.split(",");
+                    for (String splitId : splitIds) {
+                        String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
+                        modelService.getModel(Long.parseLong(splitId), finalAccessToken, finalShopId, modelList);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    modelCountDownLatch.countDown();
+                    log.info("modelCountDownLatch===> {}", modelCountDownLatch);
+                }
+            }, modelExecutor);
+        }
+
+        try {
+            productCountDownLatch.await();
+            modelCountDownLatch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        this.saveOrUpdateBatch(productList);
+//        System.out.println("updateProList===>" + JSONArray.toJSONString(updateProList));
+//        this.updateBatchById(updateProList);
+        modelService.saveOrUpdateBatch(modelList);
+//        System.out.println("updateModelList===>" + JSONArray.toJSONString(updateModelList));
+//        modelService.updateBatchById(updateModelList);
+    }
+
+    private void getProductDetail(String itemIds, String token, long shopId, List<Product> productList) {
         try {
             JSONObject result = ShopeeUtil.getProductInfo(token, shopId, itemIds);
 
@@ -202,6 +209,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
                 long itemId = itemObject.getLong("item_id");
                 Product product = Product.builder()
+                        .id(itemId)
                         .shopId(shopId)
                         .itemId(itemId)
                         .itemName(itemObject.getString("item_name"))
@@ -224,7 +232,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 }
 
 
-                String judgeResult = CommonUtil.judgeRedis(redisService,PRODUCT_ITEM + itemId, productList, updateProList, product, Product.class);
+                String judgeResult = CommonUtil.judgeRedis(redisService,PRODUCT_ITEM + itemId, productList, product, Product.class);
                 if (!"".equals(judgeResult)) {
                     JSONArray diffArray = JSON.parseObject(judgeResult).getJSONArray("defectsList");
                     if (diffArray.size() != 0) {
@@ -254,24 +262,25 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         }
         // 分页查询分类列表
         List<ProductVO> productList = productDao.productList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition)
-                .stream().map(product -> {
-                    ProductVO productVO = BeanCopyUtils.copyObject(product, ProductVO.class);
-                    Object redisCategoryObj = redisService.get(CATEGORY + product.getCategoryId());
+                .stream().map(productVO -> {
+                    Object redisCategoryObj = redisService.get(CATEGORY + productVO.getCategoryId());
                     if (redisCategoryObj != null) {
                         productVO.setCategoryName(JSONObject.parseObject(redisCategoryObj.toString()).getString("display_category_name"));
                     }
-                    productVO.setCreateTime(CommonUtil.timestamp2String(product.getCreateTime()));
-                    productVO.setStatus(productStatusMap.get(product.getStatus()));
+                    productVO.setCreateTime(CommonUtil.timestamp2String((Long) productVO.getCreateTime()));
+                    productVO.setStatus(productStatusMap.get(productVO.getStatus()));
 
-                    productVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().eq("shop_id", product.getShopId())).getName());
+                    productVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().select("name").eq("shop_id", productVO.getShopId())).getName());
 
                     // 设置销量
-                    Integer tempCount = orderItemDao.salesVolumeByItemId(product.getItemId());
-                    int salesVolume = tempCount == null ? 0 : tempCount;
-                    productVO.setSalesVolume(salesVolume);
+//                    Integer tempCount = orderItemDao.salesVolumeByItemId(productVO.getItemId());
+//                    int salesVolume = tempCount == null ? 0 : tempCount;
+//                    productVO.setSalesVolume(salesVolume);
 
+                    Product product = BeanCopyUtils.copyObject(productVO, Product.class);
+                    product.setCreateTime(CommonUtil.string2Timestamp(String.valueOf(productVO.getCreateTime())));
                     // 判断规则设置产品等级
-                    productVO.setGrade(getGrade(product, salesVolume));
+                    productVO.setGrade(getGrade(product, productVO.getSalesVolume()));
 
                     return productVO;
                 }).collect(Collectors.toList());

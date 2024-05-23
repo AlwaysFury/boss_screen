@@ -22,8 +22,8 @@ import java.time.LocalDateTime;
 @TableName("tb_order_item")
 public class OrderItem {
 
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+//    @TableId(value = "id", type = IdType.AUTO)
+    private Long id;
 
     /**
      * 创建时间

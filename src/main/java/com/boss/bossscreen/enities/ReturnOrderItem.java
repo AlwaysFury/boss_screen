@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 public class ReturnOrderItem {
 
     @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+    private Long id;
 
     /**
      * 创建时间

@@ -21,8 +21,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @TableName("tb_escrow_item")
 public class EscrowItem {
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+//    @TableId(value = "id", type = IdType.AUTO)
+    private Long id;
 
     /**
      * 创建时间

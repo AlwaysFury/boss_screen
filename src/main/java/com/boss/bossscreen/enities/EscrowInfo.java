@@ -22,8 +22,8 @@ import java.time.LocalDateTime;
 @TableName("tb_escrow_info")
 public class EscrowInfo {
 
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+//    @TableId(value = "id", type = IdType.AUTO)
+    private Long id;
 
     /**
      * 创建时间

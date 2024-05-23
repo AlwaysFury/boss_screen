@@ -1,7 +1,5 @@
 package com.boss.bossscreen.enities;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,8 +19,8 @@ import lombok.NoArgsConstructor;
 @TableName("tb_order")
 public class Order {
 
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+//    @TableId(value = "id", type = IdType.AUTO)
+    private Long id;
 
     /**
      * 创建时间
@@ -83,6 +81,11 @@ public class Order {
      * 买家取消原因
      */
     private String buyerCancelReason;
+
+    /**
+     * 运送方式
+     */
+    private String shippingCarrier;
 
 
 }

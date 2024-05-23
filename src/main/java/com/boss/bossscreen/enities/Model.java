@@ -23,8 +23,8 @@ import java.time.LocalDateTime;
 @TableName("tb_model")
 public class Model {
 
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+//    @TableId(value = "id", type = IdType.AUTO)
+    private Long id;
 
     /**
      * 系统 id

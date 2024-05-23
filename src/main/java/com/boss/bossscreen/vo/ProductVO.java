@@ -27,6 +27,11 @@ public class ProductVO {
     /**
      * 类目 id
      */
+    private Long categoryId;
+
+    /**
+     * 类目名称
+     */
     private String categoryName;
 
     /**
@@ -67,7 +72,7 @@ public class ProductVO {
     /**
      * 创建时间
      */
-    private String createTime;
+    private Object createTime;
 
     /**
      * 总销量

@@ -1,6 +1,9 @@
 package com.boss.bossscreen.util;
 
+import cn.hutool.core.lang.Snowflake;
+import cn.hutool.core.util.IdUtil;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.boss.bossscreen.service.impl.RedisServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +62,7 @@ public class CommonUtil {
         return dateTime.toInstant(ZoneOffset.UTC).toEpochMilli() / 1000;
     }
 
-    public static <T> String judgeRedis(RedisServiceImpl redisService, String redisKey, List<T> insertList, List<T> updateList, T t, Class<T> clazz) {
+    public static <T> String judgeRedis(RedisServiceImpl redisService, String redisKey, List<T> list, T t, Class<T> clazz) {
         // 检测入库
         // 将新旧数据全部数据缓存进入 redis
         // 新数据与旧数据进行比较：时间戳
@@ -71,27 +74,47 @@ public class CommonUtil {
         // 删除：指示标记该条数据被删除！！！不是物理删除，存入删除集合，并在更新 redis 和 mysql 中的数据
         String result = "";
         Object redisResult = redisService.get(redisKey);
-        log.info("key:{} ===> value:{}" , redisKey, redisResult);
         String newJsonStr = JSON.toJSONString(t, SerializerFeature.WriteMapNullValue);
         if (Objects.isNull(redisResult)) {
             // 为空入库
             redisService.set(redisKey, newJsonStr);
-            insertList.add(t);
+            list.add(t);
         } else {
             // 不为空判断更新
-            String oldJsonStr = redisResult.toString();
+            JSONObject oldObject = JSON.parseObject(redisResult.toString());
+            long id = oldObject.getLong("id");
+            oldObject.remove("id");
+            String oldJsonStr = oldObject.toJSONString();
+
+            JSONObject newObject = JSON.parseObject(newJsonStr);
+            newObject.remove("id");
+            newJsonStr = newObject.toJSONString();
+
+
             if (!newJsonStr.equals(oldJsonStr)) {
                 JsonComparedOption jsonComparedOption = new JsonComparedOption().setIgnoreOrder(true);
                 JsonCompareResult jsonCompareResult = new DefaultJsonDifference()
                         .option(jsonComparedOption)
                         .detectDiff(newJsonStr, oldJsonStr);
                 result = JSON.toJSONString(jsonCompareResult);
+
                 log.info("newJsonStr====>"+newJsonStr);
                 log.info("oldJsonStr====>"+oldJsonStr);
+
+                newObject.put("id", id);
+                newJsonStr = newObject.toJSONString();
                 redisService.set(redisKey, newJsonStr);
-                updateList.add(JSON.parseObject(redisResult.toString(), clazz));
+                list.add(JSON.parseObject(newJsonStr, clazz));
             }
         }
         return result;
+    }
+
+    /**
+     * 生成Snowflake id
+     */
+    public static long createNo() {
+        Snowflake snowflake = IdUtil.getSnowflake(1, 1);//单例方式获取实例，否则高并发会重复！！！
+        return snowflake.nextId() / 1000;
     }
 }

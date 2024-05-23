@@ -12,5 +12,5 @@ import java.util.List;
  */
 public interface ModelService extends IService<Model> {
 
-    void getModel(long itemId, String token, long shopId, List<Model> modelList, List<Model> updateModeList);
+    void getModel(long itemId, String token, long shopId, List<Model> modelList);
 }

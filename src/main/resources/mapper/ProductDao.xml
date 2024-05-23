@@ -35,20 +35,15 @@
     </select>
 
 
-    <select id="productList" resultType="com.boss.bossscreen.enities.Product">
+    <select id="productList" resultType="com.boss.bossscreen.vo.ProductVO">
         SELECT
-            id,
-            item_id,
-            category_id,
-            item_name,
-            item_sku,
-            mainImg_url,
-            grade,
-            shop_id,
-            status,
-            create_time
+            s.id, s.item_id, s.category_id, s.item_name, s.item_sku, s.mainImg_url, s.grade, s.shop_id, s.status, s.create_time, IFNULL(d.num, 0) as salesVolume
         FROM
             tb_product s
+        left join
+            (select item_id, count(*) as num from tb_order_item group by item_id) as d
+        on
+            s.item_id=d.item_id
         <where>
             s.id is not null
             <if test="condition.item_id != null">
@@ -73,7 +68,9 @@
                 and s.create_time &lt;= #{condition.end_time}
             </if>
         </where>
-        order by create_time desc
+        <if test="condition.orderBy_name != null">
+            order by ${condition.orderBy_name}
+        </if>
         LIMIT #{current},#{size}
     </select>
 </mapper>
