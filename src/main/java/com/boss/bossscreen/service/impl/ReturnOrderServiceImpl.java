@@ -56,7 +56,7 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void saveOrUpdateReturnOrder() {
-        long startTime =  System.currentTimeMillis();
+
         // 遍历所有未冻结店铺获取 token 和 shopId
         QueryWrapper<Shop> shopQueryWrapper = new QueryWrapper<>();
         shopQueryWrapper.select("shop_id").eq("status", "1");
@@ -128,7 +128,7 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
 //        System.out.println("updateModelList===>" + JSONArray.toJSONString(updateModelList));
 //        returnOrderItemService.updateBatchById(updateReturnOrderItemList);
 
-        log.info("更新退单耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
+
     }
 
     private void getReturnOrderDetail(JSONObject tempObject, List<ReturnOrder> returnOrdertList) {

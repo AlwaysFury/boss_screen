@@ -31,4 +31,6 @@ public interface ProductService extends IService<Product> {
 //    void updateAccountsStatus(UpdateStatusDTO updateStatusDTO);
 
 //    void refreshAccountToken();
+
+    void refreshProducts(List<Integer> itemIds);
 }

@@ -23,7 +23,6 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
@@ -93,17 +92,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void saveOrUpdateOrder(String orderSnStartTime) {
-        long logStart =  System.currentTimeMillis();
-
-        // 定义日期格式
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd 00:00:00");
-
-        // 将字符串转换为LocalDate对象
-        LocalDate startTime = LocalDate.parse(orderSnStartTime, formatter);
-
-        LocalDate endTime = LocalDate.from(LocalDateTime.now());
-
+    public void saveOrUpdateOrder(LocalDate startLocalDateTime, LocalDate endLocalDateTime) {
         // 遍历所有未冻结店铺获取 token 和 shopId
         QueryWrapper<Shop> shopQueryWrapper = new QueryWrapper<>();
         shopQueryWrapper.select("shop_id").eq("status", "1");
@@ -117,7 +106,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             shopId = shop.getShopId();
             accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
 
-            List<LocalDate[]> timeList = splitIntoEvery15DaysTimestamp(startTime, endTime);
+            List<LocalDate[]> timeList = CommonUtil.splitIntoEvery15DaysTimestamp(startLocalDateTime, endLocalDateTime, 14);
             List<String> orderSnList = new ArrayList<>();
             for (LocalDate[] time : timeList) {
                 long start = time[0].atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000L;
@@ -135,10 +124,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                 newOrderSnList.add(String.join(",", orderSnList.subList(i, Math.min(i + 50, orderSnList.size()))));
             }
 
+            // todo 事务嵌套了
             refreshOrderBySn(newOrderSnList, shopId);
         }
 
-        log.info("更新订单耗时： {}秒", (System.currentTimeMillis() - logStart) / 1000);
+
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -151,6 +141,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 //        List<EscrowInfo> updateEscrowInfoList = new CopyOnWriteArrayList<>();
         List<EscrowItem> escrowItemList = new CopyOnWriteArrayList<>();
 //        List<EscrowItem> updateEscrowItemList = new CopyOnWriteArrayList<>();
+
+        // todo 改为全局线程池和 futurelist
 
         CountDownLatch orderCountDownLatch = new CountDownLatch(orderSnList.size());
         // 开线程池，线程数量为要遍历的对象的长度
@@ -231,23 +223,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         escrowItemService.saveOrUpdateBatch(escrowItemList);
 //        System.out.println("updateEscrowItemList===>" + JSONArray.toJSONString(updateEscrowItemList));
 //        escrowItemService.updateBatchById(updateEscrowItemList);
-    }
-
-    private List<LocalDate[]> splitIntoEvery15DaysTimestamp(LocalDate startDate, LocalDate endDate) {
-        List<LocalDate[]> timestampPairs = new ArrayList<>();
-        while (!startDate.isAfter(endDate)) {
-            LocalDate endOfSplitDate = startDate.plusDays(14);
-            if (endOfSplitDate.isAfter(endDate)) {
-                endOfSplitDate = endDate;
-            }
-            LocalDate[] pair = new LocalDate[]{
-                    startDate,
-                    endOfSplitDate
-            };
-            timestampPairs.add(pair);
-            startDate = endOfSplitDate.plusDays(1);
-        }
-        return timestampPairs;
     }
 
     private void getOrderDetail(JSONObject orderObject, List<Order> ordertList, Long shopId) {

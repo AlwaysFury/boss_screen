@@ -1,14 +1,13 @@
 package com.boss.bossscreen.controller;
 
 import com.boss.bossscreen.dto.ConditionDTO;
+import com.boss.bossscreen.dto.UpdateStatusDTO;
 import com.boss.bossscreen.service.impl.ProductServiceImpl;
 import com.boss.bossscreen.vo.*;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -61,6 +60,12 @@ public class ProductController {
     @GetMapping("/statusSelect")
     public Result<List<SelectVO>> getStatusSelect() {
         return Result.ok(productService.getStatusSelect());
+    }
+
+    @PostMapping("/refreshProducts")
+    public Result<?> refreshProducts(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
+        productService.refreshProducts(updateStatusDTO.getIdList());
+        return Result.ok();
     }
 
 

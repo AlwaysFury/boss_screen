@@ -11,11 +11,9 @@ import me.codeleep.jsondiff.DefaultJsonDifference;
 import me.codeleep.jsondiff.common.model.JsonCompareResult;
 import me.codeleep.jsondiff.core.config.JsonComparedOption;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -116,5 +114,22 @@ public class CommonUtil {
     public static long createNo() {
         Snowflake snowflake = IdUtil.getSnowflake(1, 1);//单例方式获取实例，否则高并发会重复！！！
         return snowflake.nextId() / 1000;
+    }
+
+    public static List<LocalDate[]> splitIntoEvery15DaysTimestamp(LocalDate startDate, LocalDate endDate, int offset) {
+        List<LocalDate[]> timestampPairs = new ArrayList<>();
+        while (!startDate.isAfter(endDate)) {
+            LocalDate endOfSplitDate = startDate.plusDays(offset);
+            if (endOfSplitDate.isAfter(endDate)) {
+                endOfSplitDate = endDate;
+            }
+            LocalDate[] pair = new LocalDate[]{
+                    startDate,
+                    endOfSplitDate
+            };
+            timestampPairs.add(pair);
+            startDate = endOfSplitDate.plusDays(1);
+        }
+        return timestampPairs;
     }
 }

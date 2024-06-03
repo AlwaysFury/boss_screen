@@ -153,7 +153,7 @@ class BossScreenApplicationTests {
 
     @Test
     void saveOrUpdateOrder() {
-        orderService.saveOrUpdateOrder("2024-01-01 00:00:00");
+//        orderService.saveOrUpdateOrder("2024-01-01 00:00:00");
     }
 
     @Autowired

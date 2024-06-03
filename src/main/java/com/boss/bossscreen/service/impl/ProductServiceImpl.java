@@ -96,7 +96,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
     @Override
     public void saveOrUpdateProduct() {
-        long startTime =  System.currentTimeMillis();
         // 遍历所有未冻结店铺获取 token 和 shopId
         QueryWrapper<Shop> shopQueryWrapper = new QueryWrapper<>();
         shopQueryWrapper.select("shop_id").eq("status", "1");
@@ -120,26 +119,61 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 itemIdList.add(String.join(",", itemIds.subList(i, Math.min(i + 50, itemIds.size()))));
             }
 
+            // todo 事务嵌套了
             refreshProductByItemId(itemIdList, shopId);
         }
+    }
 
-        log.info("更新产品耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
+    @Override
+    public void refreshProducts(List<Integer> itemIds) {
+        StringJoiner sj = new StringJoiner(",");
+        for (int i = 0; i < itemIds.size(); i ++) {
+            sj.add(String.valueOf(itemIds.get(i)));
+        }
+        List<Product> products = productDao.selectList(new QueryWrapper<Product>().select("item_id", "shop_id").in("item_id", sj.toString()));
+
+        Map<Long, List<String>> map = new HashMap<>();
+
+        for (Product product : products) {
+            long itemId = product.getItemId();
+            long shop_id = product.getShopId();
+
+            if (!map.containsKey(shop_id)) {
+                List<String> temp = new ArrayList<>();
+                temp.add(String.valueOf(itemId));
+                map.put(shop_id, temp);
+            } else {
+                List<String> temp = map.get(shop_id);
+                temp.add(String.valueOf(itemId));
+                map.put(shop_id, temp);
+            }
+        }
+
+        for (long shopId : map.keySet()) {
+            List<String> oldItemList = map.get(shopId);
+
+            List<String> itemIdList = new ArrayList<>();
+            for (int i = 0; i < oldItemList.size(); i += 50) {
+                itemIdList.add(String.join(",", oldItemList.subList(i, Math.min(i + 50, oldItemList.size()))));
+            }
+
+            // todo 加锁
+//            refreshProductByItemId(itemIdList, shopId);
+        }
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void refreshProductByItemId(List<String> itemIdList, long shopId) {
         // 根据每个店铺的 token 和 shopId 获取产品
         List<Product> productList = new CopyOnWriteArrayList<>();
-//        List<Product> updateProList = new CopyOnWriteArrayList<>();
         List<Model> modelList =  new CopyOnWriteArrayList<>();
-//        List<Model> updateModelList = new CopyOnWriteArrayList<>();
 
+        // todo 改为全局线程池和 futurelist
+
+        // 开线程池，线程数量为要遍历的对象的长度
         CountDownLatch productCountDownLatch = new CountDownLatch(itemIdList.size());
-        // 开线程池，线程数量为要遍历的对象的长度
         ExecutorService productExecutor = Executors.newFixedThreadPool(itemIdList.size());
-
         CountDownLatch modelCountDownLatch = new CountDownLatch(itemIdList.size());
-        // 开线程池，线程数量为要遍历的对象的长度
         ExecutorService modelExecutor = Executors.newFixedThreadPool(itemIdList.size());
         for (String itemId : itemIdList) {
 
@@ -181,11 +215,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         }
 
         this.saveOrUpdateBatch(productList);
-//        System.out.println("updateProList===>" + JSONArray.toJSONString(updateProList));
-//        this.updateBatchById(updateProList);
         modelService.saveOrUpdateBatch(modelList);
-//        System.out.println("updateModelList===>" + JSONArray.toJSONString(updateModelList));
-//        modelService.updateBatchById(updateModelList);
     }
 
     private void getProductDetail(String itemIds, String token, long shopId, List<Product> productList) {
