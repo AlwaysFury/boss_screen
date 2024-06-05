@@ -1,5 +1,8 @@
 package com.boss.bossscreen;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.LocalDateTimeUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.boss.bossscreen.service.impl.*;
@@ -153,7 +156,19 @@ class BossScreenApplicationTests {
 
     @Test
     void saveOrUpdateOrder() {
-//        orderService.saveOrUpdateOrder("2024-01-01 00:00:00");
+        log.info("======开始刷新订单信息");
+        long startTime =  System.currentTimeMillis();
+
+        DateTime date = DateUtil.date();
+        DateTime startDate = DateUtil.offsetMonth(date, -1);
+        String startFormat = DateUtil.format(startDate, "yyyy-MM-dd");
+        String endFormat = DateUtil.format(date, "yyyy-MM-dd");
+
+        LocalDate startLocalDateTime = LocalDateTimeUtil.parseDate(startFormat);
+        LocalDate endLocalDateTime = LocalDateTimeUtil.parseDate(endFormat);
+        orderService.saveOrUpdateOrder(startLocalDateTime, endLocalDateTime);
+
+        log.info("更新订单耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
     }
 
     @Autowired

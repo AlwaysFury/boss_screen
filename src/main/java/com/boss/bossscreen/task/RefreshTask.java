@@ -9,6 +9,7 @@ import com.boss.bossscreen.service.impl.ReturnOrderServiceImpl;
 import com.boss.bossscreen.service.impl.ShopServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -44,7 +45,7 @@ public class RefreshTask {
      * 月（0~11）
      * 周几（ 可填1-7 或 SUN/MON/TUE/WED/THU/FRI/SAT）
      */
-//    @Scheduled(cron = "0 0 */2 * * ?")
+    @Scheduled(cron = "0 0 */2 * * ?")
     public void refreshToken() {
         log.info("======开始刷新 token");
         shopService.refreshShopToken();

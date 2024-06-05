@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderEscrowVO {
-    private Integer id;
+    private Long id;
 
     /**
      * 创建时间

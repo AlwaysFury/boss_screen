@@ -19,7 +19,7 @@ import java.util.List;
 @NoArgsConstructor
 public class ProductInfoVO {
 
-    private Integer id;
+    private Long id;
 
     /**
      * 创建时间

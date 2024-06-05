@@ -19,7 +19,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class ModelVO {
 
-    private Integer id;
+    private Long id;
 
     /**
      * 系统 id

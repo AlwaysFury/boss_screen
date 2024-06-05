@@ -19,7 +19,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class OrderEscrowItemVO {
 
-    private Integer id;
+    private Long id;
 
     /**
      * 产品 id

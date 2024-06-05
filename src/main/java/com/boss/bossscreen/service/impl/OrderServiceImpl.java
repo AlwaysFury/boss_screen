@@ -143,86 +143,121 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 //        List<EscrowItem> updateEscrowItemList = new CopyOnWriteArrayList<>();
 
         // todo 改为全局线程池和 futurelist
+        ExecutorService executor = Executors.newFixedThreadPool(Math.min(orderSnList.size(), Runtime.getRuntime().availableProcessors() + 1));
 
-        CountDownLatch orderCountDownLatch = new CountDownLatch(orderSnList.size());
-        // 开线程池，线程数量为要遍历的对象的长度
-        ExecutorService orderExecutor = Executors.newFixedThreadPool(orderSnList.size());
 
-        CountDownLatch escrowCountDownLatch = new CountDownLatch(orderSnList.size());
-        // 开线程池，线程数量为要遍历的对象的长度
-        ExecutorService escrowExecutor = Executors.newFixedThreadPool(orderSnList.size());
-        for (String orderSn : orderSnList) {
-
-            long finalShopId = shopId;
-
-            CompletableFuture.runAsync(() -> {
-                try {
-                    String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
-                    JSONObject orderObject = ShopeeUtil.getOrderDetail(finalAccessToken, finalShopId, orderSn);
-                    if (orderObject.getString("error").contains("error") && orderObject == null) {
-                        return;
-                    }
-                    JSONArray orderArray = orderObject.getJSONObject("response").getJSONArray("order_list");
-                    JSONObject orderDetailObject;
-                    for (int j = 0; j < orderArray.size(); j++) {
-                        orderDetailObject = orderArray.getJSONObject(j);
-                        getOrderDetail(orderDetailObject, ordertList, finalShopId);
-                        getOrderItem(orderDetailObject, orderItemList);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    orderCountDownLatch.countDown();
-                    log.info("orderCountDownLatch===> {}" , orderCountDownLatch);
-                }
-            }, orderExecutor);
-
-            CompletableFuture.runAsync(() -> {
-                try {
-                    String[] splitOrderSns = orderSn.split(",");
-                    for (String sn : splitOrderSns) {
+        List<CompletableFuture<Void>> orderFutures = orderSnList.stream()
+                .map(orderSn -> {
+                    long finalShopId = shopId;
+                    return CompletableFuture.runAsync(() -> {
                         String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
-                        JSONObject escrowResult = ShopeeUtil.getEscrowDetail(finalAccessToken, finalShopId, sn);
-                        JSONObject escrowInfoObject = escrowResult.getJSONObject("response");
-                        if (escrowResult.getString("error").contains("error") && escrowInfoObject == null) {
+                        JSONObject orderObject = ShopeeUtil.getOrderDetail(finalAccessToken, finalShopId, orderSn);
+                        if (orderObject.getString("error").contains("error") && orderObject == null && orderObject.getJSONObject("response") == null) {
                             return;
                         }
-                        JSONObject oderIncomeObject = escrowInfoObject.getJSONObject("order_income");
-                        saveEscrowInfoByOrderSn(oderIncomeObject, sn, escrowInfoList);
-                        saveEscrowItem(oderIncomeObject, sn, escrowItemList);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    escrowCountDownLatch.countDown();
-                    log.info("escrowCountDownLatch===> {}" , escrowCountDownLatch);
-                }
-            }, escrowExecutor);
-        }
+                        JSONArray orderArray = orderObject.getJSONObject("response").getJSONArray("order_list");
+                        JSONObject orderDetailObject;
+                        for (int j = 0; j < orderArray.size(); j++) {
+                            orderDetailObject = orderArray.getJSONObject(j);
+                            getOrderDetail(orderDetailObject, ordertList, finalShopId);
+                            getOrderItem(orderDetailObject, orderItemList);
+                        }
+                    }, executor);
+                }).collect(Collectors.toList());
 
-        try {
-            orderCountDownLatch.await();
-            escrowCountDownLatch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+
+        List<CompletableFuture<Void>> escrowFutures = orderSnList.stream()
+                .map(orderSn -> {
+                    long finalShopId = shopId;
+                    return CompletableFuture.runAsync(() -> {
+                        String[] splitOrderSns = orderSn.split(",");
+                        for (String sn : splitOrderSns) {
+                            String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
+                            JSONObject escrowResult = ShopeeUtil.getEscrowDetail(finalAccessToken, finalShopId, sn);
+                            JSONObject escrowInfoObject = escrowResult.getJSONObject("response");
+                            if (escrowResult.getString("error").contains("error") && escrowInfoObject == null) {
+                                return;
+                            }
+                            JSONObject oderIncomeObject = escrowInfoObject.getJSONObject("order_income");
+                            saveEscrowInfoByOrderSn(oderIncomeObject, sn, escrowInfoList);
+                            saveEscrowItem(oderIncomeObject, sn, escrowItemList);
+                        }
+                    }, executor);
+                }).collect(Collectors.toList());
+
+//        CompletableFuture.allOf(orderFutures.toArray(new CompletableFuture[0])).join();
+        CompletableFuture.allOf(escrowFutures.toArray(new CompletableFuture[0])).join();
+
+//        CountDownLatch orderCountDownLatch = new CountDownLatch(orderSnList.size());
+//        // 开线程池，线程数量为要遍历的对象的长度
+//        ExecutorService orderExecutor = Executors.newFixedThreadPool(orderSnList.size());
+//
+//        CountDownLatch escrowCountDownLatch = new CountDownLatch(orderSnList.size());
+//        // 开线程池，线程数量为要遍历的对象的长度
+//        ExecutorService escrowExecutor = Executors.newFixedThreadPool(orderSnList.size());
+//        for (String orderSn : orderSnList) {
+//
+//            long finalShopId = shopId;
+//
+//            CompletableFuture.runAsync(() -> {
+//                try {
+//                    String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
+//                    JSONObject orderObject = ShopeeUtil.getOrderDetail(finalAccessToken, finalShopId, orderSn);
+//                    if (orderObject.getString("error").contains("error") && orderObject == null) {
+//                        return;
+//                    }
+//                    JSONArray orderArray = orderObject.getJSONObject("response").getJSONArray("order_list");
+//                    JSONObject orderDetailObject;
+//                    for (int j = 0; j < orderArray.size(); j++) {
+//                        orderDetailObject = orderArray.getJSONObject(j);
+//                        getOrderDetail(orderDetailObject, ordertList, finalShopId);
+//                        getOrderItem(orderDetailObject, orderItemList);
+//                    }
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                } finally {
+//                    orderCountDownLatch.countDown();
+//                    log.info("orderCountDownLatch===> {}" , orderCountDownLatch);
+//                }
+//            }, orderExecutor);
+//
+//            CompletableFuture.runAsync(() -> {
+//                try {
+//                    String[] splitOrderSns = orderSn.split(",");
+//                    for (String sn : splitOrderSns) {
+//                        String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
+//                        JSONObject escrowResult = ShopeeUtil.getEscrowDetail(finalAccessToken, finalShopId, sn);
+//                        JSONObject escrowInfoObject = escrowResult.getJSONObject("response");
+//                        if (escrowResult.getString("error").contains("error") && escrowInfoObject == null) {
+//                            return;
+//                        }
+//                        JSONObject oderIncomeObject = escrowInfoObject.getJSONObject("order_income");
+//                        saveEscrowInfoByOrderSn(oderIncomeObject, sn, escrowInfoList);
+//                        saveEscrowItem(oderIncomeObject, sn, escrowItemList);
+//                    }
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                } finally {
+//                    escrowCountDownLatch.countDown();
+//                    log.info("escrowCountDownLatch===> {}" , escrowCountDownLatch);
+//                }
+//            }, escrowExecutor);
+//        }
+//
+//        try {
+//            orderCountDownLatch.await();
+//            escrowCountDownLatch.await();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
 
         //        System.out.println("orderList===>" + JSONArray.toJSONString(ordertList));
         this.saveOrUpdateBatch(ordertList);
-//        System.out.println("updateOrderList===>" + JSONArray.toJSONString(updateOrderList));
-//        this.updateBatchById(updateOrderList);
-//        System.out.println("orderItemList===>" + JSONArray.toJSONString(orderItemList));
         orderItemService.saveOrUpdateBatch(orderItemList);
-//        System.out.println("updateOrderItemList===>" + JSONArray.toJSONString(updateOrderItemList));
-//        orderItemService.updateBatchById(updateOrderItemList);
-//        System.out.println("escrowInfoList===>" + JSONArray.toJSONString(escrowInfoList));
+
         escrowInfoService.saveOrUpdateBatch(escrowInfoList);
-//        System.out.println("updateEscrowInfoList===>" + JSONArray.toJSONString(updateEscrowInfoList));
-//        escrowInfoService.updateBatchById(updateEscrowInfoList);
-//        System.out.println("escrowItemList===>" + JSONArray.toJSONString(escrowItemList));
         escrowItemService.saveOrUpdateBatch(escrowItemList);
-//        System.out.println("updateEscrowItemList===>" + JSONArray.toJSONString(updateEscrowItemList));
-//        escrowItemService.updateBatchById(updateEscrowItemList);
+
     }
 
     private void getOrderDetail(JSONObject orderObject, List<Order> ordertList, Long shopId) {

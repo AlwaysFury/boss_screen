@@ -158,7 +158,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
             }
 
             // todo 加锁
-//            refreshProductByItemId(itemIdList, shopId);
+            refreshProductByItemId(itemIdList, shopId);
         }
     }
 
@@ -169,50 +169,97 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         List<Model> modelList =  new CopyOnWriteArrayList<>();
 
         // todo 改为全局线程池和 futurelist
+        ExecutorService executor = Executors.newFixedThreadPool(Math.min(itemIdList.size(), Runtime.getRuntime().availableProcessors() + 1));
 
-        // 开线程池，线程数量为要遍历的对象的长度
-        CountDownLatch productCountDownLatch = new CountDownLatch(itemIdList.size());
-        ExecutorService productExecutor = Executors.newFixedThreadPool(itemIdList.size());
-        CountDownLatch modelCountDownLatch = new CountDownLatch(itemIdList.size());
-        ExecutorService modelExecutor = Executors.newFixedThreadPool(itemIdList.size());
-        for (String itemId : itemIdList) {
+        List<CompletableFuture<Void>> productFutures = itemIdList.stream()
+                .map(itemId -> {
+                    long finalShopId = shopId;
+                    return CompletableFuture.runAsync(() -> {
+                        String accessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
+                        getProductDetail(itemId, accessToken, finalShopId, productList);
+                    }, executor);
+                }).collect(Collectors.toList());
 
-            long finalShopId = shopId;
+        List<CompletableFuture<Void>> modelFutures = itemIdList.stream()
+                .map(itemId -> {
+                    long finalShopId = shopId;
+                    return CompletableFuture.runAsync(() -> {
+                        String accessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
+                        String[] splitIds = itemId.split(",");
+                        for (String splitId : splitIds) {
+                            modelService.getModel(Long.parseLong(splitId), accessToken, finalShopId, modelList);
+                        }
+                    }, executor);
+                }).collect(Collectors.toList());
 
-            CompletableFuture.runAsync(() -> {
-                try {
-                    String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
-                    getProductDetail(itemId, finalAccessToken, finalShopId, productList);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    productCountDownLatch.countDown();
-                    log.info("productCountDownLatch===> {}", productCountDownLatch);
-                }
-            }, productExecutor);
+        CompletableFuture.allOf(productFutures.toArray(new CompletableFuture[0])).join();
+        CompletableFuture.allOf(modelFutures.toArray(new CompletableFuture[0])).join();
 
-            CompletableFuture.runAsync(() -> {
-                try {
-                    String[] splitIds = itemId.split(",");
-                    for (String splitId : splitIds) {
-                        String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
-                        modelService.getModel(Long.parseLong(splitId), finalAccessToken, finalShopId, modelList);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    modelCountDownLatch.countDown();
-                    log.info("modelCountDownLatch===> {}", modelCountDownLatch);
-                }
-            }, modelExecutor);
-        }
 
-        try {
-            productCountDownLatch.await();
-            modelCountDownLatch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+
+
+//        // 开线程池，线程数量为要遍历的对象的长度
+//        CountDownLatch productCountDownLatch = new CountDownLatch(itemIdList.size());
+//        ExecutorService productExecutor = Executors.newFixedThreadPool(itemIdList.size());
+//        CountDownLatch modelCountDownLatch = new CountDownLatch(itemIdList.size());
+//        ExecutorService modelExecutor = Executors.newFixedThreadPool(itemIdList.size());
+//        for (String itemId : itemIdList) {
+//
+//            long finalShopId = shopId;
+//
+//            CompletableFuture.runAsync(() -> {
+//                try {
+//                    String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
+//                    getProductDetail(itemId, finalAccessToken, finalShopId, productList);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                } finally {
+//                    productCountDownLatch.countDown();
+//                    log.info("productCountDownLatch===> {}", productCountDownLatch);
+//                }
+//            }, productExecutor);
+//
+//            CompletableFuture.runAsync(() -> {
+//                try {
+//                    String[] splitIds = itemId.split(",");
+//                    for (String splitId : splitIds) {
+//                        String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
+//                        modelService.getModel(Long.parseLong(splitId), finalAccessToken, finalShopId, modelList);
+//                    }
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                } finally {
+//                    modelCountDownLatch.countDown();
+//                    log.info("modelCountDownLatch===> {}", modelCountDownLatch);
+//                }
+//            }, modelExecutor);
+//        }
+//
+//        try {
+//            productCountDownLatch.await();
+//            modelCountDownLatch.await();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+
+//        productFutures.forEach(future -> {
+//            try {
+//                future.get(); // 如果有异常，这里会抛出
+//            } catch (Exception e) {
+//                log.error("Error occurred", e);
+//                throw new RuntimeException(e);
+//            }
+//        });
+//
+//        modelFutures.forEach(future -> {
+//            try {
+//                future.get(); // 如果有异常，这里会抛出
+//            } catch (Exception e) {
+//                log.error("Error occurred", e);
+//                throw new RuntimeException(e);
+//            }
+//        });
+//        System.out.println(productList.size());
 
         this.saveOrUpdateBatch(productList);
         modelService.saveOrUpdateBatch(modelList);

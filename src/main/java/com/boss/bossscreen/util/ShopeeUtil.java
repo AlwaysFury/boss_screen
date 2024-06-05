@@ -208,13 +208,19 @@ public class ShopeeUtil {
         JSONObject result = getProductByHttp(accessToken, shopId, offset);
 
         int retryCount = 0;
-        while (true) {
-            if (result.getString("error").contains("error") && retryCount < 5) {
-                result = getProductByHttp(accessToken, shopId, offset);
-                retryCount++;
-            } else {
-                break;
+        final int maxRetries = 5;
+        final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
+
+        while (result.getString("error").contains("error") && retryCount < maxRetries) {
+            try {
+                Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // 保持中断状态
+                throw new RuntimeException("Thread interrupted", e);
             }
+
+            result = getProductByHttp(accessToken, shopId, offset);
+            retryCount++;
         }
 
         if (result.getString("error").contains("error")) {
@@ -254,13 +260,19 @@ public class ShopeeUtil {
         JSONObject result = getProductInfoByHttp(accessToken, shopId, itemId);
 
         int retryCount = 0;
-        while (true) {
-            if (result.getString("error").contains("error") && retryCount < 5) {
-                result = getProductInfoByHttp(accessToken, shopId, itemId);
-                retryCount++;
-            } else {
-                break;
+        final int maxRetries = 5;
+        final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
+
+        while (result.getString("error").contains("error") && retryCount < maxRetries) {
+            try {
+                Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // 保持中断状态
+                throw new RuntimeException("Thread interrupted", e);
             }
+
+            result = getProductInfoByHttp(accessToken, shopId, itemId);
+            retryCount++;
         }
 
         return result;
@@ -285,13 +297,19 @@ public class ShopeeUtil {
         JSONObject result = getModelListByHttp(accessToken, shopId, itemId);
 
         int retryCount = 0;
-        while (true) {
-            if (result == null || (result.getString("error").contains("error") && retryCount < 5)) {
-                result = getModelListByHttp(accessToken, shopId, itemId);
-                retryCount++;
-            } else {
-                break;
+        final int maxRetries = 5;
+        final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
+
+        while (result.getString("error").contains("error") && retryCount < maxRetries) {
+            try {
+                Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // 保持中断状态
+                throw new RuntimeException("Thread interrupted", e);
             }
+
+            result = getModelListByHttp(accessToken, shopId, itemId);
+            retryCount++;
         }
 
         return result;
@@ -351,13 +369,19 @@ public class ShopeeUtil {
         JSONObject result = getOrderListByHttp(accessToken, shopId, offset, orderSns, startTime, endTime);
 
         int retryCount = 0;
-        while (true) {
-            if (result.getString("error").contains("error") && retryCount < 5) {
-                result = getOrderListByHttp(accessToken, shopId, offset, orderSns, startTime, endTime);
-                retryCount++;
-            } else {
-                break;
+        final int maxRetries = 5;
+        final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
+
+        while (result.getString("error").contains("error") && retryCount < maxRetries) {
+            try {
+                Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // 保持中断状态
+                throw new RuntimeException("Thread interrupted", e);
             }
+
+            result = getOrderListByHttp(accessToken, shopId, offset, orderSns, startTime, endTime);
+            retryCount++;
         }
 
         if (result.getString("error").contains("error")) {
@@ -396,13 +420,19 @@ public class ShopeeUtil {
         JSONObject result = getOrderDetailByHttp(accessToken, shopId, orderSnList);
 
         int retryCount = 0;
-        while (true) {
-            if (result.getString("error").contains("error") && retryCount < 5) {
-                result = getOrderDetailByHttp(accessToken, shopId, orderSnList);
-                retryCount++;
-            } else {
-                break;
+        final int maxRetries = 5;
+        final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
+
+        while (result.getString("error").contains("error") && retryCount < maxRetries) {
+            try {
+                Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // 保持中断状态
+                throw new RuntimeException("Thread interrupted", e);
             }
+
+            result = getOrderDetailByHttp(accessToken, shopId, orderSnList);
+            retryCount++;
         }
 
         return result;
@@ -444,13 +474,19 @@ public class ShopeeUtil {
         JSONObject result = getEscrowDetailByHttp(accessToken, shopId, orderSn);
 
         int retryCount = 0;
-        while (true) {
-            if (result.getString("error").contains("error") && retryCount < 5) {
-                result = getEscrowDetailByHttp(accessToken, shopId, orderSn);
-                retryCount++;
-            } else {
-                break;
+        final int maxRetries = 5;
+        final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
+
+        while (result.getString("error").contains("error") && retryCount < maxRetries) {
+            try {
+                Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // 保持中断状态
+                throw new RuntimeException("Thread interrupted", e);
             }
+
+            result = getEscrowDetailByHttp(accessToken, shopId, orderSn);
+            retryCount++;
         }
 
         return result;
@@ -474,13 +510,19 @@ public class ShopeeUtil {
         JSONObject result = getTrackingNumberByHttp(accessToken, shopId, orderSn);
 
         int retryCount = 0;
-        while (true) {
-            if (result.getString("error").contains("error") && retryCount < 5) {
-                result = getTrackingNumberByHttp(accessToken, shopId, orderSn);
-                retryCount++;
-            } else {
-                break;
+        final int maxRetries = 5;
+        final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
+
+        while (result.getString("error").contains("error") && retryCount < maxRetries) {
+            try {
+                Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // 保持中断状态
+                throw new RuntimeException("Thread interrupted", e);
             }
+
+            result = getTrackingNumberByHttp(accessToken, shopId, orderSn);
+            retryCount++;
         }
 
         return result;

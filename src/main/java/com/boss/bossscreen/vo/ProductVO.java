@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ProductVO {
 
-    private Integer id;
+    private Long id;
 
     /**
      * 系统 id

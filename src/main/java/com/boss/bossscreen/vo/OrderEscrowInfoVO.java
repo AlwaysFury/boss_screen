@@ -20,7 +20,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderEscrowInfoVO {
-    private Integer id;
+    private Long id;
 
     /**
      * 创建时间
