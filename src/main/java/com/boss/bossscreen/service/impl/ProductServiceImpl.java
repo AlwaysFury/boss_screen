@@ -26,13 +26,16 @@ import com.boss.bossscreen.vo.ProductVO;
 import com.boss.bossscreen.vo.SelectVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 import static com.boss.bossscreen.constant.OptTypeConst.SYSTEM_LOG;
@@ -69,6 +72,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
     @Autowired
     private OperationLogDao operationLogDao;
 
+    @Autowired
+    @Qualifier("customThreadPool")
+    private ThreadPoolExecutor customThreadPool;
+
 
     private static final HashMap<String, String> productStatusMap = new HashMap<>();
 
@@ -94,6 +101,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         ruleKeys.add("salesVolume30days");
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void saveOrUpdateProduct() {
         // 遍历所有未冻结店铺获取 token 和 shopId
@@ -119,11 +127,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 itemIdList.add(String.join(",", itemIds.subList(i, Math.min(i + 50, itemIds.size()))));
             }
 
-            // todo 事务嵌套了
             refreshProductByItemId(itemIdList, shopId);
         }
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void refreshProducts(List<Integer> itemIds) {
         StringJoiner sj = new StringJoiner(",");
@@ -157,19 +165,17 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 itemIdList.add(String.join(",", oldItemList.subList(i, Math.min(i + 50, oldItemList.size()))));
             }
 
-            // todo 加锁
             refreshProductByItemId(itemIdList, shopId);
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
     public void refreshProductByItemId(List<String> itemIdList, long shopId) {
         // 根据每个店铺的 token 和 shopId 获取产品
         List<Product> productList = new CopyOnWriteArrayList<>();
         List<Model> modelList =  new CopyOnWriteArrayList<>();
 
-        // todo 改为全局线程池和 futurelist
-        ExecutorService executor = Executors.newFixedThreadPool(Math.min(itemIdList.size(), Runtime.getRuntime().availableProcessors() + 1));
+        // 改为全局线程池和 futurelist
+        // ExecutorService executor = Executors.newFixedThreadPool(Math.min(itemIdList.size(), Runtime.getRuntime().availableProcessors() + 1));
 
         List<CompletableFuture<Void>> productFutures = itemIdList.stream()
                 .map(itemId -> {
@@ -177,7 +183,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                     return CompletableFuture.runAsync(() -> {
                         String accessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
                         getProductDetail(itemId, accessToken, finalShopId, productList);
-                    }, executor);
+                    }, customThreadPool);
                 }).collect(Collectors.toList());
 
         List<CompletableFuture<Void>> modelFutures = itemIdList.stream()
@@ -189,77 +195,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                         for (String splitId : splitIds) {
                             modelService.getModel(Long.parseLong(splitId), accessToken, finalShopId, modelList);
                         }
-                    }, executor);
+                    }, customThreadPool);
                 }).collect(Collectors.toList());
 
         CompletableFuture.allOf(productFutures.toArray(new CompletableFuture[0])).join();
         CompletableFuture.allOf(modelFutures.toArray(new CompletableFuture[0])).join();
-
-
-
-
-//        // 开线程池，线程数量为要遍历的对象的长度
-//        CountDownLatch productCountDownLatch = new CountDownLatch(itemIdList.size());
-//        ExecutorService productExecutor = Executors.newFixedThreadPool(itemIdList.size());
-//        CountDownLatch modelCountDownLatch = new CountDownLatch(itemIdList.size());
-//        ExecutorService modelExecutor = Executors.newFixedThreadPool(itemIdList.size());
-//        for (String itemId : itemIdList) {
-//
-//            long finalShopId = shopId;
-//
-//            CompletableFuture.runAsync(() -> {
-//                try {
-//                    String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
-//                    getProductDetail(itemId, finalAccessToken, finalShopId, productList);
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                } finally {
-//                    productCountDownLatch.countDown();
-//                    log.info("productCountDownLatch===> {}", productCountDownLatch);
-//                }
-//            }, productExecutor);
-//
-//            CompletableFuture.runAsync(() -> {
-//                try {
-//                    String[] splitIds = itemId.split(",");
-//                    for (String splitId : splitIds) {
-//                        String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
-//                        modelService.getModel(Long.parseLong(splitId), finalAccessToken, finalShopId, modelList);
-//                    }
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                } finally {
-//                    modelCountDownLatch.countDown();
-//                    log.info("modelCountDownLatch===> {}", modelCountDownLatch);
-//                }
-//            }, modelExecutor);
-//        }
-//
-//        try {
-//            productCountDownLatch.await();
-//            modelCountDownLatch.await();
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-
-//        productFutures.forEach(future -> {
-//            try {
-//                future.get(); // 如果有异常，这里会抛出
-//            } catch (Exception e) {
-//                log.error("Error occurred", e);
-//                throw new RuntimeException(e);
-//            }
-//        });
-//
-//        modelFutures.forEach(future -> {
-//            try {
-//                future.get(); // 如果有异常，这里会抛出
-//            } catch (Exception e) {
-//                log.error("Error occurred", e);
-//                throw new RuntimeException(e);
-//            }
-//        });
-//        System.out.println(productList.size());
 
         this.saveOrUpdateBatch(productList);
         modelService.saveOrUpdateBatch(modelList);

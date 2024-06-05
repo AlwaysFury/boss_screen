@@ -492,5 +492,13 @@ public interface RedisService {
      * @return 返回集合
      */
     List<String> geoGetHash(String key, String... place);
+
+    /**
+     * 分布式锁
+     * @param lockKey
+     * @param o
+     * @return
+     */
+    Boolean setnx(String lockKey, Object o);
 }
 

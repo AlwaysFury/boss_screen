@@ -15,6 +15,7 @@ import com.boss.bossscreen.util.ShopeeUtil;
 import com.boss.bossscreen.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,6 +78,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
     @Autowired
     private RedisServiceImpl redisService;
 
+    @Autowired
+    @Qualifier("customThreadPool")
+    private ThreadPoolExecutor customThreadPool;
+
     private static final HashMap<String, String> orderStatusMap = new HashMap<>();
 
     static {
@@ -131,7 +136,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
     }
 
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     public void refreshOrderBySn(List<String> orderSnList, long shopId) {
         List<Order> ordertList = new CopyOnWriteArrayList<>();
 //        List<Order> updateOrderList = new CopyOnWriteArrayList<>();
@@ -142,8 +147,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         List<EscrowItem> escrowItemList = new CopyOnWriteArrayList<>();
 //        List<EscrowItem> updateEscrowItemList = new CopyOnWriteArrayList<>();
 
-        // todo 改为全局线程池和 futurelist
-        ExecutorService executor = Executors.newFixedThreadPool(Math.min(orderSnList.size(), Runtime.getRuntime().availableProcessors() + 1));
+        // 改为全局线程池和 futurelist
+        //ExecutorService executor = Executors.newFixedThreadPool(Math.min(orderSnList.size(), Runtime.getRuntime().availableProcessors() + 1));
 
 
         List<CompletableFuture<Void>> orderFutures = orderSnList.stream()
@@ -162,7 +167,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                             getOrderDetail(orderDetailObject, ordertList, finalShopId);
                             getOrderItem(orderDetailObject, orderItemList);
                         }
-                    }, executor);
+                    }, customThreadPool);
                 }).collect(Collectors.toList());
 
 
@@ -182,76 +187,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                             saveEscrowInfoByOrderSn(oderIncomeObject, sn, escrowInfoList);
                             saveEscrowItem(oderIncomeObject, sn, escrowItemList);
                         }
-                    }, executor);
+                    }, customThreadPool);
                 }).collect(Collectors.toList());
 
-//        CompletableFuture.allOf(orderFutures.toArray(new CompletableFuture[0])).join();
+        CompletableFuture.allOf(orderFutures.toArray(new CompletableFuture[0])).join();
         CompletableFuture.allOf(escrowFutures.toArray(new CompletableFuture[0])).join();
 
-//        CountDownLatch orderCountDownLatch = new CountDownLatch(orderSnList.size());
-//        // 开线程池，线程数量为要遍历的对象的长度
-//        ExecutorService orderExecutor = Executors.newFixedThreadPool(orderSnList.size());
-//
-//        CountDownLatch escrowCountDownLatch = new CountDownLatch(orderSnList.size());
-//        // 开线程池，线程数量为要遍历的对象的长度
-//        ExecutorService escrowExecutor = Executors.newFixedThreadPool(orderSnList.size());
-//        for (String orderSn : orderSnList) {
-//
-//            long finalShopId = shopId;
-//
-//            CompletableFuture.runAsync(() -> {
-//                try {
-//                    String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
-//                    JSONObject orderObject = ShopeeUtil.getOrderDetail(finalAccessToken, finalShopId, orderSn);
-//                    if (orderObject.getString("error").contains("error") && orderObject == null) {
-//                        return;
-//                    }
-//                    JSONArray orderArray = orderObject.getJSONObject("response").getJSONArray("order_list");
-//                    JSONObject orderDetailObject;
-//                    for (int j = 0; j < orderArray.size(); j++) {
-//                        orderDetailObject = orderArray.getJSONObject(j);
-//                        getOrderDetail(orderDetailObject, ordertList, finalShopId);
-//                        getOrderItem(orderDetailObject, orderItemList);
-//                    }
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                } finally {
-//                    orderCountDownLatch.countDown();
-//                    log.info("orderCountDownLatch===> {}" , orderCountDownLatch);
-//                }
-//            }, orderExecutor);
-//
-//            CompletableFuture.runAsync(() -> {
-//                try {
-//                    String[] splitOrderSns = orderSn.split(",");
-//                    for (String sn : splitOrderSns) {
-//                        String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
-//                        JSONObject escrowResult = ShopeeUtil.getEscrowDetail(finalAccessToken, finalShopId, sn);
-//                        JSONObject escrowInfoObject = escrowResult.getJSONObject("response");
-//                        if (escrowResult.getString("error").contains("error") && escrowInfoObject == null) {
-//                            return;
-//                        }
-//                        JSONObject oderIncomeObject = escrowInfoObject.getJSONObject("order_income");
-//                        saveEscrowInfoByOrderSn(oderIncomeObject, sn, escrowInfoList);
-//                        saveEscrowItem(oderIncomeObject, sn, escrowItemList);
-//                    }
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                } finally {
-//                    escrowCountDownLatch.countDown();
-//                    log.info("escrowCountDownLatch===> {}" , escrowCountDownLatch);
-//                }
-//            }, escrowExecutor);
-//        }
-//
-//        try {
-//            orderCountDownLatch.await();
-//            escrowCountDownLatch.await();
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-
-        //        System.out.println("orderList===>" + JSONArray.toJSONString(ordertList));
         this.saveOrUpdateBatch(ordertList);
         orderItemService.saveOrUpdateBatch(orderItemList);
 

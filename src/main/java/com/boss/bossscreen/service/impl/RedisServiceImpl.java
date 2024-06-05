@@ -320,4 +320,10 @@ public class RedisServiceImpl implements RedisService {
                 .hash(key, place);
     }
 
+    @Override
+    public Boolean setnx(String lockKey, Object o) {
+
+        return redisTemplate.opsForValue().setIfAbsent(lockKey, o);
+    }
+
 }
