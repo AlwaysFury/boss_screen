@@ -1,6 +1,7 @@
 package com.boss.bossscreen.service.impl;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.thread.ExecutorBuilder;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -15,6 +16,7 @@ import com.boss.bossscreen.enities.Model;
 import com.boss.bossscreen.enities.OperationLog;
 import com.boss.bossscreen.enities.Product;
 import com.boss.bossscreen.enities.Shop;
+import com.boss.bossscreen.enums.ProductStatusEnum;
 import com.boss.bossscreen.service.ProductService;
 import com.boss.bossscreen.util.BeanCopyUtils;
 import com.boss.bossscreen.util.CommonUtil;
@@ -77,29 +79,29 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
     private ThreadPoolExecutor customThreadPool;
 
 
-    private static final HashMap<String, String> productStatusMap = new HashMap<>();
+//    private static final HashMap<String, String> productStatusMap = new HashMap<>();
 
-    private static final List<String> ruleKeys = new ArrayList<>();
+//    private static final List<String> ruleKeys = new ArrayList<>();
 
-    static {
-        productStatusMap.put("NORMAL", "已上架");
-        productStatusMap.put("BANNED", "禁止");
-        productStatusMap.put("UNLIST", "未上架");
-        productStatusMap.put("SELLER_DELETE", "卖家删除");
-        productStatusMap.put("SHOPEE_DELETE", "平台删除");
-        productStatusMap.put("REVIEWING", "审查中");
+//    static {
+//        productStatusMap.put("NORMAL", "已上架");
+//        productStatusMap.put("BANNED", "禁止");
+//        productStatusMap.put("UNLIST", "未上架");
+//        productStatusMap.put("SELLER_DELETE", "卖家删除");
+//        productStatusMap.put("SHOPEE_DELETE", "平台删除");
+//        productStatusMap.put("REVIEWING", "审查中");
 
-        ruleKeys.add("itemId");
-        ruleKeys.add("itemSku");
-        ruleKeys.add("categoryId");
-        ruleKeys.add("status");
-        ruleKeys.add("createTime");
-        ruleKeys.add("price");
-        ruleKeys.add("salesVolume");
-        ruleKeys.add("salesVolumeOneDays");
-        ruleKeys.add("salesVolume7days");
-        ruleKeys.add("salesVolume30days");
-    }
+//        ruleKeys.add("itemId");
+//        ruleKeys.add("itemSku");
+//        ruleKeys.add("categoryId");
+//        ruleKeys.add("status");
+//        ruleKeys.add("createTime");
+//        ruleKeys.add("price");
+//        ruleKeys.add("salesVolume");
+//        ruleKeys.add("salesVolumeOneDays");
+//        ruleKeys.add("salesVolume7days");
+//        ruleKeys.add("salesVolume30days");
+//    }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -183,7 +185,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                     return CompletableFuture.runAsync(() -> {
                         String accessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
                         getProductDetail(itemId, accessToken, finalShopId, productList);
-                    }, customThreadPool);
+                    }, ExecutorBuilder.create().setCorePoolSize(itemIdList.size()).build());
                 }).collect(Collectors.toList());
 
         List<CompletableFuture<Void>> modelFutures = itemIdList.stream()
@@ -195,14 +197,14 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                         for (String splitId : splitIds) {
                             modelService.getModel(Long.parseLong(splitId), accessToken, finalShopId, modelList);
                         }
-                    }, customThreadPool);
+                    }, ExecutorBuilder.create().setCorePoolSize(itemIdList.size()).build());
                 }).collect(Collectors.toList());
 
         CompletableFuture.allOf(productFutures.toArray(new CompletableFuture[0])).join();
         CompletableFuture.allOf(modelFutures.toArray(new CompletableFuture[0])).join();
 
-        this.saveOrUpdateBatch(productList);
-        modelService.saveOrUpdateBatch(modelList);
+//        this.saveOrUpdateBatch(productList);
+//        modelService.saveOrUpdateBatch(modelList);
     }
 
     private void getProductDetail(String itemIds, String token, long shopId, List<Product> productList) {
@@ -285,7 +287,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                         productVO.setCategoryName(JSONObject.parseObject(redisCategoryObj.toString()).getString("display_category_name"));
                     }
                     productVO.setCreateTime(CommonUtil.timestamp2String((Long) productVO.getCreateTime()));
-                    productVO.setStatus(productStatusMap.get(productVO.getStatus()));
+                    productVO.setStatus(ProductStatusEnum.getDescByCode(productVO.getStatus()));
 
                     productVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().select("name").eq("shop_id", productVO.getShopId())).getName());
 
@@ -316,7 +318,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         }
 
         productInfoVO.setCreateTime(CommonUtil.timestamp2String(product.getCreateTime()));
-        productInfoVO.setStatus(productStatusMap.get(product.getStatus()));
+        productInfoVO.setStatus(ProductStatusEnum.getDescByCode(product.getStatus()));
 
         productInfoVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().eq("shop_id", product.getShopId())).getName());
 
@@ -352,14 +354,14 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
     @Override
     public List<SelectVO> getStatusSelect() {
-        List<SelectVO> list = new ArrayList<>();
-        for(String key : productStatusMap.keySet()){
-            SelectVO vo = SelectVO.builder()
-                    .key(key)
-                    .value(productStatusMap.get(key)).build();
-            list.add(vo);
-        }
-        return list;
+//        List<SelectVO> list = new ArrayList<>();
+//        for (ProductStatusEnum statusEnum : ProductStatusEnum.values()) {
+//            SelectVO vo = SelectVO.builder()
+//                    .key(statusEnum.getCode())
+//                    .value(statusEnum.getDesc()).build();
+//            list.add(vo);
+//        }
+        return ProductStatusEnum.getProductStatusEnum();
     }
 
 
@@ -470,7 +472,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
             // 最大价格
             BigDecimal maxPrice = new BigDecimal(object.getString("maxPrice"));
 
-            BigDecimal itemMinPrice = orderItemDao.itemMinPrice(product.getItemId());
+            BigDecimal tempItemMinPrice = orderItemDao.itemMinPrice(product.getItemId());
+            BigDecimal itemMinPrice = tempItemMinPrice == null ? new BigDecimal(0) : tempItemMinPrice;
 
             if (itemMinPrice.compareTo(minPrice) >= 0 && itemMinPrice.compareTo(maxPrice) <= 0) {
                 count++;

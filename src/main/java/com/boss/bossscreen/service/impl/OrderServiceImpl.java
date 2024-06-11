@@ -1,5 +1,6 @@
 package com.boss.bossscreen.service.impl;
 
+import cn.hutool.core.thread.ExecutorBuilder;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -7,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.bossscreen.dao.*;
 import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.enities.*;
+import com.boss.bossscreen.enums.OrderStatusEnum;
 import com.boss.bossscreen.service.OrderService;
 import com.boss.bossscreen.util.BeanCopyUtils;
 import com.boss.bossscreen.util.CommonUtil;
@@ -15,7 +17,6 @@ import com.boss.bossscreen.util.ShopeeUtil;
 import com.boss.bossscreen.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +26,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -78,22 +80,22 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
     @Autowired
     private RedisServiceImpl redisService;
 
-    @Autowired
-    @Qualifier("customThreadPool")
-    private ThreadPoolExecutor customThreadPool;
+//    @Autowired
+//    @Qualifier("customThreadPool")
+//    private ThreadPoolExecutor customThreadPool;
 
-    private static final HashMap<String, String> orderStatusMap = new HashMap<>();
+//    private static final HashMap<String, String> orderStatusMap = new HashMap<>();
 
-    static {
-        orderStatusMap.put("UNPAID", "未支付");
-        orderStatusMap.put("READY_TO_SHIP", "待出货");
-        orderStatusMap.put("PROCESSED", "已处理");
-        orderStatusMap.put("SHIPPED", "运送中");
-        orderStatusMap.put("COMPLETED", "已完成");
-        orderStatusMap.put("IN_CANCEL", "取消中");
-        orderStatusMap.put("CANCELLED", "已取消");
-        orderStatusMap.put("INVOICE_PENDING", "等待退款");
-    }
+//    static {
+//        orderStatusMap.put("UNPAID", "未支付");
+//        orderStatusMap.put("READY_TO_SHIP", "待出货");
+//        orderStatusMap.put("PROCESSED", "已处理");
+//        orderStatusMap.put("SHIPPED", "运送中");
+//        orderStatusMap.put("COMPLETED", "已完成");
+//        orderStatusMap.put("IN_CANCEL", "取消中");
+//        orderStatusMap.put("CANCELLED", "已取消");
+//        orderStatusMap.put("INVOICE_PENDING", "等待退款");
+//    }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -106,7 +108,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         // 根据每个店铺的 token 和 shopId 获取订单
         long shopId;
         String accessToken;
-        JSONObject result;
         for (Shop shop : shopList) {
             shopId = shop.getShopId();
             accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
@@ -129,7 +130,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                 newOrderSnList.add(String.join(",", orderSnList.subList(i, Math.min(i + 50, orderSnList.size()))));
             }
 
-            // todo 事务嵌套了
             refreshOrderBySn(newOrderSnList, shopId);
         }
 
@@ -167,7 +167,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                             getOrderDetail(orderDetailObject, ordertList, finalShopId);
                             getOrderItem(orderDetailObject, orderItemList);
                         }
-                    }, customThreadPool);
+                    }, ExecutorBuilder.create().setCorePoolSize(orderSnList.size()).build());
                 }).collect(Collectors.toList());
 
 
@@ -187,17 +187,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                             saveEscrowInfoByOrderSn(oderIncomeObject, sn, escrowInfoList);
                             saveEscrowItem(oderIncomeObject, sn, escrowItemList);
                         }
-                    }, customThreadPool);
+                    }, ExecutorBuilder.create().setCorePoolSize(orderSnList.size()).build());
                 }).collect(Collectors.toList());
 
         CompletableFuture.allOf(orderFutures.toArray(new CompletableFuture[0])).join();
         CompletableFuture.allOf(escrowFutures.toArray(new CompletableFuture[0])).join();
 
-        this.saveOrUpdateBatch(ordertList);
-        orderItemService.saveOrUpdateBatch(orderItemList);
 
-        escrowInfoService.saveOrUpdateBatch(escrowInfoList);
-        escrowItemService.saveOrUpdateBatch(escrowItemList);
+
+//        this.saveOrUpdateBatch(ordertList);
+//        orderItemService.saveOrUpdateBatch(orderItemList);
+//
+//        escrowInfoService.saveOrUpdateBatch(escrowInfoList);
+//        escrowItemService.saveOrUpdateBatch(escrowItemList);
 
     }
 
@@ -339,7 +341,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         // 分页查询分类列表
         List<OrderEscrowVO> orderEscrowVOList = orderDao.orderList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition).stream().map(orderEscrowVO -> {
             orderEscrowVO.setCreateTime(CommonUtil.timestamp2String((Long) orderEscrowVO.getCreateTime()));
-            orderEscrowVO.setStatus(orderStatusMap.get(orderEscrowVO.getStatus()));
+            orderEscrowVO.setStatus(OrderStatusEnum.getDescByCode(orderEscrowVO.getStatus()));
 
 //            List<OrderItem> orderItemList = orderItemDao.selectList(new QueryWrapper<OrderItem>().eq("order_sn", order.getOrderSn()));
 //            int clothesCount = 0;
@@ -364,7 +366,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         if (order.getPayTime() != null) {
             orderEscrowInfoVO.setPayTime(CommonUtil.timestamp2String(order.getPayTime()));
         }
-        orderEscrowInfoVO.setStatus(orderStatusMap.get(order.getStatus()));
+        orderEscrowInfoVO.setStatus(OrderStatusEnum.getDescByCode(order.getStatus()));
 
         orderEscrowInfoVO.setShopName(shopDao.selectOne(new QueryWrapper<Shop>().eq("shop_id", order.getShopId())).getName());
 
@@ -512,13 +514,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
     @Override
     public List<SelectVO> getStatusSelect() {
-        List<SelectVO> list = new ArrayList<>();
-        for(String key : orderStatusMap.keySet()){
-            SelectVO vo = SelectVO.builder()
-                    .key(key)
-                    .value(orderStatusMap.get(key)).build();
-            list.add(vo);
-        }
-        return list;
+//        List<SelectVO> list = new ArrayList<>();
+//        for(String key : orderStatusMap.keySet()){
+//            SelectVO vo = SelectVO.builder()
+//                    .key(key)
+//                    .value(orderStatusMap.get(key)).build();
+//            list.add(vo);
+//        }
+        return OrderStatusEnum.getOrderStatusEnum();
     }
 }

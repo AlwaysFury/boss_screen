@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static com.boss.bossscreen.constant.RedisPrefixConst.CATEGORY;
@@ -159,7 +160,8 @@ class BossScreenApplicationTests {
         log.info("======开始刷新订单信息");
         long startTime =  System.currentTimeMillis();
 
-        DateTime date = DateUtil.date();
+        String dateStr = "2024-06-01";
+        Date date = DateUtil.parse(dateStr);
         DateTime startDate = DateUtil.offsetMonth(date, -1);
         String startFormat = DateUtil.format(startDate, "yyyy-MM-dd");
         String endFormat = DateUtil.format(date, "yyyy-MM-dd");
@@ -245,7 +247,7 @@ class BossScreenApplicationTests {
     private RedisServiceImpl redisService;
     @Test
     void getCostType() {
-        String str = "[[\"clothes_type:short\",\"short\"],[\"clothes_type:100%cotton\",\"100%cotton\"],[\"clothes_type:hoodie\",\"hoodie\"],[\"clothes_type:s\",\"s\"]]";
+        String str = "[[\"clothes_type:short\",\"short\"],[\"clothes_type:100%cotton\",\"100%cotton\"],[\"clothes_type:hoodie\",\"hoodie\"],[\"clothes_type:s\",\"s\"],[\"clothes_type:child\",\"child\"]]";
 //        Set<String> keys = redisService.keys(CLOTHES_TYPE + "*");
 //        JSONArray array = new JSONArray();
 //        for (String key : keys) {

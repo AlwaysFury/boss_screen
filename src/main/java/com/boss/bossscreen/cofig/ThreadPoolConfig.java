@@ -21,7 +21,7 @@ public class ThreadPoolConfig {
     // 线程空闲时的存活时间
     private static final long KEEP_ALIVE_SECONDS = 60L;
     // 队列容量
-    private static final int QUEUE_CAPACITY = 100;
+    private static final int QUEUE_CAPACITY = 1000;
     // 工作队列类型：无界LinkedBlockingQueue，可根据需要替换为其他队列
     private static final BlockingQueue<Runnable> WORK_QUEUE = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
 

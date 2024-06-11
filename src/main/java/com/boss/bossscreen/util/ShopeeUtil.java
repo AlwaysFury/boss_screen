@@ -159,9 +159,6 @@ public class ShopeeUtil {
         return result;
     }
 
-
-
-
     public static JSONObject refreshTokenByHttp(String refresh_token, long id, String type) {
 
         long timest = System.currentTimeMillis() / 1000L;
@@ -252,7 +249,16 @@ public class ShopeeUtil {
                         "&item_status=NORMAL&item_status=BANNED&item_status=UNLIST&item_status=REVIEWING&item_status=SHOPEE_DELETE&offset=%s",
                 partner_id, timest, String.format("%032x",sign), accessToken, shopId, offset);
 
-        return JSONObject.parseObject(HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8));
+        String result;
+        try {
+            result = HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8);
+        } catch (Exception e) {
+            JSONObject temp = new JSONObject();
+            temp.put("error", "error");
+            return temp;
+        }
+
+        return JSONObject.parseObject(result);
     }
 
     public static JSONObject getProductInfo(String accessToken, long shopId, String itemId) {
@@ -289,7 +295,16 @@ public class ShopeeUtil {
         String tmp_url = host + path + String.format("?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&item_id_list=%s",
                 partner_id, timest, String.format("%032x",sign), accessToken, shopId, itemId);
 
-        return JSONObject.parseObject(HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8));
+        String result;
+        try {
+            result = HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8);
+        } catch (Exception e) {
+            JSONObject temp = new JSONObject();
+            temp.put("error", "error");
+            return temp;
+        }
+
+        return JSONObject.parseObject(result);
     }
 
 
@@ -326,7 +341,16 @@ public class ShopeeUtil {
         String tmp_url = host + path + String.format("?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&item_id=%s",
                 partner_id, timest, String.format("%032x",sign), accessToken, shopId, itemId);
 
-        return JSONObject.parseObject(HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8));
+        String result;
+        try {
+            result = HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8);
+        } catch (Exception e) {
+            JSONObject temp = new JSONObject();
+            temp.put("error", "error");
+            return temp;
+        }
+
+        return JSONObject.parseObject(result);
     }
 
 
@@ -413,7 +437,16 @@ public class ShopeeUtil {
         String tmp_url = host + path + String.format("?&partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&time_range_field=create_time&time_from=%s&time_to=%s&page_size=100&cursor=%s",
                 partner_id, timest, String.format("%032x",sign), accessToken, shopId, startTime, endTime, offset);
 
-        return JSONObject.parseObject(HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8));
+        String result;
+        try {
+            result = HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8);
+        } catch (Exception e) {
+            JSONObject temp = new JSONObject();
+            temp.put("error", "error");
+            return temp;
+        }
+
+        return JSONObject.parseObject(result);
     }
 
     public static JSONObject getOrderDetail(String accessToken, long shopId, String orderSnList) {
@@ -449,7 +482,16 @@ public class ShopeeUtil {
         String tmp_url = host + path + String.format("?&partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&order_sn_list=%s&&request_order_status_pending=true&response_optional_fields=buyer_user_id,buyer_username,estimated_shipping_fee,recipient_address,actual_shipping_fee,goods_to_declare,note,note_update_time,item_list,pay_time,dropshipper, dropshipper_phone,split_up,buyer_cancel_reason,cancel_by,cancel_reason,actual_shipping_fee_confirmed,buyer_cpf_id,fulfillment_flag,pickup_done_time,package_list,shipping_carrier,payment_method,total_amount,buyer_username,invoice_data,no_plastic_packing,order_chargeable_weight_gram,edt",
                 partner_id, timest, String.format("%032x",sign), accessToken, shopId, orderSnList);
 
-        return JSONObject.parseObject(HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8));
+        String result;
+        try {
+            result = HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8);
+        } catch (Exception e) {
+            JSONObject temp = new JSONObject();
+            temp.put("error", "error");
+            return temp;
+        }
+
+        return JSONObject.parseObject(result);
     }
 
     public static JSONObject getItemPromotion(String accessToken, long shopId, String itemIds) {
@@ -503,7 +545,16 @@ public class ShopeeUtil {
         String tmp_url = host + path + String.format("?&partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&order_sn=%s",
                 partner_id, timest, String.format("%032x",sign), accessToken, shopId, orderSn);
 
-        return JSONObject.parseObject(HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8));
+        String result;
+        try {
+            result = HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8);
+        } catch (Exception e) {
+            JSONObject temp = new JSONObject();
+            temp.put("error", "error");
+            return temp;
+        }
+
+        return JSONObject.parseObject(result);
     }
 
     public static JSONObject getTrackingNumber(String accessToken, long shopId, String orderSn) {
@@ -521,7 +572,12 @@ public class ShopeeUtil {
                 throw new RuntimeException("Thread interrupted", e);
             }
 
-            result = getTrackingNumberByHttp(accessToken, shopId, orderSn);
+
+            try {
+                result = getTrackingNumberByHttp(accessToken, shopId, orderSn);
+            } catch (Exception e) {
+
+            }
             retryCount++;
         }
 
@@ -529,6 +585,8 @@ public class ShopeeUtil {
     }
 
     public static JSONObject getTrackingNumberByHttp(String accessToken, long shopId, String orderSn) {
+
+
         long timest = System.currentTimeMillis() / 1000L;
         String host = ShopAuthDTO.getHost();
         String path = "/api/v2/logistics/get_tracking_number";
@@ -539,8 +597,14 @@ public class ShopeeUtil {
         String tmp_url = host + path + String.format("?&partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&order_sn=%s",
                 partner_id, timest, String.format("%032x",sign), accessToken, shopId, orderSn);
 
-        String result = HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8);
-
+        String result;
+        try {
+            result = HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8);
+        } catch (Exception e) {
+            JSONObject temp = new JSONObject();
+            temp.put("error", "error");
+            return temp;
+        }
 
         return JSONObject.parseObject(result);
     }
