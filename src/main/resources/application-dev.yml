@@ -48,6 +48,20 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
 
+# 上传模式 可选 oss或local
+upload:
+  mode: oss
+  local:
+    # nginx映射本地文件路径，无域名则为 ip +端口
+    # url: https://www.alwaysfury.top/
+    # 本地文件存储路径
+    # path: /app/project/blog/upload/
+  oss:
+    url:
+    endpoint:
+    accessKeyId:
+    accessKeySecret:
+    bucketName:
 
 shopeeApi:
   host: https://partner.shopeemobile.com/
