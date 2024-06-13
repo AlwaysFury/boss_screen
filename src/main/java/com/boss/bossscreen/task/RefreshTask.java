@@ -1,18 +1,12 @@
 package com.boss.bossscreen.task;
 
-import cn.hutool.core.date.DateTime;
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.date.LocalDateTimeUtil;
 import com.boss.bossscreen.service.impl.OrderServiceImpl;
 import com.boss.bossscreen.service.impl.ProductServiceImpl;
 import com.boss.bossscreen.service.impl.ReturnOrderServiceImpl;
 import com.boss.bossscreen.service.impl.ShopServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDate;
 
 /**
  * @Description
@@ -45,7 +39,7 @@ public class RefreshTask {
      * 月（0~11）
      * 周几（ 可填1-7 或 SUN/MON/TUE/WED/THU/FRI/SAT）
      */
-    @Scheduled(cron = "0 0 */2 * * ?")
+//    @Scheduled(cron = "0 0 */2 * * ?")
     public void refreshToken() {
         log.info("======开始刷新 token");
         shopService.refreshShopToken();
@@ -66,14 +60,7 @@ public class RefreshTask {
         log.info("======开始刷新订单信息");
         long startTime =  System.currentTimeMillis();
 
-        DateTime date = DateUtil.date();
-        DateTime startDate = DateUtil.offsetMonth(date, -1);
-        String startFormat = DateUtil.format(startDate, "yyyy-MM-dd 00:00:00");
-        String endFormat = DateUtil.format(date, "yyyy-MM-dd 23:59:59");
-
-        LocalDate startLocalDateTime = LocalDateTimeUtil.parseDate(startFormat);
-        LocalDate endLocalDateTime = LocalDateTimeUtil.parseDate(endFormat);
-        orderService.saveOrUpdateOrder(startLocalDateTime, endLocalDateTime);
+        orderService.saveOrUpdateOrder("2024-05-01", "2024-05-31");
 
         log.info("更新订单耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
     }

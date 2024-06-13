@@ -1,8 +1,5 @@
 package com.boss.bossscreen;
 
-import cn.hutool.core.date.DateTime;
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.date.LocalDateTimeUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.boss.bossscreen.service.impl.*;
@@ -22,7 +19,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import static com.boss.bossscreen.constant.RedisPrefixConst.CATEGORY;
@@ -160,15 +156,7 @@ class BossScreenApplicationTests {
         log.info("======开始刷新订单信息");
         long startTime =  System.currentTimeMillis();
 
-        String dateStr = "2024-06-01";
-        Date date = DateUtil.parse(dateStr);
-        DateTime startDate = DateUtil.offsetMonth(date, -1);
-        String startFormat = DateUtil.format(startDate, "yyyy-MM-dd");
-        String endFormat = DateUtil.format(date, "yyyy-MM-dd");
-
-        LocalDate startLocalDateTime = LocalDateTimeUtil.parseDate(startFormat);
-        LocalDate endLocalDateTime = LocalDateTimeUtil.parseDate(endFormat);
-        orderService.saveOrUpdateOrder(startLocalDateTime, endLocalDateTime);
+        orderService.saveOrUpdateOrder("2024-05-01", "2024-05-31");
 
         log.info("更新订单耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
     }
@@ -206,7 +194,7 @@ class BossScreenApplicationTests {
 
     @Test
     void getEscrowDetailTest() {
-        JSONObject object = ShopeeUtil.getEscrowDetail("685875684c5a4c576d5a4f7665657143", 874244879, "240114UGWCQHFX");
+        JSONObject object = ShopeeUtil.getEscrowDetail("655952765848657543524e7947626641", 874244879, "2405015JVKQJ2Y");
         System.out.println(object);
     }
 

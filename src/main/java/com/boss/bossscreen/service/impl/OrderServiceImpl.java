@@ -1,6 +1,7 @@
 package com.boss.bossscreen.service.impl;
 
 import cn.hutool.core.thread.ExecutorBuilder;
+import cn.hutool.core.util.IdUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -9,12 +10,14 @@ import com.boss.bossscreen.dao.*;
 import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.enities.*;
 import com.boss.bossscreen.enums.OrderStatusEnum;
+import com.boss.bossscreen.mapper.OrderMapper;
 import com.boss.bossscreen.service.OrderService;
 import com.boss.bossscreen.util.BeanCopyUtils;
 import com.boss.bossscreen.util.CommonUtil;
 import com.boss.bossscreen.util.PageUtils;
 import com.boss.bossscreen.util.ShopeeUtil;
 import com.boss.bossscreen.vo.*;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,12 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -60,15 +62,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
     private EscrowItemDao escrowItemDao;
 
     @Autowired
-    private OrderItemServiceImpl orderItemService;
-
-    @Autowired
-    private EscrowInfoServiceImpl escrowInfoService;
-
-    @Autowired
-    private EscrowItemServiceImpl escrowItemService;
-
-    @Autowired
     private ShopServiceImpl shopService;
 
     @Autowired
@@ -79,6 +72,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
     @Autowired
     private RedisServiceImpl redisService;
+
+    @Resource
+    private OrderMapper orderMapper;
 
 //    @Autowired
 //    @Qualifier("customThreadPool")
@@ -99,7 +95,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void saveOrUpdateOrder(LocalDate startLocalDateTime, LocalDate endLocalDateTime) {
+    public void saveOrUpdateOrder(String startTime, String endTime) {
         // 遍历所有未冻结店铺获取 token 和 shopId
         QueryWrapper<Shop> shopQueryWrapper = new QueryWrapper<>();
         shopQueryWrapper.select("shop_id").eq("status", "1");
@@ -112,12 +108,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             shopId = shop.getShopId();
             accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
 
-            List<LocalDate[]> timeList = CommonUtil.splitIntoEvery15DaysTimestamp(startLocalDateTime, endLocalDateTime, 14);
             List<String> orderSnList = new ArrayList<>();
-            for (LocalDate[] time : timeList) {
-                long start = time[0].atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000L;
-                long end = time[1].atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000L;
-                List<String> object = ShopeeUtil.getOrderList(accessToken, shopId, 0, new ArrayList<>(), start, end);
+
+            List<Long[]> result = CommonUtil.splitIntoEveryNDaysTimestamp(startTime, endTime, 14);
+            for (Long[] pair : result) {
+                List<String> object = ShopeeUtil.getOrderList(accessToken, shopId, 0, new ArrayList<>(), pair[0], pair[1]);
+                log.info(pair[0] + "---" + pair[1] + ":  " + object.size());
                 orderSnList.addAll(object);
             }
 
@@ -195,6 +191,55 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
 
 
+
+        ThreadPoolExecutor executor = ExecutorBuilder.create().setCorePoolSize(orderSnList.size()).build();
+
+        List<List<Order>> batchesOrderList = CommonUtil.splitListBatches(ordertList, 1000);
+//        List<CompletableFuture<Void>> insertOrderFutures = new ArrayList<>();
+//        for (List<Order> batch : batchesOrderList) {
+//            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+//                try {
+//                    TransactionTemplate transactionTemplate = new TransactionTemplate();
+//                    transactionTemplate.executeWithoutResult(status -> {
+//                        this.saveOrUpdateBatch(batch);
+//                    });
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }, executor);
+//
+//            insertOrderFutures.add(future);
+//        }
+//        CompletableFuture.allOf(insertOrderFutures.toArray(new CompletableFuture[0])).join();
+
+        List<List<OrderItem>> batchesOrderItemList = CommonUtil.splitListBatches(orderItemList, 1000);
+//        List<CompletableFuture<Void>> insertOrderItemFutures = new ArrayList<>();
+//        for (List<OrderItem> batch : batchesOrderItemList) {
+//            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> orderItemService.saveOrUpdateBatch(batch), executor);
+//            insertOrderItemFutures.add(future);
+//        }
+//        CompletableFuture.allOf(insertOrderItemFutures.toArray(new CompletableFuture[0])).join();
+
+        List<List<EscrowInfo>> batchesEscrowInfoList = CommonUtil.splitListBatches(escrowInfoList, 1000);
+//        List<CompletableFuture<Void>> insertEscrowInfoFutures = new ArrayList<>();
+//        for (List<EscrowInfo> batch : batchesEscrowInfoList) {
+//            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> escrowInfoService.saveOrUpdateBatch(batch), executor);
+//            insertEscrowInfoFutures.add(future);
+//        }
+//        CompletableFuture.allOf(insertEscrowInfoFutures.toArray(new CompletableFuture[0])).join();
+
+        List<List<EscrowItem>> batchesEscrowItemList = CommonUtil.splitListBatches(escrowItemList, 1000);
+//        List<CompletableFuture<Void>> insertEscrowItemFutures = new ArrayList<>();
+//        for (List<EscrowItem> batch : batchesEscrowItemList) {
+//            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> escrowItemService.saveOrUpdateBatch(batch), executor);
+//            insertEscrowItemFutures.add(future);
+//        }
+//        CompletableFuture.allOf(insertEscrowItemFutures.toArray(new CompletableFuture[0])).join();
+
+
+//        orderMapper.insertBatchSomeColumn(ordertList);
+
+
 //        this.saveOrUpdateBatch(ordertList);
 //        orderItemService.saveOrUpdateBatch(orderItemList);
 //
@@ -207,7 +252,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         String orderSn = orderObject.getString("order_sn");
 
         Order order = Order.builder()
-                .id(CommonUtil.createNo())
+                .id(IdUtil.getSnowflakeNextId())
                 .shopId(shopId)
                 .createTime(orderObject.getLong("create_time"))
                 .updateTime(orderObject.getLong("update_time"))
@@ -252,7 +297,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             long itemId = itemObject.getLong("item_id");
             long modelId = itemObject.getLong("model_id");
             OrderItem orderItem = OrderItem.builder()
-                    .id(CommonUtil.createNo())
+                    .id(IdUtil.getSnowflakeNextId())
                     .orderSn(orderSn)
                     .itemId(itemId)
                     .itemName(itemObject.getString("item_name"))
@@ -283,7 +328,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
     public void saveEscrowInfoByOrderSn(JSONObject orderIncomeObject, String orderSn, List<EscrowInfo> escrowInfoList) {
 
         EscrowInfo escrowInfo = EscrowInfo.builder()
-                .id(CommonUtil.createNo())
+                .id(IdUtil.getSnowflakeNextId())
                 .orderSn(orderSn)
                 .buyerUserName(orderIncomeObject.getString("buyer_user_name"))
                 .buyerTotalAmount(orderIncomeObject.getBigDecimal("buyer_total_amount"))
@@ -310,7 +355,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             long itemId = itemObject.getLong("item_id");
             long modelId = itemObject.getLong("model_id");
             EscrowItem escrowItem = EscrowItem.builder()
-                    .id(CommonUtil.createNo())
+                    .id(IdUtil.getSnowflakeNextId())
                     .orderSn(orderSn)
                     .itemId(itemId)
                     .itemName(itemObject.getString("item_name"))

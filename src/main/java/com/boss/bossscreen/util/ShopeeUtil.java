@@ -148,7 +148,7 @@ public class ShopeeUtil {
 
         int retryCount = 0;
         while (true) {
-            if (result.getString("error").contains("error") && retryCount < 5) {
+            if ((result == null || result.getString("error").contains("error")) && retryCount < 5) {
                 result = refreshTokenByHttp(refresh_token, id, type);
                 retryCount++;
             } else {
@@ -208,7 +208,7 @@ public class ShopeeUtil {
         final int maxRetries = 5;
         final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
 
-        while (result.getString("error").contains("error") && retryCount < maxRetries) {
+        while ((result == null || result.getString("error").contains("error")) && retryCount < maxRetries) {
             try {
                 Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
             } catch (InterruptedException e) {
@@ -220,7 +220,7 @@ public class ShopeeUtil {
             retryCount++;
         }
 
-        if (result.getString("error").contains("error")) {
+        if ((result == null || result.getString("error").contains("error"))) {
             return itemIds;
         }
 
@@ -269,7 +269,7 @@ public class ShopeeUtil {
         final int maxRetries = 5;
         final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
 
-        while (result.getString("error").contains("error") && retryCount < maxRetries) {
+        while ((result == null || result.getString("error").contains("error")) && retryCount < maxRetries) {
             try {
                 Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
             } catch (InterruptedException e) {
@@ -315,7 +315,7 @@ public class ShopeeUtil {
         final int maxRetries = 5;
         final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
 
-        while (result.getString("error").contains("error") && retryCount < maxRetries) {
+        while ((result == null || result.getString("error").contains("error")) && retryCount < maxRetries) {
             try {
                 Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
             } catch (InterruptedException e) {
@@ -396,7 +396,7 @@ public class ShopeeUtil {
         final int maxRetries = 5;
         final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
 
-        while (result.getString("error").contains("error") && retryCount < maxRetries) {
+        while ((result == null || result.getString("error").contains("error")) && retryCount < maxRetries) {
             try {
                 Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
             } catch (InterruptedException e) {
@@ -408,7 +408,7 @@ public class ShopeeUtil {
             retryCount++;
         }
 
-        if (result.getString("error").contains("error")) {
+        if ((result == null || result.getString("error").contains("error"))) {
             return orderSns;
         }
 
@@ -456,7 +456,7 @@ public class ShopeeUtil {
         final int maxRetries = 5;
         final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
 
-        while (result.getString("error").contains("error") && retryCount < maxRetries) {
+        while ((result == null || result.getString("error").contains("error")) && retryCount < maxRetries) {
             try {
                 Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
             } catch (InterruptedException e) {
@@ -519,7 +519,7 @@ public class ShopeeUtil {
         final int maxRetries = 5;
         final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
 
-        while (result.getString("error").contains("error") && retryCount < maxRetries) {
+        while ((result == null || result.getString("error").contains("error")) && retryCount < maxRetries) {
             try {
                 Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
             } catch (InterruptedException e) {
@@ -564,7 +564,7 @@ public class ShopeeUtil {
         final int maxRetries = 5;
         final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
 
-        while (result.getString("error").contains("error") && retryCount < maxRetries) {
+        while ((result == null || (result == null || result.getString("error").contains("error"))) && retryCount < maxRetries) {
             try {
                 Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
             } catch (InterruptedException e) {

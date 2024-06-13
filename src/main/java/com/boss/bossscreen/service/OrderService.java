@@ -8,7 +8,6 @@ import com.boss.bossscreen.vo.OrderEscrowVO;
 import com.boss.bossscreen.vo.PageResult;
 import com.boss.bossscreen.vo.SelectVO;
 
-import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -18,7 +17,7 @@ import java.util.List;
  */
 public interface OrderService extends IService<Order> {
 
-    void saveOrUpdateOrder(LocalDate startLocalDateTime, LocalDate endLocalDateTime);
+    void saveOrUpdateOrder(String startTime, String endTime);
 
     PageResult<OrderEscrowVO> orderListByCondition(ConditionDTO condition);
 

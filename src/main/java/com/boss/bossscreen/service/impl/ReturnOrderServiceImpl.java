@@ -1,5 +1,6 @@
 package com.boss.bossscreen.service.impl;
 
+import cn.hutool.core.util.IdUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -135,7 +136,7 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
         try {
             String returnSn = tempObject.getString("return_sn");
             ReturnOrder returnOrder = ReturnOrder.builder()
-                    .id(CommonUtil.createNo())
+                    .id(IdUtil.getSnowflakeNextId())
                     .returnSn(returnSn)
                     .orderSn(tempObject.getString("order_sn"))
                     .reason(tempObject.getString("reason"))
@@ -167,7 +168,7 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
                 long itemId = itemObject.getLong("item_id");
                 long modelId = itemObject.getLong("model_id");
                 ReturnOrderItem returnOrderItem = ReturnOrderItem.builder()
-                        .id(CommonUtil.createNo())
+                        .id(IdUtil.getSnowflakeNextId())
                         .returnSn(returnSn)
                         .name(itemObject.getString("name"))
                         .itemId(itemId)

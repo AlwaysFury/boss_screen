@@ -1,7 +1,5 @@
 package com.boss.bossscreen.util;
 
-import cn.hutool.core.lang.Snowflake;
-import cn.hutool.core.util.IdUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
@@ -16,6 +14,7 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Description
@@ -158,27 +157,60 @@ public class CommonUtil {
     }
 
     /**
-     * 生成Snowflake id
+     * 分割list
+     * @param records
+     * @param batchSize
+     * @return
+     * @param <T>
      */
-    public static long createNo() {
-        Snowflake snowflake = IdUtil.getSnowflake(1, 1);//单例方式获取实例，否则高并发会重复！！！
-        return snowflake.nextId() / 1000;
+    public static <T> List<List<T>> splitListBatches(List<T> records, int batchSize) {
+        List<List<T>> batches = new ArrayList<>();
+        for (int i = 0; i < records.size(); i += batchSize) {
+            batches.add(records.subList(i, Math.min(i + batchSize, records.size())));
+        }
+        return batches;
     }
 
-    public static List<LocalDate[]> splitIntoEvery15DaysTimestamp(LocalDate startDate, LocalDate endDate, int offset) {
+
+//    /**
+//     * 生成Snowflake id
+//     */
+//    private static Snowflake snowflake = IdUtil.getSnowflake(1, 1);
+//    public static long createNo() {
+////        Snowflake snowflake = IdUtil.getSnowflake(1, 1);//单例方式获取实例，否则高并发会重复！！！
+//        return snowflake.nextId() / 1000;
+//    }
+
+    public static List<Long[]> splitIntoEveryNDaysTimestamp(String startDateStr, String endDateStr, int offset) {
+        ZoneId zoneId = ZoneId.systemDefault();
+        LocalDate startLocalDate = LocalDate.parse(startDateStr);
+        LocalDate endLocalDate = LocalDate.parse(endDateStr);
+
+        List<LocalDate[]> localDatePairs = splitIntoEvery15DaysTimestamp(startLocalDate, endLocalDate, offset);
+
+        return localDatePairs.stream()
+                .map(pair -> new Long[]{
+                        pair[0].atStartOfDay(zoneId).toInstant().getEpochSecond(), // 开始时间为当天00:00:00，转换为秒
+                        pair[1].atTime(LocalTime.of(23, 59, 59)).atZone(zoneId).toInstant().getEpochSecond()}) // 结束时间为当天23:59:59
+                .collect(Collectors.toList());
+    }
+
+    private static List<LocalDate[]> splitIntoEvery15DaysTimestamp(LocalDate startDate, LocalDate endDate, int offset) {
         List<LocalDate[]> timestampPairs = new ArrayList<>();
-        while (!startDate.isAfter(endDate)) {
-            LocalDate endOfSplitDate = startDate.plusDays(offset);
-            if (endOfSplitDate.isAfter(endDate)) {
-                endOfSplitDate = endDate;
+        LocalDate currentDate = startDate;
+
+        while (!currentDate.isAfter(endDate)) {
+            LocalDate nextSplitStart = currentDate;
+            LocalDate nextDate = currentDate.plusDays(offset - 1);
+
+            if (nextDate.isAfter(endDate)) {
+                nextDate = endDate;
             }
-            LocalDate[] pair = new LocalDate[]{
-                    startDate,
-                    endOfSplitDate
-            };
-            timestampPairs.add(pair);
-            startDate = endOfSplitDate.plusDays(1);
+
+            timestampPairs.add(new LocalDate[]{nextSplitStart, nextDate});
+            currentDate = nextDate.plusDays(1);
         }
+
         return timestampPairs;
     }
 
