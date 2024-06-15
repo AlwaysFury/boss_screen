@@ -19,7 +19,7 @@ public enum OrderStatusEnum {
 
     UNPAID("UNPAID", "未支付"),
     READY_TO_SHIP("READY_TO_SHIP", "待出货"),
-    PROCESSED("PROCESSED", "已处理"),
+    PROCESSED("PROCESSED", "已处理/已发货"),
     SHIPPED("SHIPPED", "运送中"),
     COMPLETED("COMPLETED", "已完成"),
     IN_CANCEL("IN_CANCEL", "取消中"),

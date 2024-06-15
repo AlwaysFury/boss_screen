@@ -29,8 +29,10 @@ import com.boss.bossscreen.vo.SelectVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -77,6 +79,13 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
     @Autowired
     @Qualifier("customThreadPool")
     private ThreadPoolExecutor customThreadPool;
+
+    private final TransactionTemplate transactionTemplate;
+
+    @Autowired
+    public ProductServiceImpl(DataSourceTransactionManager transactionManager) {
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+    }
 
 
 //    private static final HashMap<String, String> productStatusMap = new HashMap<>();
@@ -178,6 +187,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
         // 改为全局线程池和 futurelist
         // ExecutorService executor = Executors.newFixedThreadPool(Math.min(itemIdList.size(), Runtime.getRuntime().availableProcessors() + 1));
+        log.info("===产品发送请求及处理开始");
+        long startTime =  System.currentTimeMillis();
 
         List<CompletableFuture<Void>> productFutures = itemIdList.stream()
                 .map(itemId -> {
@@ -187,6 +198,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                         getProductDetail(itemId, accessToken, finalShopId, productList);
                     }, ExecutorBuilder.create().setCorePoolSize(itemIdList.size()).build());
                 }).collect(Collectors.toList());
+
+
 
         List<CompletableFuture<Void>> modelFutures = itemIdList.stream()
                 .map(itemId -> {
@@ -202,6 +215,57 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
         CompletableFuture.allOf(productFutures.toArray(new CompletableFuture[0])).join();
         CompletableFuture.allOf(modelFutures.toArray(new CompletableFuture[0])).join();
+
+        log.info("===产品发送请求并处理结束，耗时：{}秒", (System.currentTimeMillis() - startTime) / 1000);
+
+        log.info("===开始产品数据落库");
+        startTime = System.currentTimeMillis();
+
+
+        List<List<Product>> splitProduct = CommonUtil.splitListBatches(productList, 100);
+        List<CompletableFuture<Void>> insertProductFutures = new ArrayList<>();
+        for (List<Product> batch : splitProduct) {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                try {
+//                    TransactionTemplate transactionTemplate = new TransactionTemplate();
+                    transactionTemplate.executeWithoutResult(status -> {
+                        this.saveOrUpdateBatch(batch);
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }, ExecutorBuilder.create().setCorePoolSize(splitProduct.size()).build());
+
+            insertProductFutures.add(future);
+        }
+
+
+        List<List<Model>> splitModel = CommonUtil.splitListBatches(modelList, 5000);
+        List<CompletableFuture<Void>> insertModelFutures = new ArrayList<>();
+        for (List<Model> batch : splitModel) {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                try {
+//                    TransactionTemplate transactionTemplate = new TransactionTemplate();
+                    transactionTemplate.executeWithoutResult(status -> {
+                        modelService.saveOrUpdateBatch(batch);
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }, ExecutorBuilder.create().setCorePoolSize(splitModel.size()).build());
+
+            insertModelFutures.add(future);
+        }
+
+        CompletableFuture.allOf(insertProductFutures.toArray(new CompletableFuture[0])).join();
+        CompletableFuture.allOf(insertModelFutures.toArray(new CompletableFuture[0])).join();
+
+//        List<List<Model>> splitModel = CommonUtil.splitListBatches(modelList, 1000);
+//        for (List<Model> models : splitModel) {
+//            modelService.saveOrUpdateBatch(models);
+//        }
+
+        log.info("===产品数据落库结束，耗时：{}秒", (System.currentTimeMillis() - startTime) / 1000);
 
 //        this.saveOrUpdateBatch(productList);
 //        modelService.saveOrUpdateBatch(modelList);

@@ -18,7 +18,7 @@ spring:
       # 空闲连接存活最大时间，默认600000（10分钟）
       idle-timeout: 180000
       # 连接池最大连接数，默认是10
-      maximum-pool-size: 10
+      maximum-pool-size: 100
       # 此属性控制从池返回的连接的默认自动提交行为,默认值：true
       auto-commit: true
       # 连接池名称
@@ -47,6 +47,7 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
+  executor-type: batch
 
 # 上传模式 可选 oss或local
 upload:

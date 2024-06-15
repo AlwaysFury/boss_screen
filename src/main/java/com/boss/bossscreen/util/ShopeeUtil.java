@@ -201,6 +201,14 @@ public class ShopeeUtil {
         return JSONObject.parseObject(result);
     }
 
+    /**
+     * 获取产品列表
+     * @param accessToken
+     * @param shopId
+     * @param offset
+     * @param itemIds
+     * @return
+     */
     public static List<String> getProducts(String accessToken, long shopId, int offset, List<String> itemIds) {
         JSONObject result = getProductByHttp(accessToken, shopId, offset);
 
@@ -261,6 +269,13 @@ public class ShopeeUtil {
         return JSONObject.parseObject(result);
     }
 
+    /**
+     * 获取产品的基本信息
+     * @param accessToken
+     * @param shopId
+     * @param itemId
+     * @return
+     */
     public static JSONObject getProductInfo(String accessToken, long shopId, String itemId) {
 
         JSONObject result = getProductInfoByHttp(accessToken, shopId, itemId);
@@ -307,7 +322,13 @@ public class ShopeeUtil {
         return JSONObject.parseObject(result);
     }
 
-
+    /**
+     * 获取产品的模型信息
+     * @param accessToken
+     * @param shopId
+     * @param itemId
+     * @return
+     */
     public static JSONObject getModelList(String accessToken, long shopId, long itemId) {
         JSONObject result = getModelListByHttp(accessToken, shopId, itemId);
 
@@ -389,6 +410,16 @@ public class ShopeeUtil {
         return JSONObject.parseObject(result);
     }
 
+    /**
+     * 获取订单列表
+     * @param accessToken
+     * @param shopId
+     * @param offset
+     * @param orderSns
+     * @param startTime
+     * @param endTime
+     * @return
+     */
     public static List<String> getOrderList(String accessToken, long shopId, int offset, List<String> orderSns, long startTime, long endTime) {
         JSONObject result = getOrderListByHttp(accessToken, shopId, offset, orderSns, startTime, endTime);
 
@@ -449,6 +480,13 @@ public class ShopeeUtil {
         return JSONObject.parseObject(result);
     }
 
+    /**
+     * 获取订单详情
+     * @param accessToken
+     * @param shopId
+     * @param orderSnList
+     * @return
+     */
     public static JSONObject getOrderDetail(String accessToken, long shopId, String orderSnList) {
         JSONObject result = getOrderDetailByHttp(accessToken, shopId, orderSnList);
 
@@ -511,7 +549,13 @@ public class ShopeeUtil {
         return JSONObject.parseObject(result);
     }
 
-
+    /**
+     * 获取订单支付详情
+     * @param accessToken
+     * @param shopId
+     * @param orderSn
+     * @return
+     */
     public static JSONObject getEscrowDetail(String accessToken, long shopId, String orderSn) {
         JSONObject result = getEscrowDetailByHttp(accessToken, shopId, orderSn);
 
@@ -557,6 +601,13 @@ public class ShopeeUtil {
         return JSONObject.parseObject(result);
     }
 
+    /**
+     * 获取订单物流号
+     * @param accessToken
+     * @param shopId
+     * @param orderSn
+     * @return
+     */
     public static JSONObject getTrackingNumber(String accessToken, long shopId, String orderSn) {
         JSONObject result = getTrackingNumberByHttp(accessToken, shopId, orderSn);
 
@@ -634,6 +685,12 @@ public class ShopeeUtil {
         return JSONObject.parseObject(result);
     }
 
+    /**
+     * 获取退货列表
+     * @param accessToken
+     * @param shopId
+     * @return
+     */
     public static JSONObject getReturnListByHttp(String accessToken, long shopId) {
         long timest = System.currentTimeMillis() / 1000L;
         String host = ShopAuthDTO.getHost();
@@ -674,5 +731,88 @@ public class ShopeeUtil {
                 partner_id, timest, String.format("%032x",sign), accessToken, shopId);
 
         return JSONObject.parseObject(HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8));
+    }
+
+    /**
+     * 收入和调整记录
+     * @param accessToken
+     * @param shopId
+     * @param startTime
+     * @param endTime
+     * @return
+     */
+    public static JSONObject getPayoutDetail(String accessToken, long shopId, long startTime, long endTime) {
+        long timest = System.currentTimeMillis() / 1000L;
+        String host = ShopAuthDTO.getHost();
+        String path = "/api/v2/payment/get_payout_detail";
+        long partner_id = ShopAuthDTO.getPartnerId();
+        String tmp_partner_key = ShopAuthDTO.getTempPartnerKey();
+        BigInteger sign = getShopTokenSign(partner_id, path,timest, accessToken, shopId, tmp_partner_key);
+        // "https://partner.shopeemobile.com/api/v2/order/get_order_list?page_size=20&response_optional_fields=order_status&timestamp=timestamp&shop_id=shop_id&order_status=READY_TO_SHIP&partner_id=partner_id&access_token=access_token&cursor=""&time_range_field=create_time&time_from=1607235072&time_to=1608271872&sign=sign"
+        String tmp_url = host + path + String.format("?&partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s",
+                partner_id, timest, String.format("%032x",sign), accessToken, shopId);
+
+        JSONObject bodyObject = new JSONObject();
+        bodyObject.put("payout_time_from", startTime);
+        bodyObject.put("payout_time_to", endTime);
+        bodyObject.put("page_size", 100);
+        bodyObject.put("page_no", 1);
+
+        String result = HttpUtil.post(tmp_url, bodyObject.toJSONString());
+
+        return JSONObject.parseObject(result);
+    }
+
+    /**
+     * 取产品额外信息
+     * @param accessToken
+     * @param shopId
+     * @param itemId
+     * @return
+     */
+    public static JSONObject getProductExtraInfo(String accessToken, long shopId, String itemId) {
+
+        JSONObject result = getProductExtraInfoByHttp(accessToken, shopId, itemId);
+
+        int retryCount = 0;
+        final int maxRetries = 5;
+        final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
+
+        while ((result == null || result.getString("error").contains("error")) && retryCount < maxRetries) {
+            try {
+                Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // 保持中断状态
+                throw new RuntimeException("Thread interrupted", e);
+            }
+
+            result = getProductExtraInfoByHttp(accessToken, shopId, itemId);
+            retryCount++;
+        }
+
+        return result;
+    }
+
+    private static JSONObject getProductExtraInfoByHttp(String accessToken, long shopId, String itemId) {
+        long timest = System.currentTimeMillis() / 1000L;
+        String host = ShopAuthDTO.getHost();
+        String path = "/api/v2/product/get_item_extra_info";
+        long partner_id = ShopAuthDTO.getPartnerId();
+        String tmp_partner_key = ShopAuthDTO.getTempPartnerKey();
+        BigInteger sign = getShopTokenSign(partner_id, path,timest, accessToken, shopId, tmp_partner_key);
+//        String tmp_url = host + path + "?partner_id=" + partner_id + "&timestamp=" + timest + "&access_token=" + accessToken + "&shop_id=" + shopId + "&sign=" + String.format("%032x",sign) + "&page_siz=100&item_status=NORMAL&offset=0&update_time_to="+ timest;
+        String tmp_url = host + path + String.format("?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&item_id_list=%s",
+                partner_id, timest, String.format("%032x",sign), accessToken, shopId, itemId);
+
+        String result;
+        try {
+            result = HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8);
+        } catch (Exception e) {
+            JSONObject temp = new JSONObject();
+            temp.put("error", "error");
+            return temp;
+        }
+
+        return JSONObject.parseObject(result);
     }
 }

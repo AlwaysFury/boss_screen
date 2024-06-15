@@ -1,9 +1,6 @@
 package com.boss.bossscreen.task;
 
-import com.boss.bossscreen.service.impl.OrderServiceImpl;
-import com.boss.bossscreen.service.impl.ProductServiceImpl;
-import com.boss.bossscreen.service.impl.ReturnOrderServiceImpl;
-import com.boss.bossscreen.service.impl.ShopServiceImpl;
+import com.boss.bossscreen.service.impl.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -20,6 +17,9 @@ public class RefreshTask {
 
     @Autowired
     private ProductServiceImpl productService;
+
+    @Autowired
+    private ProductExtraInfoServiceImpl productExtraInfoService;
 
     @Autowired
     private OrderServiceImpl orderService;
@@ -43,6 +43,16 @@ public class RefreshTask {
     public void refreshToken() {
         log.info("======开始刷新 token");
         shopService.refreshShopToken();
+    }
+
+//    @Scheduled(cron = "0 0 */2 * * ?")
+    public void refreshProductExtraInfo() {
+        log.info("======开始刷新产品额外信息");
+        long startTime =  System.currentTimeMillis();
+
+        productExtraInfoService.saveOrUpdateProductExtraInfo();
+
+        log.info("刷新产品额外信息耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
     }
 
 //    @Scheduled(cron = "0 */10 * * * ?")
