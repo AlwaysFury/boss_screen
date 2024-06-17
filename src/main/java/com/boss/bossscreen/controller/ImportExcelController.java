@@ -63,24 +63,28 @@ public class ImportExcelController {
         return Result.ok();
     }
 
+    // 流量概述
     @PostMapping("/flowOverview")
     public Result<String> saveFlowOverview(@RequestParam("shop_id") long shopId, @RequestParam("file") MultipartFile file) {
         flowOverviewService.importExcel(shopId, file);
         return Result.ok();
     }
 
+    //加购优惠概述
     @PostMapping("/favorable")
     public Result<String> saveFlowOverview(@RequestParam("shop_id") long shopId, @RequestParam("date") String dateStr, @RequestParam("file") MultipartFile file) {
         favorableService.importExcel(shopId, dateStr, file);
         return Result.ok();
     }
 
+    // 店内限时秒杀
     @PostMapping("/seckillIndex")
     public Result<String> saveSeckillIndex(@RequestParam("shop_id") long shopId, @RequestParam("file") MultipartFile file) {
         seckillIndexService.importExcel(shopId, file);
         return Result.ok();
     }
 
+    // 优惠券
     @PostMapping("/coupon")
     public Result<String> saveCoupon(@RequestParam("shop_id") long shopId, @RequestParam("date") String dateStr, @RequestParam("file") MultipartFile file) {
         couponIndexService.importExcel(shopId, file);
@@ -88,12 +92,14 @@ public class ImportExcelController {
         return Result.ok();
     }
 
+    // 套装
     @PostMapping("/setDiscounts")
     public Result<String> saveSetDiscounts(@RequestParam("shop_id") long shopId, @RequestParam("date") String dateStr, @RequestParam("file") MultipartFile file) {
         setDiscountsService.importExcel(shopId, dateStr, file);
         return Result.ok();
     }
 
+    // 关注礼
     @PostMapping("/focusGifts")
     public Result<String> saveFocusGifts(@RequestParam("shop_id") long shopId, @RequestParam("file") MultipartFile file) {
         focusGiftService.importExcel(shopId, file);
