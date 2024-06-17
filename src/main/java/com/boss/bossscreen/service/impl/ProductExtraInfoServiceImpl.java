@@ -110,6 +110,8 @@ public class ProductExtraInfoServiceImpl extends ServiceImpl<ProductExtraInfoDao
 
             insertProductFutures.add(future);
         }
+
+        CompletableFuture.allOf(insertProductFutures.toArray(new CompletableFuture[0])).join();
     }
 
     private void getProductExtraInfo(String itemIds, String token, long shopId, List<ProductExtraInfo> productList) {

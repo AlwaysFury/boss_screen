@@ -301,4 +301,11 @@ class BossScreenApplicationTests {
         System.out.println(object);
     }
 
+    @Autowired
+    private ProductExtraInfoServiceImpl productExtraInfoService;
+    @Test
+    void refreshProductExtraInfoTest() {
+        productExtraInfoService.saveOrUpdateProductExtraInfo();
+    }
+
 }
