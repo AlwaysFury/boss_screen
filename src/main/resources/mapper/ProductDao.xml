@@ -37,7 +37,7 @@
 
     <select id="productList" resultType="com.boss.bossscreen.vo.ProductVO">
         SELECT
-            s.id, s.item_id, s.category_id, s.item_name, s.item_sku, s.mainImg_url, s.grade, s.shop_id, s.status, s.create_time, IFNULL(d.sales, 0) as salesVolume
+            s.id, s.item_id, s.category_id, s.item_name, s.item_sku, s.mainImg_url, s.grade, s.shop_id, s.status, s.create_time, IFNULL(d.sale, 0) as salesVolume
         FROM
             tb_product s
         left join

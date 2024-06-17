@@ -144,7 +144,7 @@ class BossScreenApplicationTests {
 
     @Test
     void getOrderDetail() {
-        JSONObject object = ShopeeUtil.getOrderDetail("6a565561557961446d6f697973504843", 1017169304, "240102SQ95FRB7");
+        JSONObject object = ShopeeUtil.getOrderDetail("475962786d70755862446676417a6e55", 874244879, "240517GY0MEPRV");
         System.out.println(object);
     }
 
@@ -194,7 +194,7 @@ class BossScreenApplicationTests {
 
     @Test
     void getEscrowDetailTest() {
-        JSONObject object = ShopeeUtil.getEscrowDetail("655952765848657543524e7947626641", 874244879, "2405015JVKQJ2Y");
+        JSONObject object = ShopeeUtil.getEscrowDetail("475962786d70755862446676417a6e55", 874244879, "240517GY0MEPRV");
         System.out.println(object);
     }
 
@@ -219,7 +219,7 @@ class BossScreenApplicationTests {
 
     @Test
     void getReturnListByHttpTest() {
-        JSONObject object = ShopeeUtil.getReturnListByHttp("694c786c63794a4441457064416c4152", 1017169304);
+        JSONObject object = ShopeeUtil.getReturnListByHttp("475962786d70755862446676417a6e55", 874244879);
         System.out.println(object);
     }
 
@@ -293,6 +293,12 @@ class BossScreenApplicationTests {
         }
         String tempContent = content.toString();
         return tempContent;
+    }
+
+    @Test
+    void getPayoutDetailTest() {
+        JSONObject object = ShopeeUtil.getPayoutDetail("5a797358747548427a4d706a56586172", 874244879, 1716912000, 1716998399);
+        System.out.println(object);
     }
 
 }

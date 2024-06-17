@@ -10,18 +10,21 @@ import com.boss.bossscreen.dao.*;
 import com.boss.bossscreen.dto.ConditionDTO;
 import com.boss.bossscreen.enities.*;
 import com.boss.bossscreen.enums.OrderStatusEnum;
-import com.boss.bossscreen.mapper.OrderMapper;
+import com.boss.bossscreen.service.EscrowInfoService;
+import com.boss.bossscreen.service.EscrowItemService;
+import com.boss.bossscreen.service.OrderItemService;
 import com.boss.bossscreen.service.OrderService;
 import com.boss.bossscreen.util.BeanCopyUtils;
 import com.boss.bossscreen.util.CommonUtil;
 import com.boss.bossscreen.util.PageUtils;
 import com.boss.bossscreen.util.ShopeeUtil;
 import com.boss.bossscreen.vo.*;
-import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -65,6 +68,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
     private ShopServiceImpl shopService;
 
     @Autowired
+    private EscrowInfoService escrowInfoService;
+
+    @Autowired
+    private EscrowItemService escrowItemService;
+
+    @Autowired
+    private OrderItemService orderItemService;
+
+    @Autowired
     private CostServiceImpl costService;
 
     @Autowired
@@ -73,8 +85,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
     @Autowired
     private RedisServiceImpl redisService;
 
-    @Resource
-    private OrderMapper orderMapper;
+    @Autowired
+    @Qualifier("customThreadPool")
+    private ThreadPoolExecutor customThreadPool;
 
 //    @Autowired
 //    @Qualifier("customThreadPool")
@@ -145,7 +158,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
         // 改为全局线程池和 futurelist
         //ExecutorService executor = Executors.newFixedThreadPool(Math.min(orderSnList.size(), Runtime.getRuntime().availableProcessors() + 1));
-
+        log.info("===订单发送请求及处理开始");
+        long startTime =  System.currentTimeMillis();
 
         List<CompletableFuture<Void>> orderFutures = orderSnList.stream()
                 .map(orderSn -> {
@@ -163,8 +177,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                             getOrderDetail(orderDetailObject, ordertList, finalShopId);
                             getOrderItem(orderDetailObject, orderItemList);
                         }
-                    }, ExecutorBuilder.create().setCorePoolSize(orderSnList.size()).build());
+                    }, customThreadPool);
                 }).collect(Collectors.toList());
+
+        CompletableFuture.allOf(orderFutures.toArray(new CompletableFuture[0])).join();
 
 
         List<CompletableFuture<Void>> escrowFutures = orderSnList.stream()
@@ -183,58 +199,90 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                             saveEscrowInfoByOrderSn(oderIncomeObject, sn, escrowInfoList);
                             saveEscrowItem(oderIncomeObject, sn, escrowItemList);
                         }
-                    }, ExecutorBuilder.create().setCorePoolSize(orderSnList.size()).build());
+                    }, customThreadPool);
                 }).collect(Collectors.toList());
 
-        CompletableFuture.allOf(orderFutures.toArray(new CompletableFuture[0])).join();
+
         CompletableFuture.allOf(escrowFutures.toArray(new CompletableFuture[0])).join();
 
+        log.info("===订单发送请求并处理结束，耗时：{}秒", (System.currentTimeMillis() - startTime) / 1000);
 
+        log.info("===开始订单数据落库");
+        startTime =  System.currentTimeMillis();
 
 
         ThreadPoolExecutor executor = ExecutorBuilder.create().setCorePoolSize(orderSnList.size()).build();
 
-        List<List<Order>> batchesOrderList = CommonUtil.splitListBatches(ordertList, 1000);
-//        List<CompletableFuture<Void>> insertOrderFutures = new ArrayList<>();
-//        for (List<Order> batch : batchesOrderList) {
-//            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-//                try {
-//                    TransactionTemplate transactionTemplate = new TransactionTemplate();
-//                    transactionTemplate.executeWithoutResult(status -> {
-//                        this.saveOrUpdateBatch(batch);
-//                    });
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }, executor);
-//
-//            insertOrderFutures.add(future);
-//        }
-//        CompletableFuture.allOf(insertOrderFutures.toArray(new CompletableFuture[0])).join();
+        List<List<Order>> batchesOrderList = CommonUtil.splitListBatches(ordertList, 100);
+        List<CompletableFuture<Void>> insertOrderFutures = new ArrayList<>();
+        for (List<Order> batch : batchesOrderList) {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                try {
+                    TransactionTemplate transactionTemplate = new TransactionTemplate();
+                    transactionTemplate.executeWithoutResult(status -> {
+                        this.saveOrUpdateBatch(batch);
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }, customThreadPool);
+
+            insertOrderFutures.add(future);
+        }
+        CompletableFuture.allOf(insertOrderFutures.toArray(new CompletableFuture[0])).join();
 
         List<List<OrderItem>> batchesOrderItemList = CommonUtil.splitListBatches(orderItemList, 1000);
-//        List<CompletableFuture<Void>> insertOrderItemFutures = new ArrayList<>();
-//        for (List<OrderItem> batch : batchesOrderItemList) {
-//            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> orderItemService.saveOrUpdateBatch(batch), executor);
-//            insertOrderItemFutures.add(future);
-//        }
-//        CompletableFuture.allOf(insertOrderItemFutures.toArray(new CompletableFuture[0])).join();
+        List<CompletableFuture<Void>> insertOrderItemFutures = new ArrayList<>();
+        for (List<OrderItem> batch : batchesOrderItemList) {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                try {
+                    TransactionTemplate transactionTemplate = new TransactionTemplate();
+                    transactionTemplate.executeWithoutResult(status -> {
+                        orderItemService.saveOrUpdateBatch(batch);
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }, customThreadPool);
+            insertOrderItemFutures.add(future);
+        }
+        CompletableFuture.allOf(insertOrderItemFutures.toArray(new CompletableFuture[0])).join();
 
-        List<List<EscrowInfo>> batchesEscrowInfoList = CommonUtil.splitListBatches(escrowInfoList, 1000);
-//        List<CompletableFuture<Void>> insertEscrowInfoFutures = new ArrayList<>();
-//        for (List<EscrowInfo> batch : batchesEscrowInfoList) {
-//            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> escrowInfoService.saveOrUpdateBatch(batch), executor);
-//            insertEscrowInfoFutures.add(future);
-//        }
-//        CompletableFuture.allOf(insertEscrowInfoFutures.toArray(new CompletableFuture[0])).join();
+        List<List<EscrowInfo>> batchesEscrowInfoList = CommonUtil.splitListBatches(escrowInfoList, 100);
+        List<CompletableFuture<Void>> insertEscrowInfoFutures = new ArrayList<>();
+        for (List<EscrowInfo> batch : batchesEscrowInfoList) {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                try {
+                    TransactionTemplate transactionTemplate = new TransactionTemplate();
+                    transactionTemplate.executeWithoutResult(status -> {
+                        escrowInfoService.saveOrUpdateBatch(batch);
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }, customThreadPool);
+            insertEscrowInfoFutures.add(future);
+        }
+        CompletableFuture.allOf(insertEscrowInfoFutures.toArray(new CompletableFuture[0])).join();
 
         List<List<EscrowItem>> batchesEscrowItemList = CommonUtil.splitListBatches(escrowItemList, 1000);
-//        List<CompletableFuture<Void>> insertEscrowItemFutures = new ArrayList<>();
-//        for (List<EscrowItem> batch : batchesEscrowItemList) {
-//            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> escrowItemService.saveOrUpdateBatch(batch), executor);
-//            insertEscrowItemFutures.add(future);
-//        }
-//        CompletableFuture.allOf(insertEscrowItemFutures.toArray(new CompletableFuture[0])).join();
+        List<CompletableFuture<Void>> insertEscrowItemFutures = new ArrayList<>();
+        for (List<EscrowItem> batch : batchesEscrowItemList) {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                try {
+                    TransactionTemplate transactionTemplate = new TransactionTemplate();
+                    transactionTemplate.executeWithoutResult(status -> {
+                        escrowItemService.saveOrUpdateBatch(batch);
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }, customThreadPool);
+            insertEscrowItemFutures.add(future);
+        }
+        CompletableFuture.allOf(insertEscrowItemFutures.toArray(new CompletableFuture[0])).join();
+
+        log.info("===产品数据落库结束，耗时：{}秒", (System.currentTimeMillis() - startTime) / 1000);
 
 
 //        orderMapper.insertBatchSomeColumn(ordertList);
