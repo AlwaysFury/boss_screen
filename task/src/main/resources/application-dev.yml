@@ -1,0 +1,57 @@
+# 配置端口
+server:
+  port: 8082
+  servlet:
+    session:
+      timeout: 21600
+
+# 配置mysql数据库
+spring:
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://120.76.157.173:3368/boss_screen?serverTimezone=Asia/Shanghai&allowMultiQueries=true&rewriteBatchedStatements=true
+    username: root
+    password: Hxt@102620
+    hikari:
+      minimum-idle: 5
+      # 空闲连接存活最大时间，默认600000（10分钟）
+      idle-timeout: 180000
+      # 连接池最大连接数，默认是10
+      maximum-pool-size: 1000
+      # 此属性控制从池返回的连接的默认自动提交行为,默认值：true
+      auto-commit: true
+      # 连接池名称
+      pool-name: MyHikariCP
+      # 此属性控制池中连接的最长生命周期，值0表示无限生命周期，默认1800000即30分钟
+      max-lifetime: 0
+      # 数据库连接超时时间,默认30秒，即30000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+  # redis配置
+  data:
+    redis:
+      host: 120.76.157.173
+      port: 6791
+      password: Hxt@102620redis
+      lettuce:
+        pool:
+          max-active: 8
+          min-idle: 8
+          max-idle: 0
+          max-wait: -1
+
+# 配置MybatisPlus
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+  executor-type: batch
+
+shopeeApi:
+  host: https://partner.shopeemobile.com/
+  partner_id: 2007608
+  partner_key: 636a44756841535751715058756d4173505a5a63495a766f515372447a664a43
+  shop_redirect_url: http://120.76.157.173:8991/api/shopee/saveOrUpdateShop
+  account_redirect_url: http://120.76.157.173:8991/api/shopee/saveOrUpdateAccount

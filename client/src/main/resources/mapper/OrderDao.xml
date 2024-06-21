@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boss.client.dao.OrderDao">
+
+    <select id="orderCount" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        FROM
+            tb_order as s
+        <where>
+            s.id is not null
+            <if test="condition.order_sn != null">
+                and s.order_sn = #{condition.order_sn}
+            </if>
+            <if test="condition.order_status != null">
+                and s.status = #{condition.order_status}
+            </if>
+            <if test="condition.tracking_number != null">
+                and s.tracking_number = #{condition.tracking_number}
+            </if>
+            <if test="condition.shop_id != null">
+                and s.shop_id = #{condition.shop_id}
+            </if>
+            <if test="condition.start_time != null">
+                and s.create_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                and s.create_time &lt;= #{condition.end_time}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="orderList" resultType="com.boss.client.vo.OrderEscrowVO">
+        SELECT
+            s.id, s.order_sn, s.tracking_number, IFNULL(p.status,s.STATUS) as status, s.shop_id, s.create_time, IFNULL(d.num, 0) as totalCount
+        FROM
+            tb_order as s
+        left join
+            (select order_sn, sum(count) as num from tb_order_item GROUP BY order_sn) as d
+        on
+            s.order_sn = d.order_sn
+        left join  (select order_sn,status from tb_order_status_push where (order_sn, create_time) in (select order_sn, max(create_time) from tb_order_status_push group by order_sn)) as p
+            on s.order_sn = p.order_sn
+        <where>
+            s.id is not null
+            <if test="condition.order_sn != null">
+                and s.order_sn = #{condition.order_sn}
+            </if>
+            <if test="condition.order_status != null">
+                and IFNULL(p.status,s.STATUS) = #{condition.order_status}
+            </if>
+            <if test="condition.tracking_number != null">
+                and s.tracking_number = #{condition.tracking_number}
+            </if>
+            <if test="condition.shop_id != null">
+                and s.shop_id = #{condition.shop_id}
+            </if>
+            <if test="condition.start_time != null">
+                and s.create_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                and s.create_time &lt;= #{condition.end_time}
+            </if>
+        </where>
+        <if test="condition.orderBy_name != null">
+            order by ${condition.orderBy_name}
+        </if>
+        LIMIT #{current},#{size}
+    </select>
+
+    <select id="maxTimeList" resultType="com.boss.common.enities.Order">
+        select max(s.create_time), shop_id from tb_order as s GROUP BY shop_id
+    </select>
+
+
+
+    <select id="getNonEscrowList" resultType="java.lang.String">
+        SELECT
+            s.order_sn
+        FROM
+            tb_order AS s
+                LEFT JOIN tb_escrow_info AS t ON s.order_sn = t.order_sn
+                left join  (select order_sn,status from tb_order_status_push where (order_sn, create_time) in (select order_sn, max(create_time) from tb_order_status_push group by order_sn)) as p
+                           on s.order_sn = p.order_sn
+        WHERE
+            s.shop_id = #{shopId}
+          AND t.order_sn IS NULL
+          and IFNULL(p.status,s.STATUS) != 'UNPAID';
+    </select>
+</mapper>

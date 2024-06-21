@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boss.client.dao.CostDao">
+
+
+    <select id="costCount" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        FROM
+            tb_cost as s
+        <where>
+            <if test="condition.cost_type != null">
+                s.type = #{condition.cost_type}
+            </if>
+            <if test="condition.start_time != null">
+                s.start_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                s.end_time &lt;= #{condition.end_time}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="costList" resultType="com.boss.client.vo.CostVO">
+        SELECT
+            id,
+            type,
+            price,
+            exchange_rate,
+            start_time,
+            end_time
+        FROM
+            tb_cost as s
+        <where>
+            <if test="condition.start_time != null">
+                s.start_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                s.end_time &lt;= #{condition.end_time}
+            </if>
+        </where>
+        LIMIT #{current},#{size}
+    </select>
+
+</mapper>

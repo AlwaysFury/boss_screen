@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boss.client.dao.OrderItemDao">
+
+    <select id="itemCountByCreateTimeRange" resultType="java.lang.Integer">
+        SELECT
+            sum(count)
+        FROM
+            tb_order_item as s,
+            tb_order as d
+        where
+            s.item_id = #{item_id}
+            and
+            s.order_sn = d.order_sn
+            and
+            d.create_time >= #{start_time}
+            and
+            d.create_time &lt;= #{end_time}
+    </select>
+
+
+    <select id="itemCountByCreateTime" resultType="java.lang.Integer">
+        SELECT
+            sum(d.count)
+        FROM
+            tb_order as s,
+            tb_order_item as d
+        where
+            d.item_id = #{item_id}
+          and
+            s.order_sn = d.order_sn
+          and
+            UNIX_TIMESTAMP(FROM_UNIXTIME(s.create_time,'%Y-%m-%d 00:00:00')) = #{time}
+    </select>
+
+
+    <select id="itemMinPrice" resultType="java.math.BigDecimal">
+        SELECT
+            min(current_price)
+        FROM
+            tb_model as s
+        where
+            s.item_id = #{item_id}
+    </select>
+
+    <select id="salesVolumeByItemId" resultType="java.lang.Integer">
+        SELECT
+            sum(count)
+        FROM
+            tb_order_item as s
+        where
+            s.item_id = #{item_id}
+    </select>
+
+    <select id="salesVolumeByModelId" resultType="java.lang.Integer">
+        SELECT
+            sum(count)
+        FROM
+            tb_order_item as s
+        where
+            s.model_id = #{model_id}
+    </select>
+</mapper>

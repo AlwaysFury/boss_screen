@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boss.client.dao.OrderStatusPushDao">
+
+
+    <select id="maxTimeStatus" resultType="string">
+        SELECT
+            order_sn,
+            STATUS
+        FROM
+            tb_order_status_push
+        WHERE
+            ( order_sn, create_time ) IN ( SELECT order_sn, MAX( create_time ) FROM tb_order_status_push GROUP BY order_sn )
+          AND order_sn = #{orderSn}
+    </select>
+
+</mapper>

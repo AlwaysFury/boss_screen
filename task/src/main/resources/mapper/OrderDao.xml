@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boss.task.dao.OrderDao">
+
+    <select id="maxTimeList" resultType="com.boss.common.enities.Order">
+        select max(s.create_time), shop_id from tb_order as s GROUP BY shop_id
+    </select>
+
+    <select id="getNonEscrowList" resultType="java.lang.String">
+        SELECT
+            s.order_sn
+        FROM
+            tb_order AS s
+                LEFT JOIN tb_escrow_info AS t ON s.order_sn = t.order_sn
+                left join  (select order_sn,status from tb_order_status_push where (order_sn, create_time) in (select order_sn, max(create_time) from tb_order_status_push group by order_sn)) as p
+                           on s.order_sn = p.order_sn
+        WHERE
+            s.shop_id = #{shopId}
+          AND t.order_sn IS NULL
+          and IFNULL(p.status,s.STATUS) != 'UNPAID';
+    </select>
+</mapper>
