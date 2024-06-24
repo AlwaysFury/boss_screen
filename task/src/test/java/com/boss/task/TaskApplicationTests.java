@@ -333,4 +333,8 @@ class TaskApplicationTests {
         }
     }
 
+    @Autowired
+    private TrackingInfoServiceImpl trackingInfoService;
+
+
 }

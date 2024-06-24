@@ -59,7 +59,7 @@ public class TrackingInfoServiceImpl extends ServiceImpl<TrackingInfoDao, Tracki
         String accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
         JSONObject trackingInfoObject = ShopeeUtil.getTrackingInfo(accessToken, shopId, orderSn);
 
-        if (trackingInfoObject.getString("error").contains("error") && trackingInfoObject == null && trackingInfoObject.getJSONObject("response") == null) {
+        if (trackingInfoObject.getString("error").contains("error") || trackingInfoObject == null || trackingInfoObject.getJSONObject("response") == null) {
             return;
         }
 
@@ -133,7 +133,7 @@ public class TrackingInfoServiceImpl extends ServiceImpl<TrackingInfoDao, Tracki
                     return CompletableFuture.runAsync(() -> {
                         String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
                         JSONObject trackingInfoObject = ShopeeUtil.getTrackingInfo(finalAccessToken, shopId, orderSn);
-                        if (trackingInfoObject.getString("error").contains("error") && trackingInfoObject == null && trackingInfoObject.getJSONObject("response") == null) {
+                        if (trackingInfoObject.getString("error").contains("error") || trackingInfoObject == null || trackingInfoObject.getJSONObject("response") == null) {
                             return;
                         }
                         JSONObject response = trackingInfoObject.getJSONObject("response");

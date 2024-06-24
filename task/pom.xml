@@ -13,6 +13,8 @@
     <name>task</name>
     <description>task</description>
 
+    <packaging>jar</packaging>
+
     <dependencies>
         <dependency>
             <groupId>com.boss</groupId>

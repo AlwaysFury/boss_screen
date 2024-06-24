@@ -8,9 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.TrackingInfoDao;
 import com.boss.client.service.TrackingInfoService;
 import com.boss.client.util.ShopeeUtil;
-import com.boss.client.vo.PayoutInfoVO;
 import com.boss.client.vo.TrackingInfoVO;
-import com.boss.common.enities.PayoutInfo;
 import com.boss.common.enities.TrackingInfo;
 import com.boss.common.util.BeanCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +35,7 @@ public class TrackingInfoServiceImpl extends ServiceImpl<TrackingInfoDao, Tracki
         String accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
         JSONObject trackingInfoObject = ShopeeUtil.getTrackingInfo(accessToken, shopId, orderSn);
 
-        if (trackingInfoObject.getString("error").contains("error") && trackingInfoObject == null && trackingInfoObject.getJSONObject("response") == null) {
+        if (trackingInfoObject.getString("error").contains("error") || trackingInfoObject == null || trackingInfoObject.getJSONObject("response") == null) {
             return;
         }
 

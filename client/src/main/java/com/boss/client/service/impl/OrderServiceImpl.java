@@ -294,7 +294,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                     return CompletableFuture.runAsync(() -> {
                         String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
                         JSONObject orderObject = ShopeeUtil.getOrderDetail(finalAccessToken, finalShopId, orderSn);
-                        if (orderObject.getString("error").contains("error") && orderObject == null && orderObject.getJSONObject("response") == null) {
+                        if (orderObject.getString("error").contains("error") || orderObject == null || orderObject.getJSONObject("response") == null) {
                             return;
                         }
                         JSONArray orderArray = orderObject.getJSONObject("response").getJSONArray("order_list");
@@ -344,7 +344,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
         String token = shopService.getAccessTokenByShopId(String.valueOf(shopId));
         JSONObject orderObject = ShopeeUtil.getOrderDetail(token, shopId, orderSn);
-        if (orderObject.getString("error").contains("error") && orderObject == null && orderObject.getJSONObject("response") == null) {
+        if (orderObject.getString("error").contains("error") || orderObject == null || orderObject.getJSONObject("response") == null) {
             return;
         }
         JSONArray orderArray = orderObject.getJSONObject("response").getJSONArray("order_list");
@@ -376,7 +376,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                     return CompletableFuture.runAsync(() -> {
                         String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
                         JSONObject orderObject = ShopeeUtil.getOrderDetail(finalAccessToken, finalShopId, orderSn);
-                        if (orderObject.getString("error").contains("error") && orderObject == null && orderObject.getJSONObject("response") == null) {
+                        if (orderObject.getString("error").contains("error") || orderObject == null || orderObject.getJSONObject("response") == null) {
                             return;
                         }
                         JSONArray orderArray = orderObject.getJSONObject("response").getJSONArray("order_list");
