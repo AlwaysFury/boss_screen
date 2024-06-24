@@ -7,7 +7,9 @@ import com.boss.task.service.WebhookService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -37,6 +39,13 @@ public class WebhookServiceImpl implements WebhookService {
     @Qualifier("customThreadPool")
     private ThreadPoolExecutor customThreadPool;
 
+    private final TransactionTemplate transactionTemplate;
+
+    @Autowired
+    public WebhookServiceImpl(DataSourceTransactionManager transactionManager) {
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+    }
+
     @Override
     public void getPush(String data) {
         JSONObject object = JSONObject.parseObject(data);
@@ -63,7 +72,13 @@ public class WebhookServiceImpl implements WebhookService {
                         .shopId(shopId)
                         .build();
 
-                orderStatusPushService.save(orderStatusPush);
+                try {
+                    transactionTemplate.executeWithoutResult(transactionStatus -> {
+                        orderStatusPushService.save(orderStatusPush);
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
                 if (UNPAID.getCode().equals(status) || CANCELLED.getCode().equals(status)) {
                     log.info("新增订单信息");

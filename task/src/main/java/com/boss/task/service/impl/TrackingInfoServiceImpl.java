@@ -78,7 +78,13 @@ public class TrackingInfoServiceImpl extends ServiceImpl<TrackingInfoDao, Tracki
             trackingInfo.setLogisticsData(infoArray.toJSONString());
         }
 
-        this.save(trackingInfo);
+        try {
+            transactionTemplate.executeWithoutResult(status -> {
+                this.save(trackingInfo);
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 

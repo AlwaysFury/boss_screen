@@ -1,5 +1,7 @@
 package com.boss.common.enities;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,7 +42,7 @@ public class Order {
     /**
      * 运单号
      */
-    private String trackingNumber;
+//    private String trackingNumber;
 
     /**
      * 所属店铺
@@ -75,16 +77,19 @@ public class Order {
     /**
      * 取消通过
      */
+    @TableField(updateStrategy = FieldStrategy.IGNORED, insertStrategy = FieldStrategy.IGNORED, whereStrategy = FieldStrategy.IGNORED)
     private String cancelBy;
 
     /**
      * 买家取消原因
      */
+    @TableField(updateStrategy = FieldStrategy.IGNORED, insertStrategy = FieldStrategy.IGNORED, whereStrategy = FieldStrategy.IGNORED)
     private String buyerCancelReason;
 
     /**
      * 运送方式
      */
+    @TableField(updateStrategy = FieldStrategy.IGNORED, insertStrategy = FieldStrategy.IGNORED, whereStrategy = FieldStrategy.IGNORED)
     private String shippingCarrier;
 
 

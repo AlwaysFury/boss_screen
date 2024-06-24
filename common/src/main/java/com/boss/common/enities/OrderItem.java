@@ -102,5 +102,5 @@ public class OrderItem {
     /**
      * 成本
      */
-    private BigDecimal cost;
+//    private BigDecimal cost;
 }

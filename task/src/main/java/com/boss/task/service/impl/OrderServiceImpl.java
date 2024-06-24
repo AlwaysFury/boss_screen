@@ -322,8 +322,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             getOrderItem(orderDetailObject, orderItemList);
         }
 
-        this.saveOrUpdateBatch(ordertList);
-        orderItemService.saveOrUpdateBatch(orderItemList);
+        try {
+            transactionTemplate.executeWithoutResult(status -> {
+                this.saveOrUpdateBatch(ordertList);
+                orderItemService.saveOrUpdateBatch(orderItemList);
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void refreshBatchOrderBySn(List<String> orderSnList, long shopId) {
