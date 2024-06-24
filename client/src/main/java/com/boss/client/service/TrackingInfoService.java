@@ -1,6 +1,7 @@
 package com.boss.client.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.boss.client.vo.TrackingInfoVO;
 import com.boss.common.enities.TrackingInfo;
 
 
@@ -13,5 +14,5 @@ public interface TrackingInfoService extends IService<TrackingInfo> {
 
     void saveTrackingInfoBySn(String orderSn, long shopId, String trackingNumber);
 
-
+    TrackingInfoVO getTrackInfoBySn(String orderSn);
 }

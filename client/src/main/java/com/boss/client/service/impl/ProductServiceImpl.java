@@ -13,12 +13,11 @@ import com.boss.client.dao.OrderItemDao;
 import com.boss.client.dao.ProductDao;
 import com.boss.client.dao.ShopDao;
 import com.boss.client.service.ProductService;
-import com.boss.client.util.CommonUtil;
+import com.boss.client.util.RedisUtil;
 import com.boss.client.util.ShopeeUtil;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.ProductInfoVO;
 import com.boss.client.vo.ProductVO;
-import com.boss.common.vo.SelectVO;
 import com.boss.common.dto.ConditionDTO;
 import com.boss.common.enities.Model;
 import com.boss.common.enities.OperationLog;
@@ -26,7 +25,9 @@ import com.boss.common.enities.Product;
 import com.boss.common.enities.Shop;
 import com.boss.common.enums.ProductStatusEnum;
 import com.boss.common.util.BeanCopyUtils;
+import com.boss.common.util.CommonUtil;
 import com.boss.common.util.PageUtils;
+import com.boss.common.vo.SelectVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -348,7 +349,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 }
 
 
-                String judgeResult = CommonUtil.judgeRedis(redisService,PRODUCT_ITEM + itemId, productList, product, Product.class);
+                String judgeResult = RedisUtil.judgeRedis(redisService,PRODUCT_ITEM + itemId, productList, product, Product.class);
                 if (!"".equals(judgeResult)) {
                     JSONArray diffArray = JSON.parseObject(judgeResult).getJSONArray("defectsList");
                     if (diffArray.size() != 0) {

@@ -157,7 +157,7 @@ class TaskApplicationTests {
         log.info("======开始刷新订单信息");
         long startTime =  System.currentTimeMillis();
 
-        orderService.refreshOrderByTimeStr("2024-06-01", "2024-06-19");
+//        orderService.refreshOrderByTimeStr("2024-06-01", "2024-06-19");
 
         log.info("更新订单耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
     }
@@ -247,7 +247,7 @@ class TaskApplicationTests {
 //        array.add("8184308878393187335");
 //        JSONArray object = ShopeeUtil.getBillingTransactionInfo("4762415a576374696571644a6e455750", 874244879, array, "", new JSONArray());
 
-        payoutDetailService.refreshPayoutInfoByTime("2024-06-10", "2024-06-25");
+//        payoutDetailService.refreshPayoutInfoByTime("2024-06-10", "2024-06-25");
 
 //        System.out.println(object);
     }
@@ -299,7 +299,7 @@ class TaskApplicationTests {
 
     @Test
     void testRefreshPayoutDetail() {
-        payoutDetailService.refreshPayoutInfoByTime("2024-05-01", "2024-05-31");
+//        payoutDetailService.refreshPayoutInfoByTime("2024-05-01", "2024-05-31");
     }
 
     @Test

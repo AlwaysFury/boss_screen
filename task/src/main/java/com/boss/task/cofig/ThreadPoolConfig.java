@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ThreadPoolConfig {
 
     // 线程池核心线程数
-    private static final int CORE_POOL_SIZE = Runtime.getRuntime().availableProcessors() + 10;
+    private static final int CORE_POOL_SIZE = Runtime.getRuntime().availableProcessors() + 1;
     // 线程池最大线程数
     private static final int MAX_POOL_SIZE = CORE_POOL_SIZE * 2;
     // 线程空闲时的存活时间

@@ -9,11 +9,13 @@ import com.boss.client.dao.ProductDao;
 import com.boss.client.dao.ProductExtraInfoDao;
 import com.boss.client.dao.ShopDao;
 import com.boss.client.service.ProductExtraInfoService;
-import com.boss.client.util.CommonUtil;
 import com.boss.client.util.ShopeeUtil;
+import com.boss.client.vo.ProductExtraInfoVO;
 import com.boss.common.enities.Product;
 import com.boss.common.enities.ProductExtraInfo;
 import com.boss.common.enities.Shop;
+import com.boss.common.util.BeanCopyUtils;
+import com.boss.common.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -42,6 +44,9 @@ public class ProductExtraInfoServiceImpl extends ServiceImpl<ProductExtraInfoDao
 
     @Autowired
     private ProductDao productDao;
+
+    @Autowired
+    private ProductExtraInfoDao productExtraInfoDao;
 
     @Autowired
     private ShopServiceImpl shopService;
@@ -143,4 +148,12 @@ public class ProductExtraInfoServiceImpl extends ServiceImpl<ProductExtraInfoDao
             productList.add(productExtraInfo);
         }
     }
+
+    @Override
+    public ProductExtraInfoVO getProductExtraInfoByItemId(Long itemId) {
+        ProductExtraInfo productExtraInfo = productExtraInfoDao.selectOne(new QueryWrapper<ProductExtraInfo>().eq("id", itemId));
+        return BeanCopyUtils.copyObject(productExtraInfo, ProductExtraInfoVO.class);
+    }
+
+
 }

@@ -10,5 +10,7 @@ import com.boss.common.enities.PayoutInfo;
  */
 public interface PayoutInfoService extends IService<PayoutInfo>  {
 
-    void refreshPayoutInfoByTime(String startTime, String endTime);
+    void refreshPayoutInfoByTime(long startTime, long endTime);
+
+    void refreshNewerPayoutInfo();
 }

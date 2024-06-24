@@ -17,7 +17,7 @@ import java.util.List;
  */
 public interface OrderService extends IService<Order> {
 
-    void refreshOrderByTimeStr(String startTime, String endTime);
+    void refreshOrderByTime(long startTime, long endTime);
 
     PageResult<OrderEscrowVO> orderListByCondition(ConditionDTO condition);
 

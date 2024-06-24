@@ -12,7 +12,7 @@ import java.util.List;
  */
 public interface OrderService extends IService<Order> {
 
-    void refreshOrderByTimeStr(String startTime, String endTime);
+    void refreshOrderByTimeStr(long startTime, long endTime);
 
     void refreshOrder(List<String> sns);
 

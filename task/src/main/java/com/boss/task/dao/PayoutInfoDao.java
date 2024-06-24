@@ -11,4 +11,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PayoutInfoDao extends BaseMapper<PayoutInfo> {
 
+    long selectMaxTime(long shopId);
 }

@@ -1,6 +1,7 @@
 package com.boss.client.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.boss.client.vo.PayoutInfoVO;
 import com.boss.common.enities.PayoutInfo;
 
 
@@ -9,9 +10,11 @@ import com.boss.common.enities.PayoutInfo;
  * @Author 罗宇航
  * @Date 2024/4/10
  */
-public interface PayoutDetailService extends IService<PayoutInfo>  {
+public interface PayoutInfoService extends IService<PayoutInfo>  {
 
     void refreshPayoutInfoByTime(String startTime, String endTime);
+
+    PayoutInfoVO getPayoutInfoBySn(String orderSn);
 
 //    void saveOrUpdateCost(CostDTO costDTO);
 //

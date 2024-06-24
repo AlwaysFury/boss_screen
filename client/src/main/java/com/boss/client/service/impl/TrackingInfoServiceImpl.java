@@ -3,11 +3,16 @@ package com.boss.client.service.impl;
 import cn.hutool.core.util.IdUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.TrackingInfoDao;
 import com.boss.client.service.TrackingInfoService;
 import com.boss.client.util.ShopeeUtil;
+import com.boss.client.vo.PayoutInfoVO;
+import com.boss.client.vo.TrackingInfoVO;
+import com.boss.common.enities.PayoutInfo;
 import com.boss.common.enities.TrackingInfo;
+import com.boss.common.util.BeanCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +25,9 @@ public class TrackingInfoServiceImpl extends ServiceImpl<TrackingInfoDao, Tracki
 
     @Autowired
     private ShopServiceImpl shopService;
+
+    @Autowired
+    private TrackingInfoDao trackingInfoDao;
 
 
     @Transactional(rollbackFor = Exception.class)
@@ -49,5 +57,14 @@ public class TrackingInfoServiceImpl extends ServiceImpl<TrackingInfoDao, Tracki
 
         this.save(trackingInfo);
 
+    }
+
+    @Override
+    public TrackingInfoVO getTrackInfoBySn(String orderSn) {
+        TrackingInfo trackingInfo = trackingInfoDao.selectOne(new QueryWrapper<TrackingInfo>().eq("id", orderSn));
+        TrackingInfoVO trackingInfoVO = BeanCopyUtils.copyObject(trackingInfo, TrackingInfoVO.class);
+        trackingInfoVO.setLogisticsData(trackingInfo.getLogisticsData() == null || trackingInfo.getLogisticsData().isEmpty() ? new JSONArray() : JSONArray.parseArray(trackingInfo.getLogisticsData()));
+
+        return trackingInfoVO;
     }
 }

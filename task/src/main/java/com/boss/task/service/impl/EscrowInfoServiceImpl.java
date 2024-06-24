@@ -9,18 +9,18 @@ import com.boss.common.enities.EscrowInfo;
 import com.boss.common.enities.EscrowItem;
 import com.boss.common.enities.Order;
 import com.boss.common.enities.Shop;
+import com.boss.common.util.CommonUtil;
 import com.boss.task.dao.EscrowInfoDao;
 import com.boss.task.dao.OrderDao;
 import com.boss.task.dao.ShopDao;
 import com.boss.task.service.EscrowInfoService;
-import com.boss.task.util.CommonUtil;
+import com.boss.task.util.RedisUtil;
 import com.boss.task.util.ShopeeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
@@ -72,9 +72,9 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     @Override
-    public void refreshEscrowByTime(String startTime, String endTime) {
+    public void refreshEscrowByTime(long startTime, long endTime) {
         // 遍历所有未冻结店铺获取 token 和 shopId
         QueryWrapper<Shop> shopQueryWrapper = new QueryWrapper<>();
         shopQueryWrapper.select("shop_id").eq("status", "1");
@@ -109,7 +109,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     @Override
     public void refreshOrderNoOnEscrow() {
         // 遍历所有未冻结店铺获取 token 和 shopId
@@ -137,7 +137,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     @Override
     public void refreshEscrowByStatus(String... status) {
         List<Order> orders = orderDao.selectList(new QueryWrapper<Order>().select("order_sn", "shop_id").notIn("status", status));
@@ -175,7 +175,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     public void refreshEscrowBySn(List<List<String>> orderSnList, long shopId) {
         List<EscrowInfo> escrowInfoList =  new CopyOnWriteArrayList<>();
         List<EscrowItem> escrowItemList = new CopyOnWriteArrayList<>();
@@ -272,7 +272,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
 //            escrowInfo.setAdjustmentReason(adjustmentObject.getString("adjustment_reason"));
 //        }
 
-        CommonUtil.judgeRedis(redisService, ESCROW + orderSn, escrowInfoList, escrowInfo, EscrowInfo.class);
+        RedisUtil.judgeRedis(redisService, ESCROW + orderSn, escrowInfoList, escrowInfo, EscrowInfo.class);
     }
 
     public void saveEscrowItem(JSONObject oderIncomeObject, String orderSn, List<EscrowItem> escrowItemList) {
@@ -301,7 +301,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
                     .activityType(itemObject.getString("activity_type"))
                     .build();
 
-            CommonUtil.judgeRedis(redisService, ESCROW_ITEM_MODEL + orderSn + "_" + itemId + "_" + modelId + "_" + i, escrowItemList, escrowItem, EscrowItem.class);
+            RedisUtil.judgeRedis(redisService, ESCROW_ITEM_MODEL + orderSn + "_" + itemId + "_" + modelId + "_" + i, escrowItemList, escrowItem, EscrowItem.class);
 
         }
     }

@@ -1,6 +1,7 @@
 package com.boss.client.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.boss.client.vo.ProductExtraInfoVO;
 import com.boss.common.enities.ProductExtraInfo;
 
 
@@ -12,5 +13,7 @@ import com.boss.common.enities.ProductExtraInfo;
 public interface ProductExtraInfoService extends IService<ProductExtraInfo> {
 
     void saveOrUpdateProductExtraInfo();
+
+    ProductExtraInfoVO getProductExtraInfoByItemId(Long itemId);
 
 }

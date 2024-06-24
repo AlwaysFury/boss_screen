@@ -12,5 +12,5 @@ public interface TrackingInfoService extends IService<TrackingInfo> {
 
     void saveTrackingInfoBySn(String orderSn, long shopId, String trackingNumber);
 
-
+    void refreshTrackInfoByStatus(String... status);
 }

@@ -30,11 +30,11 @@ public class PayoutTask {
      */
 
 //    @Scheduled(cron = "0 */20 * * * ?")
-    public void refreshPayoutDetail() {
+    public void refreshPayoutInfo() {
         log.info("======开始刷新调整信息");
         long startTime = System.currentTimeMillis();
 
-        payoutInfoService.refreshPayoutInfoByTime("2024-06-01", "2024-06-30");
+        payoutInfoService.refreshNewerPayoutInfo();
 
         log.info("更新调整信息耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
     }

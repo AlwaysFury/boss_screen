@@ -56,4 +56,9 @@ public class TrackingInfo {
      * 跟踪物流状态
      */
     private String logisticsData;
+
+    /**
+     * 所属店铺id
+     */
+    private Long shopId;
 }

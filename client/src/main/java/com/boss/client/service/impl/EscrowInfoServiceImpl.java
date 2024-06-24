@@ -9,12 +9,13 @@ import com.boss.client.dao.EscrowInfoDao;
 import com.boss.client.dao.OrderDao;
 import com.boss.client.dao.ShopDao;
 import com.boss.client.service.EscrowInfoService;
-import com.boss.client.util.CommonUtil;
+import com.boss.client.util.RedisUtil;
 import com.boss.client.util.ShopeeUtil;
 import com.boss.common.enities.EscrowInfo;
 import com.boss.common.enities.EscrowItem;
 import com.boss.common.enities.Order;
 import com.boss.common.enities.Shop;
+import com.boss.common.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -73,7 +74,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void refreshEscrowByTime(String startTime, String endTime) {
+    public void refreshEscrowByTime(long startTime, long endTime) {
         // 遍历所有未冻结店铺获取 token 和 shopId
         QueryWrapper<Shop> shopQueryWrapper = new QueryWrapper<>();
         shopQueryWrapper.select("shop_id").eq("status", "1");
@@ -271,7 +272,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
 //            escrowInfo.setAdjustmentReason(adjustmentObject.getString("adjustment_reason"));
 //        }
 
-        CommonUtil.judgeRedis(redisService, ESCROW + orderSn, escrowInfoList, escrowInfo, EscrowInfo.class);
+        RedisUtil.judgeRedis(redisService, ESCROW + orderSn, escrowInfoList, escrowInfo, EscrowInfo.class);
     }
 
     public void saveEscrowItem(JSONObject oderIncomeObject, String orderSn, List<EscrowItem> escrowItemList) {
@@ -300,7 +301,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
                     .activityType(itemObject.getString("activity_type"))
                     .build();
 
-            CommonUtil.judgeRedis(redisService, ESCROW_ITEM_MODEL + orderSn + "_" + itemId + "_" + modelId + "_" + i, escrowItemList, escrowItem, EscrowItem.class);
+            RedisUtil.judgeRedis(redisService, ESCROW_ITEM_MODEL + orderSn + "_" + itemId + "_" + modelId + "_" + i, escrowItemList, escrowItem, EscrowItem.class);
 
         }
     }

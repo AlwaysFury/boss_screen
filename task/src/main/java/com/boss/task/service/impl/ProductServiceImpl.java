@@ -1,6 +1,5 @@
 package com.boss.task.service.impl;
 
-import cn.hutool.core.thread.ExecutorBuilder;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -11,12 +10,13 @@ import com.boss.common.enities.Model;
 import com.boss.common.enities.OperationLog;
 import com.boss.common.enities.Product;
 import com.boss.common.enities.Shop;
+import com.boss.common.util.CommonUtil;
 import com.boss.task.dao.OperationLogDao;
 import com.boss.task.dao.OrderItemDao;
 import com.boss.task.dao.ProductDao;
 import com.boss.task.dao.ShopDao;
 import com.boss.task.service.ProductService;
-import com.boss.task.util.CommonUtil;
+import com.boss.task.util.RedisUtil;
 import com.boss.task.util.ShopeeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,7 +84,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
      * 授权后初始化产品信息
      * @param shopId
      */
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     @Override
     public void initProduct(long shopId) {
         String accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
@@ -107,7 +107,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
      * 根据状态刷新商品
      * @param status
      */
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     @Override
     public void refreshProductByStatus(String status) {
         // 遍历所有未冻结店铺获取 token 和 shopId
@@ -186,7 +186,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                     return CompletableFuture.runAsync(() -> {
                         String accessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
                         getProductDetail(itemId, accessToken, finalShopId, productList);
-                    }, ExecutorBuilder.create().setCorePoolSize(itemIdList.size()).build());
+                    }, customThreadPool);
                 }).collect(Collectors.toList());
 
 
@@ -200,7 +200,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                         for (String splitId : splitIds) {
                             modelService.getModel(Long.parseLong(splitId), accessToken, finalShopId, modelList);
                         }
-                    }, ExecutorBuilder.create().setCorePoolSize(itemIdList.size()).build());
+                    }, customThreadPool);
                 }).collect(Collectors.toList());
 
         CompletableFuture.allOf(productFutures.toArray(new CompletableFuture[0])).join();
@@ -224,7 +224,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }, ExecutorBuilder.create().setCorePoolSize(splitProduct.size()).build());
+            }, customThreadPool);
 
             insertProductFutures.add(future);
         }
@@ -242,7 +242,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }, ExecutorBuilder.create().setCorePoolSize(splitModel.size()).build());
+            }, customThreadPool);
 
             insertModelFutures.add(future);
         }
@@ -298,7 +298,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 }
 
 
-                String judgeResult = CommonUtil.judgeRedis(redisService,PRODUCT_ITEM + itemId, productList, product, Product.class);
+                String judgeResult = RedisUtil.judgeRedis(redisService,PRODUCT_ITEM + itemId, productList, product, Product.class);
                 if (!"".equals(judgeResult)) {
                     JSONArray diffArray = JSON.parseObject(judgeResult).getJSONArray("defectsList");
                     if (diffArray.size() != 0) {

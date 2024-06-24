@@ -13,7 +13,7 @@ import com.boss.task.dao.ProductDao;
 import com.boss.task.dao.ReturnOrderDao;
 import com.boss.task.dao.ShopDao;
 import com.boss.task.service.ReturnOrderService;
-import com.boss.task.util.CommonUtil;
+import com.boss.task.util.RedisUtil;
 import com.boss.task.util.ShopeeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -148,7 +148,7 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
                     .amountBeforeDiscount(tempObject.getBigDecimal("amount_before_discount"))
                     .build();
 
-            CommonUtil.judgeRedis(redisService,RETURN_ORDER + returnSn, returnOrdertList, returnOrder, ReturnOrder.class);
+            RedisUtil.judgeRedis(redisService,RETURN_ORDER + returnSn, returnOrdertList, returnOrder, ReturnOrder.class);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -178,7 +178,7 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
                         .modelId(modelId)
                         .build();
 
-                CommonUtil.judgeRedis(redisService,RETURN_ORDER_ITEM_MODEL + returnSn + "_" + itemId + "_" + modelId, returnOrderItemList, returnOrderItem, ReturnOrderItem.class);
+                RedisUtil.judgeRedis(redisService,RETURN_ORDER_ITEM_MODEL + returnSn + "_" + itemId + "_" + modelId, returnOrderItemList, returnOrderItem, ReturnOrderItem.class);
             }
         } catch (Exception e) {
             e.printStackTrace();

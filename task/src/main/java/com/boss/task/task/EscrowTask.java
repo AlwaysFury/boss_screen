@@ -34,7 +34,7 @@ public class EscrowTask {
         log.info("======开始刷新支付信息");
         long startTime = System.currentTimeMillis();
 
-        escrowInfoService.refreshEscrowByTime("2024-05-01", "2024-05-31");
+//        escrowInfoService.refreshEscrowByTime("2024-05-01", "2024-05-31");
 
         log.info("更新支付信息耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
     }

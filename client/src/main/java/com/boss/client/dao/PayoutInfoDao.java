@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
  * 分类
  */
 @Repository
-public interface PayoutDetailDao extends BaseMapper<PayoutInfo> {
+public interface PayoutInfoDao extends BaseMapper<PayoutInfo> {
 
 
 //    Integer costCount(@Param("condition") ConditionDTO condition);

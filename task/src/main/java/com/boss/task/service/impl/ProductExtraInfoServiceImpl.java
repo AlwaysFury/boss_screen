@@ -8,17 +8,16 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.common.enities.Product;
 import com.boss.common.enities.ProductExtraInfo;
 import com.boss.common.enities.Shop;
+import com.boss.common.util.CommonUtil;
 import com.boss.task.dao.ProductDao;
 import com.boss.task.dao.ProductExtraInfoDao;
 import com.boss.task.dao.ShopDao;
 import com.boss.task.service.ProductExtraInfoService;
-import com.boss.task.util.CommonUtil;
 import com.boss.task.util.ShopeeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
@@ -54,7 +53,7 @@ public class ProductExtraInfoServiceImpl extends ServiceImpl<ProductExtraInfoDao
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     @Override
     public void saveOrUpdateProductExtraInfo() {
         // 遍历所有未冻结店铺获取 token 和 shopId

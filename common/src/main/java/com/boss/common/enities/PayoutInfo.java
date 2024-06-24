@@ -45,6 +45,11 @@ public class PayoutInfo {
     private String orderSn;
 
     /**
+     * 所属店铺id
+     */
+    private long shopId;
+
+    /**
      * 发布时间
      */
     private long payoutTime;

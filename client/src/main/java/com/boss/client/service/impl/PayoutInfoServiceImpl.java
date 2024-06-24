@@ -4,13 +4,15 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.boss.client.dao.PayoutDetailDao;
+import com.boss.client.dao.PayoutInfoDao;
 import com.boss.client.dao.ShopDao;
-import com.boss.client.service.PayoutDetailService;
-import com.boss.client.util.CommonUtil;
+import com.boss.client.service.PayoutInfoService;
 import com.boss.client.util.ShopeeUtil;
+import com.boss.client.vo.PayoutInfoVO;
 import com.boss.common.enities.PayoutInfo;
 import com.boss.common.enities.Shop;
+import com.boss.common.util.BeanCopyUtils;
+import com.boss.common.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,10 +28,13 @@ import java.util.Map;
  */
 @Service
 @Slf4j
-public class PayoutDetailServiceImpl extends ServiceImpl<PayoutDetailDao, PayoutInfo> implements PayoutDetailService {
+public class PayoutInfoServiceImpl extends ServiceImpl<PayoutInfoDao, PayoutInfo> implements PayoutInfoService {
 
     @Autowired
     private ShopDao shopDao;
+
+    @Autowired
+    private PayoutInfoDao payoutInfoDao;
 
     @Autowired
     private ShopServiceImpl shopService;
@@ -126,5 +131,12 @@ public class PayoutDetailServiceImpl extends ServiceImpl<PayoutDetailDao, Payout
 
     }
 
+    @Override
+    public PayoutInfoVO getPayoutInfoBySn(String orderSn) {
+        PayoutInfo payoutInfo = payoutInfoDao.selectOne(new QueryWrapper<PayoutInfo>().eq("id", orderSn));
+        PayoutInfoVO payoutInfoVO = BeanCopyUtils.copyObject(payoutInfo, PayoutInfoVO.class);
+        payoutInfoVO.setData(payoutInfo.getData() == null || payoutInfo.getData().isEmpty() ? new JSONArray() : JSONArray.parseArray(payoutInfo.getData()));
 
+        return payoutInfoVO;
+    }
 }

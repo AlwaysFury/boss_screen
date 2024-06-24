@@ -7,13 +7,17 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.*;
 import com.boss.client.service.OrderService;
-import com.boss.client.util.CommonUtil;
+import com.boss.client.util.RedisUtil;
 import com.boss.client.util.ShopeeUtil;
-import com.boss.client.vo.*;
+import com.boss.client.vo.OrderEscrowInfoVO;
+import com.boss.client.vo.OrderEscrowItemVO;
+import com.boss.client.vo.OrderEscrowVO;
+import com.boss.client.vo.PageResult;
 import com.boss.common.dto.ConditionDTO;
 import com.boss.common.enities.*;
 import com.boss.common.enums.OrderStatusEnum;
 import com.boss.common.util.BeanCopyUtils;
+import com.boss.common.util.CommonUtil;
 import com.boss.common.util.PageUtils;
 import com.boss.common.vo.SelectVO;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +68,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
     private EscrowItemDao escrowItemDao;
 
     @Autowired
-    private PayoutDetailDao payoutDetailDao;
+    private PayoutInfoDao payoutDetailDao;
 
     @Autowired
     private ShopServiceImpl shopService;
@@ -100,7 +104,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void refreshOrderByTimeStr(String startTime, String endTime) {
+    public void refreshOrderByTime(long startTime, long endTime) {
         // 遍历所有未冻结店铺获取 token 和 shopId
         QueryWrapper<Shop> shopQueryWrapper = new QueryWrapper<>();
         shopQueryWrapper.select("shop_id").eq("status", "1");
@@ -465,7 +469,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 //            }
 //        }
 
-        CommonUtil.judgeRedis(redisService, ORDER + orderSn, ordertList, order, Order.class);
+        RedisUtil.judgeRedis(redisService, ORDER + orderSn, ordertList, order, Order.class);
 
     }
 
@@ -497,7 +501,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                 orderItem.setImageUrl(imageInfoArray.getString("image_url"));
             }
 
-            CommonUtil.judgeRedis(redisService, ORDER_ITEM_MODEL + orderSn + "_" + itemId + "_" + modelId + "_" + i, orderItemList, orderItem, OrderItem.class);
+            RedisUtil.judgeRedis(redisService, ORDER_ITEM_MODEL + orderSn + "_" + itemId + "_" + modelId + "_" + i, orderItemList, orderItem, OrderItem.class);
         }
 
     }

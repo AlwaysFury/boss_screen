@@ -10,7 +10,7 @@ import com.boss.task.dao.ModelDao;
 import com.boss.task.dao.OperationLogDao;
 import com.boss.task.dao.OrderItemDao;
 import com.boss.task.service.ModelService;
-import com.boss.task.util.CommonUtil;
+import com.boss.task.util.RedisUtil;
 import com.boss.task.util.ShopeeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +19,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.StringJoiner;
 
-import static com.boss.common.constant.OptTypeConst.*;
-import static com.boss.common.constant.RedisPrefixConst.*;
+import static com.boss.common.constant.OptTypeConst.SYSTEM_LOG;
+import static com.boss.common.constant.RedisPrefixConst.CLOTHES_TYPE;
+import static com.boss.common.constant.RedisPrefixConst.PRODUCT_ITEM_MODEL;
 
 /**
  * @Description
@@ -102,7 +103,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
                     }
                 }
 
-                String judgeResult = CommonUtil.judgeRedis(redisService, PRODUCT_ITEM_MODEL + itemId + "_" + modelId, modelList, model, Model.class);
+                String judgeResult = RedisUtil.judgeRedis(redisService, PRODUCT_ITEM_MODEL + itemId + "_" + modelId, modelList, model, Model.class);
                 if (!"".equals(judgeResult)) {
                     JSONArray diffArray = JSON.parseObject(judgeResult).getJSONArray("defectsList");
                     if (diffArray != null && !diffArray.isEmpty()) {

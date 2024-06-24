@@ -11,7 +11,8 @@ import com.boss.common.enities.Shop;
 import com.boss.task.dao.OrderDao;
 import com.boss.task.dao.ShopDao;
 import com.boss.task.service.OrderService;
-import com.boss.task.util.CommonUtil;
+import com.boss.common.util.CommonUtil;
+import com.boss.task.util.RedisUtil;
 import com.boss.task.util.ShopeeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,9 +69,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     @Override
-    public void refreshOrderByTimeStr(String startTime, String endTime) {
+    public void refreshOrderByTimeStr(long startTime, long endTime) {
         // 遍历所有未冻结店铺获取 token 和 shopId
         QueryWrapper<Shop> shopQueryWrapper = new QueryWrapper<>();
         shopQueryWrapper.select("shop_id").eq("status", "1");
@@ -104,7 +105,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     @Override
     public void refreshNewOrder() {
         List<Order> orders = orderDao.maxTimeList();
@@ -137,7 +138,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     @Override
     public void initOrder(long shopId) {
         // 获取Calendar实例并设置为当前时间
@@ -172,7 +173,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         refreshBatchOrderBySn(newOrderSnList, shopId);
     }
 
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     @Override
     public void refreshOrder(List<String> sns) {
         StringJoiner sj = new StringJoiner(",");
@@ -210,7 +211,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     @Override
     public void refreshOrderByStatus(String... status) {
         List<Order> orders = orderDao.selectList(new QueryWrapper<Order>().select("order_sn", "shop_id").notIn("status", status));
@@ -423,7 +424,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             order.setShippingCarrier(packageArray.getJSONObject(0).getString("shipping_carrier"));
         }
 
-        CommonUtil.judgeRedis(redisService, ORDER + orderSn, ordertList, order, Order.class);
+        RedisUtil.judgeRedis(redisService, ORDER + orderSn, ordertList, order, Order.class);
 
     }
 
@@ -455,7 +456,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                 orderItem.setImageUrl(imageInfoArray.getString("image_url"));
             }
 
-            CommonUtil.judgeRedis(redisService, ORDER_ITEM_MODEL + orderSn + "_" + itemId + "_" + modelId + "_" + i, orderItemList, orderItem, OrderItem.class);
+            RedisUtil.judgeRedis(redisService, ORDER_ITEM_MODEL + orderSn + "_" + itemId + "_" + modelId + "_" + i, orderItemList, orderItem, OrderItem.class);
         }
 
     }

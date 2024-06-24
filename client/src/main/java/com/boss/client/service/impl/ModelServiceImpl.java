@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.ModelDao;
 import com.boss.client.dao.OperationLogDao;
 import com.boss.client.service.ModelService;
-import com.boss.client.util.CommonUtil;
+import com.boss.client.util.RedisUtil;
 import com.boss.client.util.ShopeeUtil;
 import com.boss.client.vo.ModelVO;
 import com.boss.common.enities.Model;
@@ -102,7 +102,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
                     }
                 }
 
-                String judgeResult = CommonUtil.judgeRedis(redisService, PRODUCT_ITEM_MODEL + itemId + "_" + modelId, modelList, model, Model.class);
+                String judgeResult = RedisUtil.judgeRedis(redisService, PRODUCT_ITEM_MODEL + itemId + "_" + modelId, modelList, model, Model.class);
                 if (!"".equals(judgeResult)) {
                     JSONArray diffArray = JSON.parseObject(judgeResult).getJSONArray("defectsList");
                     if (diffArray != null && !diffArray.isEmpty()) {
