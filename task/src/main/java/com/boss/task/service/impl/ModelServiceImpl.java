@@ -83,12 +83,14 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
                         .modelId(modelId)
                         .modelName(modelName)
                         .modelSku(modelSku)
+                        .skuName(modelSku.split("-")[0])
                         .status(modelObject.getString("model_status"))
                         .currentPrice(priceInfoObject.getBigDecimal("current_price"))
                         .originalPrice(priceInfoObject.getBigDecimal("original_price"))
                         .stock(stockObject.getInteger("stock"))
                         .promotionId(modelObject.getLong("promotion_id"))
                         .itemId(itemId)
+                        .shopId(shopId)
                         .build();
 
                 if (imageInfoArray.size() != 0 && modelName.contains(",")) {

@@ -58,11 +58,11 @@ upload:
     # 本地文件存储路径
     # path: /app/project/blog/upload/
   oss:
-    url:
-    endpoint:
-    accessKeyId:
-    accessKeySecret:
-    bucketName:
+    url: https://boss-screen-photo.oss-cn-shenzhen.aliyuncs.com/
+    endpoint: oss-cn-shenzhen.aliyuncs.com
+    accessKeyId: LTAI5t6fmgvZvvifAk7oxvgy
+    accessKeySecret: 5RNWkF8uUMfG60q9Me5PdeJ04RCGje
+    bucketName: boss-screen
 
 shopeeApi:
   host: https://partner.shopeemobile.com/

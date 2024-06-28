@@ -40,6 +40,11 @@ spring:
           min-idle: 8
           max-idle: 0
           max-wait: -1
+  # 上传图片大小限制
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
 
 # 配置MybatisPlus
 mybatis-plus:
@@ -59,11 +64,11 @@ upload:
   # 本地文件存储路径
   # path: /app/project/blog/upload/
   oss:
-    url:
-    endpoint:
-    accessKeyId:
-    accessKeySecret:
-    bucketName:
+    url: https://boss-screen-photo.oss-cn-guangzhou.aliyuncs.com/
+    endpoint: oss-cn-guangzhou.aliyuncs.com
+    accessKeyId: LTAI5t6fmgvZvvifAk7oxvgy
+    accessKeySecret: 5RNWkF8uUMfG60q9Me5PdeJ04RCGje
+    bucketName: boss-screen-photo
 
 shopeeApi:
   host: https://partner.shopeemobile.com/

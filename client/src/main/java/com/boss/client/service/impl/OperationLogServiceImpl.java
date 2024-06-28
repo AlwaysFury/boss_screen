@@ -6,7 +6,7 @@ import com.boss.client.dao.OperationLogDao;
 import com.boss.client.service.OperationLogService;
 import com.boss.client.vo.OperationLogVO;
 import com.boss.client.vo.PageResult;
-import com.boss.common.dto.ConditionDTO;
+import com.boss.client.dto.ConditionDTO;
 import com.boss.common.dto.OperationLogDTO;
 import com.boss.common.dto.UpdateStatusDTO;
 import com.boss.common.enities.OperationLog;

@@ -1,12 +1,14 @@
 package com.boss.client.controller;
 
 
+import com.boss.client.dto.ProductTagDTO;
+import com.boss.client.service.impl.ProductOrImgTagServiceImpl;
 import com.boss.client.service.impl.ProductServiceImpl;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.ProductInfoVO;
 import com.boss.client.vo.ProductVO;
 import com.boss.client.vo.Result;
-import com.boss.common.dto.ConditionDTO;
+import com.boss.client.dto.ConditionDTO;
 import com.boss.common.dto.UpdateStatusDTO;
 import com.boss.common.vo.SelectVO;
 import jakarta.validation.Valid;
@@ -15,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.boss.common.constant.TagTypeConst.ITEM;
 
 /**
  * @Description
@@ -28,6 +32,9 @@ import java.util.List;
 public class ProductController {
     @Autowired
     private ProductServiceImpl productService;
+
+    @Autowired
+    private ProductOrImgTagServiceImpl productOrImgTagService;
 
     /**
      * 获取产品列表
@@ -67,11 +74,26 @@ public class ProductController {
         return Result.ok(productService.getStatusSelect());
     }
 
+    /**
+     * 刷新产品
+     * @param updateStatusDTO
+     * @return
+     */
     @PostMapping("/refreshProducts")
     public Result<?> refreshProducts(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
         productService.refreshProducts(updateStatusDTO.getIdList());
         return Result.ok();
     }
 
+    /**
+     * 保存标签
+     * @param productTagDTO
+     * @return
+     */
+    @PostMapping("/saveTag")
+    public Result<?> saveProductTag(@Valid @RequestBody ProductTagDTO productTagDTO) {
+        productOrImgTagService.saveProductOrImgTag(productTagDTO.getTagNameList(), productTagDTO.getId(), ITEM);
+        return Result.ok();
+    }
 
 }

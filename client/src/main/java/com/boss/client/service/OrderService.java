@@ -5,7 +5,7 @@ import com.boss.client.vo.OrderEscrowInfoVO;
 import com.boss.client.vo.OrderEscrowVO;
 import com.boss.client.vo.PageResult;
 import com.boss.common.vo.SelectVO;
-import com.boss.common.dto.ConditionDTO;
+import com.boss.client.dto.ConditionDTO;
 import com.boss.common.enities.Order;
 
 import java.util.List;

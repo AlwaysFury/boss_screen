@@ -154,18 +154,38 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
             accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
             String status = "&item_status=SELLER_DELETE";
             List<String> itemIds = ShopeeUtil.getProducts(accessToken, shopId, 0, new ArrayList<>(), status);
-            if (!itemIds.isEmpty()) {
+            if (itemIds != null && !itemIds.isEmpty()) {
+                StringJoiner joiner = new StringJoiner(",");
                 for (String itemId : itemIds) {
-                    productDao.update(new UpdateWrapper<Product>().set("status", "SELLER_DELETE").eq("item_id", itemId));
+                    joiner.add(itemId);
                 }
+            }
+            List<String> tempList = productDao.selectList(new QueryWrapper<Product>().select("item_id" ).in("item_id", itemIds))
+                    .stream().map(p -> String.valueOf(p.getItemId())).collect(Collectors.toList());
+            if (tempList != null && !tempList.isEmpty()) {
+                StringJoiner joiner = new StringJoiner(",");
+                for (String itemId : tempList) {
+                    joiner.add(itemId);
+                }
+                productDao.update(new UpdateWrapper<Product>().set("status", "SELLER_DELETE").in("item_id", joiner));
             }
 
             status = "&item_status=SHOPEE_DELETE";
             itemIds = ShopeeUtil.getProducts(accessToken, shopId, 0, new ArrayList<>(), status);
-            if (!itemIds.isEmpty()) {
+            if (itemIds != null && !itemIds.isEmpty()) {
+                StringJoiner joiner = new StringJoiner(",");
                 for (String itemId : itemIds) {
-                    productDao.update(new UpdateWrapper<Product>().set("status", "SHOPEE_DELETE").eq("item_id", itemId));
+                    joiner.add(itemId);
                 }
+            }
+            tempList = productDao.selectList(new QueryWrapper<Product>().select("item_id" ).in("item_id", itemIds))
+                    .stream().map(p -> String.valueOf(p.getItemId())).collect(Collectors.toList());
+            if (tempList != null && !tempList.isEmpty()) {
+                StringJoiner joiner = new StringJoiner(",");
+                for (String itemId : tempList) {
+                    joiner.add(itemId);
+                }
+                productDao.update(new UpdateWrapper<Product>().set("status", "SHOPEE_DELETE").in("item_id", joiner));
             }
         }
     }

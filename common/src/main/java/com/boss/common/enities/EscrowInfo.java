@@ -72,6 +72,11 @@ public class EscrowInfo {
     private BigDecimal escrowAmount;
 
     /**
+     * 所属店铺id
+     */
+    private Long shopId;
+
+    /**
      * 调整交易金额
      */
 //    private BigDecimal adjustmentAmount;

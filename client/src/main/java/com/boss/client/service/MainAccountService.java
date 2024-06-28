@@ -3,7 +3,7 @@ package com.boss.client.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.boss.client.vo.MainAccountVO;
 import com.boss.client.vo.PageResult;
-import com.boss.common.dto.ConditionDTO;
+import com.boss.client.dto.ConditionDTO;
 import com.boss.common.dto.UpdateStatusDTO;
 import com.boss.common.enities.MainAccount;
 

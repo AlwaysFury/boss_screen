@@ -18,7 +18,7 @@ import com.boss.client.util.ShopeeUtil;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.ProductInfoVO;
 import com.boss.client.vo.ProductVO;
-import com.boss.common.dto.ConditionDTO;
+import com.boss.client.dto.ConditionDTO;
 import com.boss.common.enities.Model;
 import com.boss.common.enities.OperationLog;
 import com.boss.common.enities.Product;
@@ -237,7 +237,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                     return CompletableFuture.runAsync(() -> {
                         String accessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
                         getProductDetail(itemId, accessToken, finalShopId, productList);
-                    }, ExecutorBuilder.create().setCorePoolSize(itemIdList.size()).build());
+                    }, customThreadPool);
                 }).collect(Collectors.toList());
 
 
@@ -251,7 +251,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                         for (String splitId : splitIds) {
                             modelService.getModel(Long.parseLong(splitId), accessToken, finalShopId, modelList);
                         }
-                    }, ExecutorBuilder.create().setCorePoolSize(itemIdList.size()).build());
+                    }, customThreadPool);
                 }).collect(Collectors.toList());
 
         CompletableFuture.allOf(productFutures.toArray(new CompletableFuture[0])).join();
@@ -275,7 +275,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }, ExecutorBuilder.create().setCorePoolSize(splitProduct.size()).build());
+            }, customThreadPool);
 
             insertProductFutures.add(future);
         }
@@ -452,13 +452,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
     @Override
     public List<SelectVO> getStatusSelect() {
-//        List<SelectVO> list = new ArrayList<>();
-//        for (ProductStatusEnum statusEnum : ProductStatusEnum.values()) {
-//            SelectVO vo = SelectVO.builder()
-//                    .key(statusEnum.getCode())
-//                    .value(statusEnum.getDesc()).build();
-//            list.add(vo);
-//        }
         return ProductStatusEnum.getProductStatusEnum();
     }
 

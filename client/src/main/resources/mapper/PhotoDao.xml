@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boss.client.dao.PhotoDao">
+
+
+    <select id="photoCount" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        FROM
+            tb_photo as s
+        <where>
+            <if test="condition.sku_id != null">
+                s.name = #{condition.sku_id}
+            </if>
+            <if test="condition.start_time != null">
+                and s.create_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                and s.create_time &lt;= #{condition.end_time}
+            </if>
+            <if test="condition.shop_id != null">
+                and s.shop_id = #{condition.shop_id}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="photoList" resultType="com.boss.client.vo.PhotoVO">
+        SELECT
+            s.id,
+            s.photoName,
+            s.create_time,
+            s.shop_id
+        FROM
+            tb_cost as s
+        <where>
+            <if test="condition.start_time != null">
+                s.start_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                s.end_time &lt;= #{condition.end_time}
+            </if>
+            <if test="condition.shop_id != null">
+                and s.shop_id = #{condition.shop_id}
+            </if>
+        </where>
+        LIMIT #{current},#{size}
+    </select>
+
+
+    <resultMap id="photoResultMap" type="com.boss.client.vo.PhotoInfoVO">
+        <id column="id" property="id"/>
+        <result column="photo_name" property="photoName"/>
+        <result column="photo_src" property="photoSrc"/>
+        <result column="create_time" property="createTime"/>
+        <collection property="tagVOList" ofType="com.boss.client.vo.TagVO">
+            <id column="tag_id" property="id"/>
+            <result column="tag_name" property="tagName"/>
+        </collection>
+    </resultMap>
+
+    <select id="getPhotoInfoById" resultMap="photoResultMap">
+        SELECT
+            s.id,
+            s.photo_name,
+            s.photo_src,
+            DATE_FORMAT(s.create_time, '%Y-%m-%d %H:%i:%s') as create_time,
+            s.shop_id
+            t.id AS tag_id,
+            t.tag_name
+        FROM
+            tb_photo as s
+                JOIN tb_photoOrImg_tag as d ON s.id = d.itemOrImg_id
+                JOIN tb_tag as t ON t.id = d.tag_id
+        WHERE
+            s.id = #{photoId} and d.tag_type = 'photo'
+    </select>
+
+</mapper>

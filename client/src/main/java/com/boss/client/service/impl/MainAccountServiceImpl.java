@@ -12,7 +12,7 @@ import com.boss.client.service.MainAccountService;
 import com.boss.client.util.ShopeeUtil;
 import com.boss.client.vo.MainAccountVO;
 import com.boss.client.vo.PageResult;
-import com.boss.common.dto.ConditionDTO;
+import com.boss.client.dto.ConditionDTO;
 import com.boss.common.dto.MainAccountDTO;
 import com.boss.common.dto.ShopDTO;
 import com.boss.common.dto.UpdateStatusDTO;

@@ -4,7 +4,7 @@ import com.boss.client.service.impl.ShopServiceImpl;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.Result;
 import com.boss.client.vo.ShopVO;
-import com.boss.common.dto.ConditionDTO;
+import com.boss.client.dto.ConditionDTO;
 import com.boss.common.dto.ShopDTO;
 import com.boss.common.dto.UpdateStatusDTO;
 import com.boss.common.vo.SelectVO;

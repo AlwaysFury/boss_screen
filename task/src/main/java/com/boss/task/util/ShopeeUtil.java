@@ -507,6 +507,8 @@ public class ShopeeUtil {
             retryCount++;
         }
 
+        log.info(result.toJSONString());
+
         return result;
     }
 
@@ -583,7 +585,6 @@ public class ShopeeUtil {
         JSONObject responseObject = result.getJSONObject("response");
         JSONArray tempArray = responseObject.getJSONArray("escrow_list");
         for (int i = 0; i < tempArray.size(); i++) {
-//            System.out.println(tempArray.getJSONObject(i).getString("order_sn") + "---" + tempArray.getJSONObject(i).getLong("escrow_release_time"));
             orderSns.add(tempArray.getJSONObject(i).getString("order_sn"));
         }
 
@@ -756,7 +757,6 @@ public class ShopeeUtil {
         orderSnObject.put("order_sn", orderSn);
         orderSnArray.add(orderSnObject);
         bodyObject.put("order_list", orderSnArray);
-        System.out.println(bodyObject);
 
         String result;
         try {

@@ -100,6 +100,11 @@ public class EscrowItem {
     private BigDecimal sellerDiscount;
 
     /**
+     * 所属店铺id
+     */
+    private Long shopId;
+
+    /**
      * 活动 id
      */
     @TableField(updateStrategy = FieldStrategy.IGNORED, insertStrategy = FieldStrategy.IGNORED, whereStrategy = FieldStrategy.IGNORED)

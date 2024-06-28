@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.*;
+import com.boss.client.enities.Cost;
 import com.boss.client.service.OrderService;
 import com.boss.client.util.RedisUtil;
 import com.boss.client.util.ShopeeUtil;
@@ -13,7 +14,7 @@ import com.boss.client.vo.OrderEscrowInfoVO;
 import com.boss.client.vo.OrderEscrowItemVO;
 import com.boss.client.vo.OrderEscrowVO;
 import com.boss.client.vo.PageResult;
-import com.boss.common.dto.ConditionDTO;
+import com.boss.client.dto.ConditionDTO;
 import com.boss.common.enities.*;
 import com.boss.common.enums.OrderStatusEnum;
 import com.boss.common.util.BeanCopyUtils;
@@ -352,7 +353,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         for (int j = 0; j < orderArray.size(); j++) {
             orderDetailObject = orderArray.getJSONObject(j);
             getOrderDetail(orderDetailObject, ordertList, shopId);
-            getOrderItem(orderDetailObject, orderItemList);
+            getOrderItem(orderDetailObject, orderItemList, shopId);
         }
 
         this.saveOrUpdateBatch(ordertList);
@@ -384,7 +385,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                         for (int j = 0; j < orderArray.size(); j++) {
                             orderDetailObject = orderArray.getJSONObject(j);
                             getOrderDetail(orderDetailObject, ordertList, finalShopId);
-                            getOrderItem(orderDetailObject, orderItemList);
+                            getOrderItem(orderDetailObject, orderItemList, finalShopId);
                         }
                     }, customThreadPool);
                 }).collect(Collectors.toList());
@@ -473,7 +474,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
     }
 
-    private void getOrderItem(JSONObject orderObject, List<OrderItem> orderItemList) {
+    private void getOrderItem(JSONObject orderObject, List<OrderItem> orderItemList, long shopId) {
         JSONArray itemList = orderObject.getJSONArray("item_list");
         JSONObject itemObject;
         for (int i = 0; i < itemList.size(); i++) {
@@ -494,6 +495,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                     .count(itemObject.getInteger("model_quantity_purchased"))
                     .promotionId(itemObject.getLong("promotion_id"))
                     .promotionType(itemObject.getString("promotion_type"))
+                    .shopId(shopId)
                     .build();
 
             JSONObject imageInfoArray = itemObject.getJSONObject("image_info");

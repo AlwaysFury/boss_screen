@@ -1,4 +1,4 @@
-package com.boss.common.enities;
+package com.boss.client.enities;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.AllArgsConstructor;
@@ -8,46 +8,42 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+
 /**
- * 相册
+ * 照片
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@TableName(value ="tb_photo_album")
-public class PhotoAlbum  {
+@TableName(value ="tb_photo")
+public class Photo {
 
     /**
-     * 主键
+     * 照片id
      */
     @TableId(type = IdType.AUTO)
-    private Integer id;
+    private Long id;
 
     /**
-     * 相册名
+     * 照片名
      */
-    private String albumName;
+    private String photoName;
 
     /**
-     * 相册描述
+     * 照片地址
      */
-    private String albumDesc;
+    private String photoSrc;
 
     /**
-     * 相册封面
+     * skuId
      */
-    private String albumCover;
+    private Long skuId;
 
     /**
-     * 是否删除
+     * 所属店铺id
      */
-    private Integer isDelete;
-
-    /**
-     * 状态值 1公开 2私密
-     */
-    private Integer status;
+    private Long shopId;
 
     /**
      * 创建时间
@@ -60,6 +56,5 @@ public class PhotoAlbum  {
      */
     @TableField(fill = FieldFill.UPDATE)
     private LocalDateTime updateTime;
-
 
 }

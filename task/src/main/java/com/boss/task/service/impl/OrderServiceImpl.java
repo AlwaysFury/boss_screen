@@ -319,7 +319,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         for (int j = 0; j < orderArray.size(); j++) {
             orderDetailObject = orderArray.getJSONObject(j);
             getOrderDetail(orderDetailObject, ordertList, shopId);
-            getOrderItem(orderDetailObject, orderItemList);
+            getOrderItem(orderDetailObject, orderItemList, shopId);
         }
 
         try {
@@ -357,7 +357,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                         for (int j = 0; j < orderArray.size(); j++) {
                             orderDetailObject = orderArray.getJSONObject(j);
                             getOrderDetail(orderDetailObject, ordertList, finalShopId);
-                            getOrderItem(orderDetailObject, orderItemList);
+                            getOrderItem(orderDetailObject, orderItemList, finalShopId);
                         }
                     }, customThreadPool);
                 }).collect(Collectors.toList());
@@ -434,7 +434,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
     }
 
-    private void getOrderItem(JSONObject orderObject, List<OrderItem> orderItemList) {
+    private void getOrderItem(JSONObject orderObject, List<OrderItem> orderItemList, long shopId) {
         JSONArray itemList = orderObject.getJSONArray("item_list");
         JSONObject itemObject;
         for (int i = 0; i < itemList.size(); i++) {
@@ -455,6 +455,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                     .count(itemObject.getInteger("model_quantity_purchased"))
                     .promotionId(itemObject.getLong("promotion_id"))
                     .promotionType(itemObject.getString("promotion_type"))
+                    .shopId(shopId)
                     .build();
 
             JSONObject imageInfoArray = itemObject.getJSONObject("image_info");

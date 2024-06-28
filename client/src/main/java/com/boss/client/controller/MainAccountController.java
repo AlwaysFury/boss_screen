@@ -5,7 +5,7 @@ import com.boss.client.service.impl.MainAccountServiceImpl;
 import com.boss.client.vo.MainAccountVO;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.Result;
-import com.boss.common.dto.ConditionDTO;
+import com.boss.client.dto.ConditionDTO;
 import com.boss.common.dto.UpdateStatusDTO;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;

@@ -202,8 +202,8 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
                             JSONObject escrowDetailObject = escrowInfoArray.getJSONObject(i).getJSONObject("escrow_detail");
                             JSONObject orderIncomeObject = escrowDetailObject.getJSONObject("order_income");
                             String sn = escrowDetailObject.getString("order_sn");
-                            saveEscrowInfoByOrderSn(orderIncomeObject, sn, escrowInfoList);
-                            saveEscrowItem(orderIncomeObject, sn, escrowItemList);
+                            saveEscrowInfoByOrderSn(orderIncomeObject, sn, escrowInfoList, finalShopId);
+                            saveEscrowItem(orderIncomeObject, sn, escrowItemList, finalShopId);
                         }
 
 //                        }
@@ -254,7 +254,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
 
     }
 
-    public void saveEscrowInfoByOrderSn(JSONObject orderIncomeObject, String orderSn, List<EscrowInfo> escrowInfoList) {
+    public void saveEscrowInfoByOrderSn(JSONObject orderIncomeObject, String orderSn, List<EscrowInfo> escrowInfoList, long shopId) {
 
         EscrowInfo escrowInfo = EscrowInfo.builder()
                 .id(IdUtil.getSnowflakeNextId())
@@ -264,6 +264,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
                 .buyerPaidShippingFee(orderIncomeObject.getBigDecimal("buyer_paid_shipping_fee"))
                 .actualShippingFee(orderIncomeObject.getBigDecimal("actual_shipping_fee"))
                 .escrowAmount(orderIncomeObject.getBigDecimal("escrow_amount"))
+                .shopId(shopId)
                 .build();
 
 //        if (orderIncomeObject.containsKey("order_adjustment")) {
@@ -275,7 +276,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
         RedisUtil.judgeRedis(redisService, ESCROW + orderSn, escrowInfoList, escrowInfo, EscrowInfo.class);
     }
 
-    public void saveEscrowItem(JSONObject oderIncomeObject, String orderSn, List<EscrowItem> escrowItemList) {
+    public void saveEscrowItem(JSONObject oderIncomeObject, String orderSn, List<EscrowItem> escrowItemList, long shopId) {
         JSONArray items = oderIncomeObject.getJSONArray("items");
 
         JSONObject itemObject;
@@ -299,6 +300,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
                     .sellerDiscount(itemObject.getBigDecimal("seller_discount"))
                     .activityId(itemObject.getLong("activity_id"))
                     .activityType(itemObject.getString("activity_type"))
+                    .shopId(shopId)
                     .build();
 
             RedisUtil.judgeRedis(redisService, ESCROW_ITEM_MODEL + orderSn + "_" + itemId + "_" + modelId + "_" + i, escrowItemList, escrowItem, EscrowItem.class);

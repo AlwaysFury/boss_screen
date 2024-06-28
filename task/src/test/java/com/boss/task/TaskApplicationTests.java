@@ -336,5 +336,9 @@ class TaskApplicationTests {
     @Autowired
     private TrackingInfoServiceImpl trackingInfoService;
 
+    @Test
+    void testDeleteProduct() {
+        productService.refreshDeletedProduct();
+    }
 
 }

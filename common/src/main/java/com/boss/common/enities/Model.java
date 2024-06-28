@@ -44,6 +44,11 @@ public class Model {
     private String modelSku;
 
     /**
+     * 款号
+     */
+    private String skuName;
+
+    /**
      * 时价
      */
     private BigDecimal currentPrice;
@@ -82,6 +87,11 @@ public class Model {
      * 图片 url
      */
     private String imageUrl;
+
+    /**
+     * 所属店铺id
+     */
+    private Long shopId;
 
     /**
      * 创建时间

@@ -1,13 +1,15 @@
 package com.boss.client.cofig;
 
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * oss配置属性
  */
 @Data
-//@Configuration
-//@ConfigurationProperties(prefix = "upload.oss")
+@Configuration
+@ConfigurationProperties(prefix = "upload.oss")
 public class OssConfigProperties {
 
     /**

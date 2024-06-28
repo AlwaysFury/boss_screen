@@ -5,7 +5,7 @@ import com.boss.client.service.impl.OperationLogServiceImpl;
 import com.boss.client.vo.OperationLogVO;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.Result;
-import com.boss.common.dto.ConditionDTO;
+import com.boss.client.dto.ConditionDTO;
 import com.boss.common.dto.OperationLogDTO;
 import com.boss.common.dto.UpdateStatusDTO;
 import jakarta.validation.Valid;

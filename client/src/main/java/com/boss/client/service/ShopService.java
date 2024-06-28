@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.boss.client.vo.PageResult;
 import com.boss.common.vo.SelectVO;
 import com.boss.client.vo.ShopVO;
-import com.boss.common.dto.ConditionDTO;
+import com.boss.client.dto.ConditionDTO;
 import com.boss.common.dto.ShopDTO;
 import com.boss.common.dto.UpdateStatusDTO;
 import com.boss.common.enities.Shop;

@@ -8,7 +8,7 @@ import com.boss.client.dao.EscrowItemDao;
 import com.boss.client.dao.OrderItemDao;
 import com.boss.client.service.OrderItemService;
 import com.boss.client.vo.OrderEscrowItemVO;
-import com.boss.common.enities.Cost;
+import com.boss.client.enities.Cost;
 import com.boss.common.enities.EscrowItem;
 import com.boss.common.enities.OrderItem;
 import com.boss.common.util.BeanCopyUtils;

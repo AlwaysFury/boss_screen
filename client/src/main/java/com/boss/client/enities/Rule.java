@@ -1,4 +1,4 @@
-package com.boss.common.enities;
+package com.boss.client.enities;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.AllArgsConstructor;
@@ -6,21 +6,21 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
  * @Description
  * @Author 罗宇航
- * @Date 2024/4/24
+ * @Date 2024/5/9
  */
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("tb_cost")
-public class Cost {
+@TableName("tb_rule")
+public class Rule {
+
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
@@ -36,13 +36,11 @@ public class Cost {
     @TableField(fill = FieldFill.UPDATE)
     private LocalDateTime updateTime;
 
-    private String type;
+    private String name;
 
-    private BigDecimal price;
+    private String grade;
 
-    private LocalDateTime startTime;
+    private Boolean allOrNot;
 
-    private LocalDateTime endTime;
-
-    private double exchangeRate;
+    private String ruleData;
 }

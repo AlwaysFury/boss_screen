@@ -9,9 +9,9 @@ import com.boss.client.service.RuleService;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.RuleInfoVO;
 import com.boss.client.vo.RuleVO;
-import com.boss.common.dto.ConditionDTO;
-import com.boss.common.dto.RuleDTO;
-import com.boss.common.enities.Rule;
+import com.boss.client.dto.ConditionDTO;
+import com.boss.client.dto.RuleDTO;
+import com.boss.client.enities.Rule;
 import com.boss.common.util.BeanCopyUtils;
 import com.boss.common.util.PageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,14 +41,14 @@ public class RuleServiceImpl extends ServiceImpl<RuleDao, Rule> implements RuleS
         Rule rule = BeanCopyUtils.copyObject(ruleDTO, Rule.class);
         rule.setRuleData(ruleDTO.getRule().toJSONString());
         this.saveOrUpdate(rule);
-        redisService.set(RULE + String.valueOf(rule.getId()), JSON.toJSONString(rule, SerializerFeature.WriteMapNullValue));
+        redisService.set(RULE + rule.getId(), JSON.toJSONString(rule, SerializerFeature.WriteMapNullValue));
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void deleteRule(List<Long> ids) {
         for (long id : ids) {
-            redisService.del(RULE + String.valueOf(id));
+            redisService.del(RULE + id);
         }
         ruleDao.deleteBatchIds(ids);
     }

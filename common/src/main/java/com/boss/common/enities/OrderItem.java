@@ -8,7 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -47,7 +46,7 @@ public class OrderItem {
     /**
      * 运单号
      */
-    private String trackingNumber;
+//    private String trackingNumber;
 
     /**
      * 产品 id
@@ -98,6 +97,11 @@ public class OrderItem {
      * 活动类型
      */
     private String promotionType;
+
+    /**
+     * 所属店铺id
+     */
+    private Long shopId;
 
     /**
      * 成本

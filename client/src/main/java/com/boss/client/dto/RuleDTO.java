@@ -1,4 +1,4 @@
-package com.boss.common.dto;
+package com.boss.client.dto;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.AllArgsConstructor;

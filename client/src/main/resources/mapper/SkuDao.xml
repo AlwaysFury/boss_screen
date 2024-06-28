@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boss.client.dao.SkuDao">
+
+
+    <select id="skuCount" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        FROM
+            tb_sku as s
+        <where>
+            <if test="condition.sku_name != null">
+                s.name = #{condition.sku_name}
+            </if>
+            <if test="condition.start_time != null">
+                and s.create_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                and s.create_time &lt;= #{condition.end_time}
+            </if>
+            <if test="condition.shop_id != null">
+                and s.shop_id = #{condition.shop_id}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="skuList" resultType="com.boss.client.enities.Sku">
+        SELECT
+            id,
+            name,
+            relevance_ids,
+            create_time
+        FROM
+            tb_sku as s
+        <where>
+            <if test="condition.sku_name != null">
+                s.name = #{condition.sku_name}
+            </if>
+            <if test="condition.start_time != null">
+                and s.create_time >= #{condition.start_time}
+            </if>
+            <if test="condition.end_time != null">
+                and s.create_time &lt;= #{condition.end_time}
+            </if>
+            <if test="condition.shop_id != null">
+                and s.shop_id = #{condition.shop_id}
+            </if>
+        </where>
+        LIMIT #{current},#{size}
+    </select>
+
+</mapper>

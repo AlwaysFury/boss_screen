@@ -4,9 +4,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.RuleInfoVO;
 import com.boss.client.vo.RuleVO;
-import com.boss.common.dto.ConditionDTO;
-import com.boss.common.dto.RuleDTO;
-import com.boss.common.enities.Rule;
+import com.boss.client.dto.ConditionDTO;
+import com.boss.client.dto.RuleDTO;
+import com.boss.client.enities.Rule;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.boss.common.dto;
+package com.boss.client.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -116,4 +116,19 @@ public class ConditionDTO {
      * 排序名称
      */
     private String orderBy_name = "s.create_time desc";
+
+    /**
+     * 标签名称
+     */
+    private String tag_name;
+
+    /**
+     * 款号id
+     */
+    private String sku_id;
+
+    /**
+     * 款号
+     */
+    private String sku_name;
 }

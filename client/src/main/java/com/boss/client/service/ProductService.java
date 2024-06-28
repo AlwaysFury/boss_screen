@@ -5,7 +5,7 @@ import com.boss.client.vo.PageResult;
 import com.boss.client.vo.ProductInfoVO;
 import com.boss.client.vo.ProductVO;
 import com.boss.common.vo.SelectVO;
-import com.boss.common.dto.ConditionDTO;
+import com.boss.client.dto.ConditionDTO;
 import com.boss.common.enities.Product;
 
 import java.util.List;
