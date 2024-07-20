@@ -1,4 +1,4 @@
-package com.boss.common.enities.excelEnities;
+package com.boss.client.enities.excelEnities;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -12,23 +12,25 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * @Description 店内限时秒杀
+ * @Description
  * @Author 罗宇航
- * @Date 2024/6/15
+ * @Date 2024/7/12
  */
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("tb_seckill_index")
-public class SeckillIndex {
+@TableName("tb_activity")
+public class Activity {
+
 
     private Long id;
 
     /**
      * 创建时间
      */
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
     /**
@@ -38,37 +40,42 @@ public class SeckillIndex {
     private LocalDateTime updateTime;
 
     /**
-     * 店铺id
+     * 商品id
+     */
+    private Long itemId;
+
+    /**
+     * 规格id
+     */
+    private Long modelId;
+
+    /**
+     * 状态
+     */
+    private String status;
+
+    /**
+     * 活动价格
+     */
+    private BigDecimal price;
+
+    /**
+     * 所属店铺id
      */
     private Long shopId;
 
     /**
-     * 销售额
+     * 时间段
      */
-    private BigDecimal salesAmount;
+    private String date;
 
     /**
-     * 订单
+     * 母活动名称
      */
-    private int orderCount;
+    private String mainName;
 
     /**
-     * 商品展示量
+     * 子活动名称
      */
-    private int displayVolume;
-
-    /**
-     * 商品点击量
-     */
-    private int clickVolume;
-
-    /**
-     * 客单价
-     */
-    private BigDecimal customerPrice;
-
-    /**
-     * 点击率
-     */
-    private double clickRate;
+    private String subName;
 }

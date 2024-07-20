@@ -66,7 +66,7 @@ public class ProductExtraInfoServiceImpl extends ServiceImpl<ProductExtraInfoDao
             shopId = shop.getShopId();
 
             List<Product> products = productDao.selectList(new QueryWrapper<Product>().select("item_id")
-                    .in("status", "NORMAL", "BANNED", "UNLIST", "REVIEWING"));
+                    .in("status", "NORMAL", "UNLIST", "REVIEWING"));
 
             if (products == null || products.isEmpty()) {
                 continue;
@@ -97,7 +97,7 @@ public class ProductExtraInfoServiceImpl extends ServiceImpl<ProductExtraInfoDao
 
 
         List<List<ProductExtraInfo>> splitProduct = CommonUtil.splitListBatches(productExtraInfoList, 100);
-        List<CompletableFuture<Void>> insertProductFutures = new ArrayList<>();
+//        List<CompletableFuture<Void>> insertProductFutures = new ArrayList<>();
         for (List<ProductExtraInfo> batch : splitProduct) {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 try {
@@ -110,10 +110,10 @@ public class ProductExtraInfoServiceImpl extends ServiceImpl<ProductExtraInfoDao
                 }
             }, ExecutorBuilder.create().setCorePoolSize(splitProduct.size()).build());
 
-            insertProductFutures.add(future);
+//            insertProductFutures.add(future);
         }
 
-        CompletableFuture.allOf(insertProductFutures.toArray(new CompletableFuture[0])).join();
+//        CompletableFuture.allOf(insertProductFutures.toArray(new CompletableFuture[0])).join();
     }
 
     private void getProductExtraInfo(String itemIds, String token, long shopId, List<ProductExtraInfo> productList) {

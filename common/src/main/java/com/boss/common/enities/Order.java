@@ -92,5 +92,4 @@ public class Order {
     @TableField(updateStrategy = FieldStrategy.IGNORED, insertStrategy = FieldStrategy.IGNORED, whereStrategy = FieldStrategy.IGNORED)
     private String shippingCarrier;
 
-
 }

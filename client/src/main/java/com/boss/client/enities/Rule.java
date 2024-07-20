@@ -43,4 +43,6 @@ public class Rule {
     private Boolean allOrNot;
 
     private String ruleData;
+
+    private String type;
 }

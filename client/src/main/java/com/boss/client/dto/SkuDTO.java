@@ -22,6 +22,4 @@ public class SkuDTO {
 
     private List<Long> relevanceIds;
 
-    private Long shopId;
-
 }

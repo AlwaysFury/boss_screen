@@ -18,19 +18,16 @@
             <if test="condition.end_time != null">
                 and s.create_time &lt;= #{condition.end_time}
             </if>
-            <if test="condition.shop_id != null">
-                and s.shop_id = #{condition.shop_id}
-            </if>
         </where>
     </select>
 
 
     <select id="skuList" resultType="com.boss.client.enities.Sku">
         SELECT
-            id,
-            name,
-            relevance_ids,
-            create_time
+            s.id,
+            s.name,
+            s.relevance_ids,
+            s.create_time
         FROM
             tb_sku as s
         <where>
@@ -43,11 +40,50 @@
             <if test="condition.end_time != null">
                 and s.create_time &lt;= #{condition.end_time}
             </if>
-            <if test="condition.shop_id != null">
-                and s.shop_id = #{condition.shop_id}
-            </if>
         </where>
         LIMIT #{current},#{size}
+    </select>
+
+
+    <select id="skuSaleVolume" resultType="com.boss.client.vo.SkuStatisticsVO">
+        SELECT
+            s.id,
+            s.name,
+            IFNULL(SUM(d.count), 0) AS saleVolume
+        FROM
+            tb_sku AS s
+        LEFT JOIN
+            tb_order_item AS d ON s.name = d.sku_name
+        <where>
+            s.id in (#{ids})
+        </where>
+        GROUP BY
+            s.name
+    </select>
+
+    <resultMap id="skuItemShopMap" type="map">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="item_id" property="itemId"/>
+        <result column="shopName" property="shopName"/>
+    </resultMap>
+
+    <select id="skuItemShop" resultMap="skuItemShopMap">
+        SELECT
+            s.id,
+            s.name,
+            t.item_id,
+            p.name as shopName
+        FROM
+            tb_sku AS s
+        LEFT JOIN
+            tb_model as t on s.name = t.sku_name
+        left join
+            tb_shop as p on t.shop_id = p.shop_id
+        <where>
+            s.id in (#{ids})
+        </where>
+        group by s.name, t.item_id
     </select>
 
 </mapper>

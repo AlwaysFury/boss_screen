@@ -1,4 +1,4 @@
-package com.boss.common.enities.excelEnities;
+package com.boss.client.enities.excelEnities;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -8,20 +8,20 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * @Description 销售组合
+ * @Description 优惠券-关键指标
  * @Author 罗宇航
  * @Date 2024/6/15
  */
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("tb_sales_mix")
-public class SalesMix {
+@TableName("tb_coupon_index")
+public class CouponIndex {
 
     private Long id;
 
@@ -42,12 +42,22 @@ public class SalesMix {
     private Long shopId;
 
     /**
-     * 新买家
+     * 销售额
      */
-    private Integer newBuyerCount;
+    private BigDecimal salesAmount;
 
     /**
-     * 现有买家
+     * 订单
      */
-    private Integer currentBuyerCount;
+    private int orderCount;
+
+    /**
+     * 使用率
+     */
+    private double useRate;
+
+    /**
+     * 花费
+     */
+    private BigDecimal spend;
 }

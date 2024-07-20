@@ -1,13 +1,11 @@
 package com.boss.client.vo;
 
-import com.alibaba.fastjson.JSONArray;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 /**
  * @Description
@@ -83,6 +81,11 @@ public class OrderEscrowInfoVO {
     private String payTime;
 
     /**
+     * 是否为新品订单
+     */
+    private boolean isNew;
+
+    /**
      * 买家最终付款金额
      */
     private BigDecimal buyerTotalAmount;
@@ -103,27 +106,47 @@ public class OrderEscrowInfoVO {
     private BigDecimal escrowAmount;
 
     /**
-     * 订单中的产品
+     * 退款金額
      */
-    private List<OrderEscrowItemVO> orderEscrowItemVOList;
+    private BigDecimal sellerReturnRefund;
 
     /**
-     * 调整交易金额
+     * Shopee回扣金额
      */
-    private BigDecimal adjustmentAmount;
+    private BigDecimal shopeeDiscount;
 
     /**
-     * 调整场景
+     * 卖家优惠券金额
      */
-    private String adjustmentReason;
+    private BigDecimal voucherFromSeller;
 
     /**
-     * 调整备注
+     * 退货运费
      */
-    private String adjustmentRemark;
+    private BigDecimal reverseShippingFee;
 
     /**
-     * 统计衣服数量
+     * 联盟营销方案佣金
      */
-    private JSONArray clothesCountMap;
+    private BigDecimal orderAmsCommissionFee;
+
+    /**
+     * 佣金
+     */
+    private BigDecimal commissionFee;
+
+    /**
+     * 服务费
+     */
+    private BigDecimal serviceFee;
+
+    /**
+     * 交易手续费
+     */
+    private BigDecimal sellerTransactionFee;
+
+    /**
+     * 汇率
+     */
+    private double exchangeRate;
 }

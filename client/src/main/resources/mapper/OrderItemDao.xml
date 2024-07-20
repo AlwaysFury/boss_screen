@@ -2,20 +2,24 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.boss.client.dao.OrderItemDao">
 
-    <select id="itemCountByCreateTimeRange" resultType="java.lang.Integer">
+    <select id="countByCreateTimeRange" resultType="java.lang.Integer">
         SELECT
             sum(count)
         FROM
             tb_order_item as s,
             tb_order as d
         where
-            s.item_id = #{item_id}
-            and
             s.order_sn = d.order_sn
+        <if test="type == 'ITEM'">
+            and s.item_id = #{item_id}
+        </if>
+        <if test="type == 'PHOTO'">
+            and s.sku_name = #{sku_name}
+        </if>
             and
-            d.create_time >= #{start_time}
+        d.create_time >= #{start_time}
             and
-            d.create_time &lt;= #{end_time}
+        d.create_time &lt;= #{end_time}
     </select>
 
 
@@ -59,5 +63,17 @@
             tb_order_item as s
         where
             s.model_id = #{model_id}
+    </select>
+
+    <select id="skuMinPriceAndCreateTime" resultType="com.boss.client.dto.GradeObject">
+        SELECT
+            s.sku_name as itemSku,
+            min(s.current_price) as price,
+            min(p.create_time) as createTime
+        FROM
+            tb_model as s
+            left join tb_product as t on s.item_id = t.id
+        where
+            s.sku_name = #{sku_name}
     </select>
 </mapper>

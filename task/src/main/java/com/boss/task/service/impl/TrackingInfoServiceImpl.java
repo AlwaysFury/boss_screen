@@ -4,6 +4,7 @@ import cn.hutool.core.util.IdUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.common.enities.TrackingInfo;
 import com.boss.common.util.CommonUtil;
@@ -18,10 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -73,17 +71,17 @@ public class TrackingInfoServiceImpl extends ServiceImpl<TrackingInfoDao, Tracki
                 .logisticsStatus(response.getString("logistics_status"))
                 .build();
 
-        JSONArray infoArray = response.getJSONArray("tracking_list");
+        JSONArray infoArray = response.getJSONArray("tracking_info");
         if (infoArray != null && !infoArray.isEmpty()) {
             trackingInfo.setLogisticsData(infoArray.toJSONString());
         }
 
-        try {
-            transactionTemplate.executeWithoutResult(status -> {
-                this.save(trackingInfo);
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
+        TrackingInfo existTrackingInfo = this.getOne(new QueryWrapper<TrackingInfo>().eq("order_sn", orderSn));
+
+        if (Objects.nonNull(existTrackingInfo)) {
+            this.update(trackingInfo, new UpdateWrapper<TrackingInfo>().eq("order_sn", orderSn));
+        } else {
+            this.save(trackingInfo);
         }
 
     }
@@ -158,7 +156,7 @@ public class TrackingInfoServiceImpl extends ServiceImpl<TrackingInfoDao, Tracki
         startTime =  System.currentTimeMillis();
 
         List<List<TrackingInfo>> batchesTrackingInfoList = CommonUtil.splitListBatches(trackingInfoList, 100);
-        List<CompletableFuture<Void>> insertTrackingInfoFutures = new ArrayList<>();
+//        List<CompletableFuture<Void>> insertTrackingInfoFutures = new ArrayList<>();
         for (List<TrackingInfo> batch : batchesTrackingInfoList) {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 try {
@@ -170,9 +168,9 @@ public class TrackingInfoServiceImpl extends ServiceImpl<TrackingInfoDao, Tracki
                 }
             }, customThreadPool);
 
-            insertTrackingInfoFutures.add(future);
+//            insertTrackingInfoFutures.add(future);
         }
-        CompletableFuture.allOf(insertTrackingInfoFutures.toArray(new CompletableFuture[0])).join();
+//        CompletableFuture.allOf(insertTrackingInfoFutures.toArray(new CompletableFuture[0])).join();
 
         log.info("===运单数据落库结束，耗时：{}秒", (System.currentTimeMillis() - startTime) / 1000);
     }

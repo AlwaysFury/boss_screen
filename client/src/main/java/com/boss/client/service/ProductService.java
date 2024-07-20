@@ -17,9 +17,9 @@ import java.util.List;
  */
 public interface ProductService extends IService<Product> {
 
-    void refreshProductByStatus(String status);
-
-    void refreshDeletedProduct();
+//    void refreshProductByStatus(String status);
+//
+//    void refreshDeletedProduct();
 
     PageResult<ProductVO> productListByCondition(ConditionDTO conditionDTO);
 

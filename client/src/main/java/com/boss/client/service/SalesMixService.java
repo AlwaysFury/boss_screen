@@ -1,7 +1,7 @@
 package com.boss.client.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.boss.common.enities.excelEnities.SalesMix;
+import com.boss.client.enities.excelEnities.SalesMix;
 import org.springframework.web.multipart.MultipartFile;
 
 /**

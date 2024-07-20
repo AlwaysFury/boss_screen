@@ -1,7 +1,7 @@
 package com.boss.client.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.boss.client.enities.ProductOrImgTag;
+import com.boss.common.enities.ProductOrImgTag;
 
 import java.util.List;
 
@@ -11,5 +11,7 @@ import java.util.List;
 public interface ProductOrImgTagService extends IService<ProductOrImgTag> {
 
     void saveProductOrImgTag(List<String> tagNameList, Long productOrImgId, String tagType);
+
+    void deleteBatch(List<Long> productOrImgIds);
 
 }

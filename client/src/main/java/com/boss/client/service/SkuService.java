@@ -7,6 +7,7 @@ import com.boss.client.dto.SkuDTO;
 import com.boss.client.enities.Sku;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.SkuInfoVO;
+import com.boss.client.vo.SkuStatisticsVO;
 import com.boss.client.vo.SkuVO;
 
 import java.util.List;
@@ -25,6 +26,8 @@ public interface SkuService extends IService<Sku>  {
     PageResult<SkuVO> skuListByCondition(ConditionDTO condition);
 
     SkuInfoVO getSkuById(long id);
+
+    List<SkuStatisticsVO> getSkuStatistics(String ids);
 //
 //    List<SelectVO> getCostType();
 }

@@ -25,6 +25,12 @@ public class UpdateStatusDTO {
     private List<Long> idList;
 
     /**
+     * 是否删除
+     */
+    @NotNull
+    private Boolean isDelete;
+
+    /**
      * 状态值
      */
     @NotNull(message = "状态值不能为空")

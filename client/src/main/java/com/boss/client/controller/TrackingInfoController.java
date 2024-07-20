@@ -25,7 +25,7 @@ public class TrackingInfoController {
     @Autowired
     private TrackingInfoServiceImpl trackingInfoService;
 
-    @GetMapping("/getPayoutInfo")
+    @GetMapping("/getTrackingInfo")
     public Result<TrackingInfoVO> getTrackingInfo(@RequestParam("order_sn") String orderSn) {
         return Result.ok(trackingInfoService.getTrackInfoBySn(orderSn));
     }

@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * @Description
  * @Author 罗宇航
@@ -118,9 +120,19 @@ public class ConditionDTO {
     private String orderBy_name = "s.create_time desc";
 
     /**
+     * 标签id
+     */
+    private List<Long> tag_ids;
+
+    /**
      * 标签名称
      */
     private String tag_name;
+
+    /**
+     * 标签类型
+     */
+    private String tag_type;
 
     /**
      * 款号id

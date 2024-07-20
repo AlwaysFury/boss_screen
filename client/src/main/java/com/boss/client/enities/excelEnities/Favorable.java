@@ -1,4 +1,4 @@
-package com.boss.common.enities.excelEnities;
+package com.boss.client.enities.excelEnities;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * @Description 优惠券-优惠券表现
+ * @Description 加购优惠概述
  * @Author 罗宇航
  * @Date 2024/6/15
  */
@@ -21,8 +21,8 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("tb_coupon_expression")
-public class CouponExpression {
+@TableName("tb_favorable")
+public class Favorable {
 
     private Long id;
 
@@ -43,29 +43,14 @@ public class CouponExpression {
     private Long shopId;
 
     /**
-     * 优惠券名称
+     * 加购优惠名称
      */
     private String couponName;
 
     /**
-     * 领取数量
+     * 类型
      */
-    private int receiveCount;
-
-    /**
-     * 订单
-     */
-    private int orderCount;
-
-    /**
-     * 销售额
-     */
-    private BigDecimal salesAmount;
-
-    /**
-     * 花费
-     */
-    private BigDecimal spend;
+    private String type;
 
     /**
      * 销售商品件数
@@ -73,12 +58,12 @@ public class CouponExpression {
     private int saleProductCount;
 
     /**
+     * 订单
+     */
+    private int orderCount;
+
+    /**
      * 客单价
      */
     private BigDecimal customerPrice;
-
-    /**
-     * 使用率
-     */
-    private double useRate;
 }

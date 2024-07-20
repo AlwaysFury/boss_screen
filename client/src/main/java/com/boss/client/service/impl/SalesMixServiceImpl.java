@@ -7,13 +7,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.SalesMixDao;
 import com.boss.client.service.SalesMixService;
-import com.boss.common.enities.excelEnities.SalesMix;
+import com.boss.client.enities.excelEnities.SalesMix;
 import com.boss.common.util.CommonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -53,6 +54,20 @@ public class SalesMixServiceImpl extends ServiceImpl<SalesMixDao, SalesMix> impl
                     .newBuyerCount(newBuyerCount)
                     .currentBuyerCount(currentBuyerCount).build();
 
+
+            if (newBuyerCount + currentBuyerCount != 0) {
+
+                double result = (double) newBuyerCount / (newBuyerCount + currentBuyerCount);
+                double finalResult = Double.parseDouble(new DecimalFormat("#.##").format(result));
+
+                salesMix.setNewBuyerRate(finalResult);
+
+                result = (double) currentBuyerCount / (newBuyerCount + currentBuyerCount);
+                finalResult = Double.parseDouble(new DecimalFormat("#.##").format(result));
+
+                salesMix.setCurrentBuyerRate(finalResult);
+            }
+
             SalesMix existSalesMix = salesMixDao.selectOne(new LambdaQueryWrapper<SalesMix>()
                     .select(SalesMix::getId)
                     .eq(SalesMix::getShopId, shopId)
@@ -62,7 +77,7 @@ public class SalesMixServiceImpl extends ServiceImpl<SalesMixDao, SalesMix> impl
             }
 
             this.saveOrUpdate(salesMix);
-
+            reader.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -106,4 +106,6 @@ public class OrderEscrowItemVO {
      */
     private float profitRate;
 
+
+
 }

@@ -7,8 +7,8 @@ import com.boss.client.dao.ProductOrImgTagDao;
 import com.boss.client.dao.TagDao;
 import com.boss.client.dto.ConditionDTO;
 import com.boss.client.dto.TagDTO;
-import com.boss.client.enities.ProductOrImgTag;
-import com.boss.client.enities.Tag;
+import com.boss.common.enities.ProductOrImgTag;
+import com.boss.common.enities.Tag;
 import com.boss.client.exception.BizException;
 import com.boss.client.service.TagService;
 import com.boss.client.vo.PageResult;
@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 标签服务
@@ -42,26 +43,29 @@ public class TagServiceImpl extends ServiceImpl<TagDao, Tag> implements TagServi
             return new PageResult<>();
         }
         // 分页查询标签列表
-        List<TagVO> tagList = tagDao.tagList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition);
+        List<TagVO> tagList = tagDao.tagList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition)
+                .stream().map(tag -> {
+                    tag.setTagType(TagTypeEnum.getDescByCode(tag.getTagType()));
+                    return tag;
+                }).collect(Collectors.toList());
         return new PageResult<>(tagList, count);
     }
 
     @Override
     public TagVO getTagById(long id) {
         Tag tag = this.getOne(new QueryWrapper<Tag>().eq("id", id));
-
-        return BeanCopyUtils.copyObject(tag, TagVO.class);
+        if (Objects.isNull(tag)) {
+            throw new BizException("标签不存在");
+        }
+        TagVO tagVO = BeanCopyUtils.copyObject(tag, TagVO.class);
+        tagVO.setTagType(TagTypeEnum.getDescByCode(tag.getTagType()));
+        return tagVO;
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void deleteTag(List<Long> tagIdList) {
-        // 查询标签下是否有文章
-        int count = Math.toIntExact(productOrImgTagDao.selectCount(new LambdaQueryWrapper<ProductOrImgTag>()
-                .in(ProductOrImgTag::getTagId, tagIdList)));
-        if (count > 0) {
-            throw new BizException("删除失败，该标签下存在链接或图片");
-        }
+        productOrImgTagDao.delete(new LambdaQueryWrapper<ProductOrImgTag>().in(ProductOrImgTag::getTagId, tagIdList));
         tagDao.deleteBatchIds(tagIdList);
     }
 
@@ -71,7 +75,7 @@ public class TagServiceImpl extends ServiceImpl<TagDao, Tag> implements TagServi
         // 查询标签名是否存在
         Tag existTag = tagDao.selectOne(new LambdaQueryWrapper<Tag>()
                 .select(Tag::getId)
-                .eq(Tag::getTagName, tagDTO.getTagName()).eq(Tag::getTagType, tagDTO.getTagType()));
+                .eq(Tag::getTagName, tagDTO.getTagName()));
         if (Objects.nonNull(existTag) && !existTag.getId().equals(tagDTO.getId())) {
             throw new BizException("该标签名已存在");
         }

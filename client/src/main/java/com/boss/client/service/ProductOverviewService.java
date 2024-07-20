@@ -1,8 +1,10 @@
 package com.boss.client.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.boss.common.enities.excelEnities.ProductOverview;
+import com.boss.client.enities.excelEnities.ProductOverview;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * @Description
@@ -12,4 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 public interface ProductOverviewService extends IService<ProductOverview>  {
 
     void importExcel(long shopId, String dateType, MultipartFile file);
+
+    List<ProductOverview> getProductOverviewInfoById(long itemId);
 }

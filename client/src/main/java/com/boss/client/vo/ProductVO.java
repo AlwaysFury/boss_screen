@@ -57,7 +57,7 @@ public class ProductVO {
     /**
      * 所属店铺 id
      */
-    private long shopId;
+//    private long shopId;
 
     /**
      * 所属店铺名称

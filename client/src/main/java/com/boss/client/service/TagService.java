@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.boss.client.dto.TagDTO;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.TagVO;
-import com.boss.client.enities.Tag;
+import com.boss.common.enities.Tag;
 import com.boss.client.dto.ConditionDTO;
 import com.boss.common.vo.SelectVO;
 

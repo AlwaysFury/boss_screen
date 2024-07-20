@@ -1,17 +1,17 @@
 package com.boss.client.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.boss.client.dao.OrderItemDao;
 import com.boss.client.dao.RuleDao;
+import com.boss.client.dto.ConditionDTO;
+import com.boss.client.dto.RuleDTO;
+import com.boss.client.enities.Rule;
 import com.boss.client.service.RuleService;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.RuleInfoVO;
 import com.boss.client.vo.RuleVO;
-import com.boss.client.dto.ConditionDTO;
-import com.boss.client.dto.RuleDTO;
-import com.boss.client.enities.Rule;
 import com.boss.common.util.BeanCopyUtils;
 import com.boss.common.util.PageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-
-import static com.boss.common.constant.RedisPrefixConst.RULE;
 
 
 /**
@@ -33,6 +31,12 @@ public class RuleServiceImpl extends ServiceImpl<RuleDao, Rule> implements RuleS
     private RuleDao ruleDao;
 
     @Autowired
+    private OrderItemDao orderItemDao;
+
+    @Autowired
+    private OrderItemServiceImpl orderItemService;
+
+    @Autowired
     private RedisServiceImpl redisService;
 
     @Transactional(rollbackFor = Exception.class)
@@ -41,15 +45,20 @@ public class RuleServiceImpl extends ServiceImpl<RuleDao, Rule> implements RuleS
         Rule rule = BeanCopyUtils.copyObject(ruleDTO, Rule.class);
         rule.setRuleData(ruleDTO.getRule().toJSONString());
         this.saveOrUpdate(rule);
-        redisService.set(RULE + rule.getId(), JSON.toJSONString(rule, SerializerFeature.WriteMapNullValue));
+//        redisService.set(RULE + rule.getId(), JSON.toJSONString(rule, SerializerFeature.WriteMapNullValue));
+    }
+
+    @Override
+    public List<Rule> getRuleList(String type) {
+        return ruleDao.selectList(new QueryWrapper<Rule>().eq("type", type));
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void deleteRule(List<Long> ids) {
-        for (long id : ids) {
-            redisService.del(RULE + id);
-        }
+//        for (long id : ids) {
+//            redisService.del(RULE + id);
+//        }
         ruleDao.deleteBatchIds(ids);
     }
 

@@ -4,10 +4,13 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.boss.client.dao.FlowOverviewDao;
 import com.boss.client.dao.FocusGiftDao;
 import com.boss.client.service.FocusGiftService;
-import com.boss.common.enities.excelEnities.FocusGift;
+import com.boss.client.enities.excelEnities.FlowOverview;
+import com.boss.client.enities.excelEnities.FocusGift;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +33,9 @@ public class FocusGiftServiceImpl extends ServiceImpl<FocusGiftDao, FocusGift> i
 
     @Autowired
     private FocusGiftDao focusGiftDao;
+
+    @Autowired
+    private FlowOverviewDao flowOverviewDao;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -58,6 +64,19 @@ public class FocusGiftServiceImpl extends ServiceImpl<FocusGiftDao, FocusGift> i
                         .newFollowerCount(Integer.parseInt(map.get("新关注者").toString().replace(",", "")))
                         .receiveCount(Integer.parseInt(map.get("独立领取数量").toString().replace(",", ""))).build();
 
+                FlowOverview flowOverview = flowOverviewDao.selectOne(new QueryWrapper<FlowOverview>()
+                        .select("visitor_count")
+                        .eq("create_time", createTime)
+                        .eq("shop_id", shopId)
+                        .eq("date_type", "day"));
+
+                if (flowOverview != null && flowOverview.getVisitorCount() != 0) {
+                    double result = (double) focusGift.getNewFollowerCount() / flowOverview.getVisitorCount();
+                    double finalResult = Double.parseDouble(new DecimalFormat("#.##").format(result));
+
+                    focusGift.setNewFollowerRate(finalResult);
+                }
+
                 FocusGift existFocusGift = focusGiftDao.selectOne(new LambdaQueryWrapper<FocusGift>()
                         .select(FocusGift::getId)
                         .eq(FocusGift::getShopId, shopId)
@@ -71,7 +90,7 @@ public class FocusGiftServiceImpl extends ServiceImpl<FocusGiftDao, FocusGift> i
             }
 
             this.saveOrUpdateBatch(focusGifts);
-
+            reader.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

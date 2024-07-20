@@ -5,9 +5,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.boss.common.enities.Product;
 import com.boss.common.enities.ReturnOrder;
 import com.boss.common.enities.ReturnOrderItem;
 import com.boss.common.enities.Shop;
+import com.boss.common.util.CommonUtil;
 import com.boss.task.dao.OperationLogDao;
 import com.boss.task.dao.ProductDao;
 import com.boss.task.dao.ReturnOrderDao;
@@ -17,11 +19,15 @@ import com.boss.task.util.RedisUtil;
 import com.boss.task.util.ShopeeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import static com.boss.common.constant.RedisPrefixConst.RETURN_ORDER;
 import static com.boss.common.constant.RedisPrefixConst.RETURN_ORDER_ITEM_MODEL;
@@ -51,8 +57,17 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
     @Autowired
     private RedisServiceImpl redisService;
 
+
     @Autowired
-    private OperationLogDao operationLogDao;
+    @Qualifier("customThreadPool")
+    private ThreadPoolExecutor customThreadPool;
+
+    private final TransactionTemplate transactionTemplate;
+
+    @Autowired
+    public ReturnOrderServiceImpl(DataSourceTransactionManager transactionManager) {
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+    }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -122,14 +137,31 @@ public class ReturnOrderServiceImpl extends ServiceImpl<ReturnOrderDao, ReturnOr
 
         }
 
-        this.saveOrUpdateBatch(returnOrdertList);
-//        System.out.println("updateProList===>" + JSONArray.toJSONString(updateProList));
-//        this.updateBatchById(updateReturnOrderList);
-        returnOrderItemService.saveOrUpdateBatch(returnOrderItemList);
-//        System.out.println("updateModelList===>" + JSONArray.toJSONString(updateModelList));
-//        returnOrderItemService.updateBatchById(updateReturnOrderItemList);
+        List<List<ReturnOrder>> splitReturnOrder = CommonUtil.splitListBatches(returnOrdertList, 100);
+        for (List<ReturnOrder> batch : splitReturnOrder) {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                try {
+                    transactionTemplate.executeWithoutResult(status -> {
+                        this.saveOrUpdateBatch(batch);
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }, customThreadPool);
+        }
 
-
+        List<List<ReturnOrderItem>> splitReturnOrderItem = CommonUtil.splitListBatches(returnOrderItemList, 100);
+        for (List<ReturnOrderItem> batch : splitReturnOrderItem) {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                try {
+                    transactionTemplate.executeWithoutResult(status -> {
+                        returnOrderItemService.saveOrUpdateBatch(batch);
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }, customThreadPool);
+        }
     }
 
     private void getReturnOrderDetail(JSONObject tempObject, List<ReturnOrder> returnOrdertList) {

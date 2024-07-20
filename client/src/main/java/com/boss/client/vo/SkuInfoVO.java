@@ -23,4 +23,5 @@ public class SkuInfoVO {
 
     private List<Map<String, Object>> relevanceList;
 
+    private String createTime;
 }

@@ -15,4 +15,6 @@ public interface ProductService extends IService<Product> {
     void refreshDeletedProduct();
 
     void initProduct(long shopId);
+
+    void updateStatusByItemId(Long itemId, String status);
 }

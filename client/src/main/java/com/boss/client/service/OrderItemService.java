@@ -1,10 +1,10 @@
 package com.boss.client.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.boss.client.vo.OrderEscrowItemVO;
 import com.boss.common.enities.OrderItem;
 
-import java.util.List;
+import java.util.Date;
+import java.util.Map;
 
 
 /**
@@ -14,5 +14,7 @@ import java.util.List;
  */
 public interface OrderItemService extends IService<OrderItem> {
 
-    List<OrderEscrowItemVO> getOrderEscrowItemVOBySn(String orderSn);
+    Map<String, Object> getOrderEscrowItemVOBySn(String orderSn);
+
+    int countByCreateTimeRange(Date nowDate, int offsetDays, Long itemId, String skuName, String type);
 }

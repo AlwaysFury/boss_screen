@@ -33,14 +33,14 @@ public class PhotoVO {
     private String photoSrc;
 
     /**
-     * skuId
+     * 款号id
      */
-    private Long skuName;
+    private String skuId;
 
     /**
-     * 所属店铺id
+     * 款号
      */
-    private Long shopName;
+    private String skuName;
 
     /**
      * 关联数量
@@ -51,4 +51,14 @@ public class PhotoVO {
      * 创建时间
      */
     private String createTime;
+
+    /**
+     * 销量
+     */
+    private int salesVolume;
+
+    /**
+     * 等级
+     */
+    private String grade;
 }

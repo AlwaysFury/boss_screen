@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.FavorableDao;
 import com.boss.client.service.FavorableService;
-import com.boss.common.enities.excelEnities.Favorable;
+import com.boss.client.enities.excelEnities.Favorable;
 import com.boss.common.util.CommonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,12 +51,14 @@ public class FavorableServiceImpl extends ServiceImpl<FavorableDao, Favorable> i
                             .shopId(shopId)
                             .createTime(dateTime)
                             .couponName(map.get("加购优惠名称").toString())
+                            .type(map.get("类型").toString())
                             .saleProductCount(Integer.parseInt(map.get("销售商品件数(已确认订单)").toString().replace(",", "")))
                             .orderCount(Integer.parseInt(map.get("订单（已确认订单）").toString().replace(",", "")))
                             .customerPrice(new BigDecimal(map.get("客单价（已确认订单） (THB)").toString().replace(",", ""))).build();
 
                     Favorable existFavorable = favorableDao.selectOne(new LambdaQueryWrapper<Favorable>()
                             .select(Favorable::getId)
+                            .eq(Favorable::getType, favorable.getType())
                             .eq(Favorable::getShopId, shopId)
                             .eq(Favorable::getCreateTime, dateTime));
 
@@ -69,7 +71,7 @@ public class FavorableServiceImpl extends ServiceImpl<FavorableDao, Favorable> i
             });
 
             this.saveOrUpdateBatch(favorables);
-
+            reader.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

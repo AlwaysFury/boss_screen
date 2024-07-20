@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.CouponExpressionDao;
 import com.boss.client.service.CouponExpressionService;
-import com.boss.common.enities.excelEnities.CouponExpression;
+import com.boss.client.enities.excelEnities.CouponExpression;
 import com.boss.common.util.CommonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -54,6 +54,7 @@ public class CouponExpressionServiceImpl extends ServiceImpl<CouponExpressionDao
                         .shopId(shopId)
                         .createTime(dateTime)
                         .couponName(map.get("优惠券名称").toString())
+                        .couponCode(map.get("优惠券代码").toString())
                         .salesAmount(new BigDecimal(map.get("销售额(已确认订单)(฿)").toString().replace(",", "")))
                         .spend(new BigDecimal(map.get("花费(已确认订单)(฿)").toString().replace(",", "")))
                         .customerPrice(new BigDecimal(map.get("客单价（已确认订单）(฿)").toString().replace(",", "")))
@@ -64,6 +65,7 @@ public class CouponExpressionServiceImpl extends ServiceImpl<CouponExpressionDao
 
                 CouponExpression existCouponExpression = couponExpressionDao.selectOne(new LambdaQueryWrapper<CouponExpression>()
                         .select(CouponExpression::getId)
+                        .eq(CouponExpression::getCouponCode, couponExpression.getCouponCode())
                         .eq(CouponExpression::getShopId, shopId)
                         .eq(CouponExpression::getCreateTime, dateTime));
 
@@ -76,7 +78,7 @@ public class CouponExpressionServiceImpl extends ServiceImpl<CouponExpressionDao
             }
 
             this.saveOrUpdateBatch(couponExpressions);
-
+            reader.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

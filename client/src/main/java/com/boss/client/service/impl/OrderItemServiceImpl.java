@@ -1,14 +1,16 @@
 package com.boss.client.service.impl;
 
+import cn.hutool.core.date.DateUtil;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.CostDao;
 import com.boss.client.dao.EscrowItemDao;
 import com.boss.client.dao.OrderItemDao;
+import com.boss.client.enities.Cost;
 import com.boss.client.service.OrderItemService;
 import com.boss.client.vo.OrderEscrowItemVO;
-import com.boss.client.enities.Cost;
 import com.boss.common.enities.EscrowItem;
 import com.boss.common.enities.OrderItem;
 import com.boss.common.util.BeanCopyUtils;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +53,9 @@ public class OrderItemServiceImpl extends ServiceImpl<OrderItemDao, OrderItem> i
     private CostDao costDao;
 
     @Override
-    public List<OrderEscrowItemVO> getOrderEscrowItemVOBySn(String orderSn) {
+    public Map<String, Object> getOrderEscrowItemVOBySn(String orderSn) {
+
+        Map<String, Object> map = new HashMap<>();
 
         // 初始化衣服数量 map
         Map<String, Integer> clothesCountMap = new HashMap<>();
@@ -72,7 +77,7 @@ public class OrderItemServiceImpl extends ServiceImpl<OrderItemDao, OrderItem> i
 
                     // 计算双面
                     String itemSku = orderItem.getItemSku();
-                    if (!"notsure".equals(itemSku) && isEnglish(itemSku.substring(0, 1)) && isEnglish(itemSku.substring(1, 2))) {
+                    if (!"notsure".equals(itemSku) && itemSku.length() != 1 && isEnglish(itemSku.substring(0, 1)) && isEnglish(itemSku.substring(1, 2))) {
                         clothesCountMap.put("double", clothesCountMap.get("double") + 1);
                     }
 
@@ -117,7 +122,18 @@ public class OrderItemServiceImpl extends ServiceImpl<OrderItemDao, OrderItem> i
                 }
         ).collect(Collectors.toList());
 
-        return orderEscrowItemVOList;
+        JSONArray clothesCounts = new JSONArray();
+        for (String s : clothesCountMap.keySet()) {
+            JSONObject object = new JSONObject();
+            object.put("key", s);
+            object.put("value", clothesCountMap.get(s));
+            clothesCounts.add(object);
+        }
+
+        map.put("order_item", orderEscrowItemVOList);
+        map.put("order_item_stat", clothesCounts);
+
+        return map;
     }
 
     private JSONObject getCostObject(String type, LocalDateTime orderCreateTime) {
@@ -170,5 +186,15 @@ public class OrderItemServiceImpl extends ServiceImpl<OrderItemDao, OrderItem> i
         }
         Matcher matcher = ENGLISH_PATTERN.matcher(str);
         return matcher.matches();
+    }
+
+    @Override
+    public int countByCreateTimeRange(Date nowDate, int offsetDays, Long itemId, String skuName, String type) {
+        long startTime = DateUtil.offsetDay(nowDate, offsetDays).getTime() / 1000;
+        long endTime = nowDate.getTime() / 1000;
+
+        Integer tempCount = orderItemDao.countByCreateTimeRange(itemId, skuName, startTime, endTime, type);
+
+        return tempCount == null ? 0 : tempCount;
     }
 }

@@ -20,8 +20,4 @@ public interface OrderDao extends BaseMapper<Order> {
     Integer orderCount(@Param("condition") ConditionDTO condition);
 
     List<OrderEscrowVO> orderList(@Param("current") Long current, @Param("size") Long size, @Param("condition") ConditionDTO condition);
-
-    List<Order> maxTimeList();
-
-    List<String> getNonEscrowList(long shopId);
 }

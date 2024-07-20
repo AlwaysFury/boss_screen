@@ -1,9 +1,15 @@
 package com.boss.client.controller;
 
+import com.boss.client.dto.ConditionDTO;
 import com.boss.client.dto.PhotoInfoDTO;
+import com.boss.client.service.impl.GradeServiceImpl;
 import com.boss.client.service.impl.PhotoServiceImpl;
 import com.boss.client.strategy.context.FileTransferStrategyContext;
+import com.boss.client.vo.PageResult;
+import com.boss.client.vo.PhotoInfoVO;
+import com.boss.client.vo.PhotoVO;
 import com.boss.client.vo.Result;
+import com.boss.common.dto.UpdateStatusDTO;
 import com.boss.common.enums.FilePathEnum;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,9 +24,9 @@ import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+
+import static com.boss.common.enums.TagTypeEnum.PHOTO;
 
 
 /**
@@ -36,6 +42,9 @@ public class PhotoController {
     private PhotoServiceImpl photoService;
 
     @Autowired
+    private GradeServiceImpl gradeService;
+
+    @Autowired
     private FileTransferStrategyContext fileTransferStrategyContext;
 
     /**
@@ -48,6 +57,39 @@ public class PhotoController {
         photoService.saveOrUpdatePhotoInfo(photoInfoDTO);
         return Result.ok();
     }
+
+
+    /**
+     * 获取照片列表
+     * @param condition
+     * @return
+     */
+    @GetMapping("/photoList")
+    public Result<PageResult<PhotoVO>> skuList(ConditionDTO condition) {
+        return Result.ok(photoService.photoListByCondition(condition));
+    }
+
+    /**
+     * 根据id获取图案信息
+     * @param id
+     * @return
+     */
+    @GetMapping("/getPhotoInfo")
+    public Result<PhotoInfoVO> getPhotoById(@RequestParam("photo_id") long id) {
+        return Result.ok(photoService.getPhotoById(id));
+    }
+
+    /**
+     * 刷新图片等级
+     * @param id
+     * @return
+     */
+    @GetMapping("/refreshGrade")
+    public Result<?> refreshGrade() {
+        gradeService.refreshGrade(PHOTO.getCode());
+        return Result.ok();
+    }
+
 
     /**
      * 上传
@@ -100,18 +142,9 @@ public class PhotoController {
         }
     }
 
-    /**
-     * 批量下载为zip
-     * @return
-     */
-
-
-
     @PostMapping("/delete")
-    public Result<?> deleteBatch() {
-        List<String> fileNames = new ArrayList<>();
-        fileNames.add("A2626.png");
-        fileTransferStrategyContext.executeDeleteStrategy(fileNames);
+    public Result<?> deleteBatch(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
+        photoService.deleteBatchById(updateStatusDTO.getIdList(), updateStatusDTO.getIsDelete());
         return Result.ok();
     }
 

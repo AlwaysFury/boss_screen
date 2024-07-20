@@ -72,6 +72,7 @@ public class PayoutInfoServiceImpl extends ServiceImpl<PayoutInfoDao, PayoutInfo
 
     private void refreshBillingTransactionInfo(JSONObject object, long shopId) {
         long payoutTime = object.getLong("payout_time");
+//        double exchangeRate = Double.parseDouble(object.getString("exchange_rate"));
         JSONArray ids = new JSONArray();
         ids.add(object.getString("encrypted_payout_id"));
         String accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
@@ -82,14 +83,16 @@ public class PayoutInfoServiceImpl extends ServiceImpl<PayoutInfoDao, PayoutInfo
         }
 
         Map<String, JSONArray> map = new HashMap<>();
-
+        Set<String> orderSnSet = new HashSet<>();
         for (int i = 0; i < array.size(); i++) {
             JSONObject jsonObject = array.getJSONObject(i);
 
             String level = jsonObject.getString("level");
+            String orderSn = jsonObject.getString("order_sn");
+
+            orderSnSet.add(orderSn);
 
             if ("ADJUSTMENT".equals(jsonObject.getString("billing_transaction_type")) && "ORDER".equals(level)) {
-                 String orderSn = jsonObject.getString("order_sn");
                 JSONArray tempArray;
                 if (map.get(orderSn) != null) {
                     tempArray = map.get(orderSn);
@@ -101,10 +104,8 @@ public class PayoutInfoServiceImpl extends ServiceImpl<PayoutInfoDao, PayoutInfo
             }
         }
 
-        List<String> orderSnList = new ArrayList<>();
         List<PayoutInfo> payoutInfoList = new ArrayList<>();
         for (String key : map.keySet()) {
-            orderSnList.add(key);
             PayoutInfo payoutInfo = PayoutInfo.builder()
                     .id(key)
                     .shopId(shopId)
@@ -116,6 +117,8 @@ public class PayoutInfoServiceImpl extends ServiceImpl<PayoutInfoDao, PayoutInfo
 
         this.saveOrUpdateBatch(payoutInfoList);
 
+
+        List<String> orderSnList = orderSnSet.stream().toList();
         List<List<String>> newOrderSnList = new ArrayList<>();
         if (orderSnList.size() > 20) {
             for (int i = 0; i < orderSnList.size(); i += 20) {
@@ -125,7 +128,7 @@ public class PayoutInfoServiceImpl extends ServiceImpl<PayoutInfoDao, PayoutInfo
             newOrderSnList.add(orderSnList);
         }
 
-        escrowInfoService.refreshEscrowBySn(newOrderSnList, shopId);
+        escrowInfoService.refreshEscrowInfoBySn(newOrderSnList, shopId);
 
     }
 

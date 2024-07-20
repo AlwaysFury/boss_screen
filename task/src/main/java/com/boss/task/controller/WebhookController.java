@@ -28,7 +28,7 @@ public class WebhookController {
     @PostMapping("/getPush")
     public Boolean receiveWebhookData(@RequestBody String body) throws NoSuchAlgorithmException, UnsupportedEncodingException, java.security.InvalidKeyException {
         // requestBody就是接收到的JSON字符串或其他格式的数据
-        System.out.println("Received data: " + body);
+        log.info("Received data: {}",  body);
         try {
             webhookService.getPush(body);
         } catch (Exception e) {

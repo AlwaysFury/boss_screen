@@ -30,23 +30,13 @@ public class OrderTask {
      */
 
 //    @Scheduled(cron = "0 */10 * * * ?")
-    public void refreshNewOrder() {
-        // 获取数据库最新的订单创建时间和当前时间之间的订单
-        log.info("======开始刷新新的订单信息");
-        long startTime = System.currentTimeMillis();
-
-        orderService.refreshNewOrder();
-
-        log.info("更新新的订单耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
-    }
-
-//    @Scheduled(cron = "0 */10 * * * ?")
-    public void refreshOrderByStatus() {
-        log.info("======开始刷新未完成订单信息");
-        long startTime = System.currentTimeMillis();
-
-        orderService.refreshOrderByStatus("COMPLETED", "CANCELLED");
-
-        log.info("更新未完成订单耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
-    }
+//    public void refreshNewOrder() {
+//        // 获取数据库最新的订单创建时间和当前时间之间的订单
+//        log.info("======开始刷新新的订单信息");
+//        long startTime = System.currentTimeMillis();
+//
+//        orderService.refreshNewOrder();
+//
+//        log.info("更新新的订单耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
+//    }
 }

@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.SeckillIndexDao;
 import com.boss.client.service.SeckillIndexService;
-import com.boss.common.enities.excelEnities.SeckillIndex;
+import com.boss.client.enities.excelEnities.SeckillIndex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,7 +71,7 @@ public class SeckillIndexServiceImpl extends ServiceImpl<SeckillIndexDao, Seckil
             }
 
             this.saveOrUpdateBatch(seckillIndices);
-
+            reader.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

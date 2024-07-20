@@ -11,9 +11,4 @@ import com.boss.common.enities.EscrowInfo;
  */
 public interface EscrowInfoService extends IService<EscrowInfo> {
 
-    void refreshEscrowByTime(long startTime, long endTime);
-
-    void refreshEscrowByStatus(String... status);
-
-    void refreshOrderNoOnEscrow();
 }

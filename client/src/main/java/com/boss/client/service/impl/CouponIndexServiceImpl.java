@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.CouponIndexDao;
 import com.boss.client.service.CouponIndexService;
-import com.boss.common.enities.excelEnities.CouponIndex;
+import com.boss.client.enities.excelEnities.CouponIndex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -67,7 +67,7 @@ public class CouponIndexServiceImpl extends ServiceImpl<CouponIndexDao, CouponIn
             }
 
             this.saveOrUpdateBatch(couponIndices);
-
+            reader.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

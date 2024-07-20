@@ -12,7 +12,7 @@ import com.boss.common.enities.ProductExtraInfo;
  */
 public interface ProductExtraInfoService extends IService<ProductExtraInfo> {
 
-    void saveOrUpdateProductExtraInfo();
+//    void saveOrUpdateProductExtraInfo();
 
     ProductExtraInfoVO getProductExtraInfoByItemId(Long itemId);
 

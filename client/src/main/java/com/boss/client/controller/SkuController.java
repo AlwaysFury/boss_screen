@@ -4,15 +4,14 @@ package com.boss.client.controller;
 import com.boss.client.dto.ConditionDTO;
 import com.boss.client.dto.SkuDTO;
 import com.boss.client.service.impl.SkuServiceImpl;
-import com.boss.client.vo.PageResult;
-import com.boss.client.vo.Result;
-import com.boss.client.vo.SkuInfoVO;
-import com.boss.client.vo.SkuVO;
+import com.boss.client.vo.*;
 import com.boss.common.dto.UpdateStatusDTO;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @Description
@@ -62,5 +61,13 @@ public class SkuController {
     public Result<?> saveOrUpdateCost(@Valid @RequestBody SkuDTO skuDTO) {
         skuService.saveOrUpdateSku(skuDTO);
         return Result.ok();
+    }
+
+    /**
+     * 获取款号统计
+     */
+    @GetMapping("/skuStatistics")
+    public Result<List<SkuStatisticsVO>> getSkuStatistics(@RequestParam("sku_id") Long id) {
+        return Result.ok(skuService.getSkuStatistics(String.valueOf(id)));
     }
 }

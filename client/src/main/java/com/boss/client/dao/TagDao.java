@@ -3,7 +3,7 @@ package com.boss.client.dao;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.boss.client.vo.TagVO;
 import com.boss.client.dto.ConditionDTO;
-import com.boss.client.enities.Tag;
+import com.boss.common.enities.Tag;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 

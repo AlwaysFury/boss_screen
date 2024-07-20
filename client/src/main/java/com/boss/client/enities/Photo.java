@@ -41,11 +41,6 @@ public class Photo {
     private Long skuId;
 
     /**
-     * 所属店铺id
-     */
-    private Long shopId;
-
-    /**
      * 创建时间
      */
     @TableField(fill = FieldFill.INSERT)

@@ -29,12 +29,17 @@ public class ProductInfoVO {
     /**
      * 修改时间
      */
-    private Long updateTime;
+    private String updateTime;
 
     /**
      * 系统 id
      */
     private Long itemId;
+
+    /**
+     * 分类id
+     */
+    private Long categoryId;
 
     /**
      * 类目 id
@@ -54,7 +59,7 @@ public class ProductInfoVO {
     /**
      * 等级
      */
-    private String grade;
+//    private String grade;
 
     /**
      * 所属店铺 id
@@ -71,6 +76,13 @@ public class ProductInfoVO {
      */
     private String status;
 
+    /**
+     * 额外信息
+     */
+    private ProductExtraInfoVO extraInfo;
 
-    List<ModelVO> modelVOList;
+    /**
+     * 标签
+     */
+    private List<TagVO> tagVOList;
 }

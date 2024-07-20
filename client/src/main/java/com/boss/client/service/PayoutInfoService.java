@@ -12,17 +12,7 @@ import com.boss.common.enities.PayoutInfo;
  */
 public interface PayoutInfoService extends IService<PayoutInfo>  {
 
-    void refreshPayoutInfoByTime(String startTime, String endTime);
 
     PayoutInfoVO getPayoutInfoBySn(String orderSn);
 
-//    void saveOrUpdateCost(CostDTO costDTO);
-//
-//    void deleteCost(List<Integer> ids);
-//
-//    PageResult<CostVO> costListByCondition(ConditionDTO condition);
-//
-//    CostVO getCostById(int id);
-//
-//    List<SelectVO> getCostType();
 }

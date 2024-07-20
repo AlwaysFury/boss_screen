@@ -1,14 +1,15 @@
 package com.boss.client.controller;
 
 
+import com.boss.client.dto.ConditionDTO;
 import com.boss.client.dto.ProductTagDTO;
+import com.boss.client.service.impl.GradeServiceImpl;
 import com.boss.client.service.impl.ProductOrImgTagServiceImpl;
 import com.boss.client.service.impl.ProductServiceImpl;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.ProductInfoVO;
 import com.boss.client.vo.ProductVO;
 import com.boss.client.vo.Result;
-import com.boss.client.dto.ConditionDTO;
 import com.boss.common.dto.UpdateStatusDTO;
 import com.boss.common.vo.SelectVO;
 import jakarta.validation.Valid;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.boss.common.constant.TagTypeConst.ITEM;
+import static com.boss.common.enums.TagTypeEnum.ITEM;
 
 /**
  * @Description
@@ -32,6 +33,9 @@ import static com.boss.common.constant.TagTypeConst.ITEM;
 public class ProductController {
     @Autowired
     private ProductServiceImpl productService;
+
+    @Autowired
+    private GradeServiceImpl gradeService;
 
     @Autowired
     private ProductOrImgTagServiceImpl productOrImgTagService;
@@ -92,7 +96,17 @@ public class ProductController {
      */
     @PostMapping("/saveTag")
     public Result<?> saveProductTag(@Valid @RequestBody ProductTagDTO productTagDTO) {
-        productOrImgTagService.saveProductOrImgTag(productTagDTO.getTagNameList(), productTagDTO.getId(), ITEM);
+        productOrImgTagService.saveProductOrImgTag(productTagDTO.getTagNameList(), productTagDTO.getId(), ITEM.getCode());
+        return Result.ok();
+    }
+
+    /**
+     * 刷新图片等级
+     * @return
+     */
+    @GetMapping("/refreshGrade")
+    public Result<?> refreshGrade() {
+        gradeService.refreshGrade(ITEM.getCode());
         return Result.ok();
     }
 

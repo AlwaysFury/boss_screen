@@ -49,7 +49,7 @@ public class ProductTask {
         log.info("======开始刷新产品信息");
         long startTime = System.currentTimeMillis();
 
-        productService.refreshProductByStatus("&item_status=NORMAL&item_status=BANNED&item_status=UNLIST&item_status=REVIEWING");
+        productService.refreshProductByStatus("&item_status=NORMAL&item_status=UNLIST&item_status=REVIEWING");
 
         log.info("更新产品信息耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
     }

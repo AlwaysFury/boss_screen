@@ -3,6 +3,8 @@ package com.boss.task.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.boss.common.enities.EscrowInfo;
 
+import java.util.List;
+
 
 /**
  * @Description
@@ -11,9 +13,13 @@ import com.boss.common.enities.EscrowInfo;
  */
 public interface EscrowInfoService extends IService<EscrowInfo> {
 
-    void refreshEscrowByTime(long startTime, long endTime);
+    void refreshEscrowBySn(List<List<String>> orderSnList, long shopId);
 
-    void refreshEscrowByStatus(String... status);
+    void refreshEscrowInfoBySn(List<List<String>> orderSnLists, long shopId);
 
-    void refreshOrderNoOnEscrow();
+//    void refreshEscrowByTime(long startTime, long endTime);
+
+//    void refreshEscrowByStatus(String... status);
+
+//    void refreshOrderNoOnEscrow();
 }

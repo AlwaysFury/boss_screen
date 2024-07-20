@@ -1,6 +1,7 @@
 package com.boss.client.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.boss.client.dto.GradeObject;
 import com.boss.common.enities.OrderItem;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -21,7 +22,7 @@ public interface OrderItemDao extends BaseMapper<OrderItem> {
 //    List<ShopVO> shopList(@Param("current") Long current, @Param("size") Long size, @Param("condition") ConditionDTO condition);
 
 
-    Integer itemCountByCreateTimeRange(@Param("item_id") long itemId, @Param("start_time") long startTime, @Param("end_time") long endTime);
+    Integer countByCreateTimeRange(@Param("item_id") long itemId, @Param("sku_name") String skuName, @Param("start_time") long startTime, @Param("end_time") long endTime, @Param("type") String type);
 
     Integer itemCountByCreateTime(@Param("item_id") long itemId, @Param("time") long time);
 
@@ -30,5 +31,7 @@ public interface OrderItemDao extends BaseMapper<OrderItem> {
     Integer salesVolumeByItemId(@Param("item_id") long itemId);
 
     Integer salesVolumeByModelId(@Param("model_id") long modelId);
+
+    GradeObject skuMinPriceAndCreateTime(@Param("sku_name") String skuName);
 
 }

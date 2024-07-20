@@ -1,4 +1,4 @@
-package com.boss.client.enities;
+package com.boss.common.enities;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.AllArgsConstructor;

@@ -6,16 +6,14 @@ import com.boss.common.enities.OrderStatusPush;
 import com.boss.task.service.WebhookService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.ArrayList;
+import java.util.List;
 
-import static com.boss.common.enums.OrderStatusEnum.CANCELLED;
-import static com.boss.common.enums.OrderStatusEnum.UNPAID;
+import static com.boss.common.enums.OrderStatusEnum.*;
+import static com.boss.common.enums.ProductStatusEnum.BANNED;
+import static com.boss.common.enums.ProductStatusEnum.SHOPEE_DELETE;
 
 /**
  * @Description
@@ -30,21 +28,17 @@ public class WebhookServiceImpl implements WebhookService {
     private OrderServiceImpl orderService;
 
     @Autowired
+    private EscrowInfoServiceImpl escrowInfoService;
+
+    @Autowired
+    private ProductServiceImpl productService;
+
+    @Autowired
     private TrackingInfoServiceImpl trackingInfoService;
 
     @Autowired
     private OrderStatusPushServiceImpl orderStatusPushService;
 
-    @Autowired
-    @Qualifier("customThreadPool")
-    private ThreadPoolExecutor customThreadPool;
-
-    private final TransactionTemplate transactionTemplate;
-
-    @Autowired
-    public WebhookServiceImpl(DataSourceTransactionManager transactionManager) {
-        this.transactionTemplate = new TransactionTemplate(transactionManager);
-    }
 
     @Override
     public void getPush(String data) {
@@ -73,31 +67,37 @@ public class WebhookServiceImpl implements WebhookService {
                         .build();
 
                 try {
-                    transactionTemplate.executeWithoutResult(transactionStatus -> {
-                        orderStatusPushService.save(orderStatusPush);
-                    });
+                    orderStatusPushService.saveOrUpdateOrderStatusPush(orderStatusPush);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
                 if (UNPAID.getCode().equals(status) || CANCELLED.getCode().equals(status)) {
-                    log.info("新增订单信息");
+                    log.info("====新增订单或更新订单取消原因");
+                    orderService.refreshSingleOrderBySn(orderSn, shopId, status);
+                }
 
-                    CompletableFuture.runAsync(() -> {
-                        try {
-                            orderService.refreshSingleOrderBySn(orderSn,shopId);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }, customThreadPool);
+                if (READY_TO_SHIP.getCode().equals(status)) {
+                    log.info("====订单已支付，更新订单支付信息");
+                    List<List<String>> allOrderSnList = new ArrayList<>();
+                    List<String> orderSnList = new ArrayList<>();
+                    orderSnList.add(orderSn);
+                    allOrderSnList.add(orderSnList);
+                    escrowInfoService.refreshEscrowBySn(allOrderSnList, shopId);
                 }
 
                 break;
             case 4:
-                log.info("====获取物流信息");
-                // {"data":{"ordersn":"2406179DN25C0Y","forder_id":"5456557173982721879","package_number":"OFG172323903251079","tracking_no":"TH240167042286R"},"shop_id":874244879,"code":4,"timestamp":1718877102}
+                log.info("====更新物流信息");
                 trackingInfoService.saveTrackingInfoBySn(dataObject.getString("ordersn"), shopId, dataObject.getString("tracking_no"));
                 break;
+            case 16:
+                log.info("====更新平台删除或禁止产品状态");
+                String itemStatus = dataObject.getString("item_status");
+
+                if (BANNED.getCode().equals(itemStatus) || SHOPEE_DELETE.getCode().equals(itemStatus)) {
+                    productService.updateStatusByItemId(dataObject.getLong("item_id"), itemStatus);
+                }
         }
     }
 }

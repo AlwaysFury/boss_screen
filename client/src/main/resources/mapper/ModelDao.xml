@@ -4,14 +4,13 @@
 
     <select id="getModelVOListByItemId" resultType="com.boss.client.vo.ModelVO">
         SELECT
-            s.id, s.model_id, s.model_name, s.model_sku, s.current_price, s.original_price, s.stock, s.promotion_id, s.item_id, s.status, s.image_id, s.image_url, s.create_time, IFNULL( d.num, 0 ) AS salesVolume
+            s.id, s.model_id, s.model_name, s.model_sku, s.current_price, s.original_price, s.stock, s.promotion_id, s.item_id, s.status, s.image_id, s.image_url, s.create_time, IFNULL(SUM(d.count), 0) AS salesVolume
         FROM
             tb_model AS s
-        LEFT JOIN
-            ( SELECT model_id, count(*) AS num FROM tb_order_item WHERE item_id = #{item_id} GROUP BY model_id ) AS d
-        ON
-            s.model_id = d.model_id
+                LEFT JOIN
+            tb_order_item AS d ON s.model_id = d.model_id
         WHERE
             s.item_id = #{item_id}
+        group by s.model_id
     </select>
 </mapper>

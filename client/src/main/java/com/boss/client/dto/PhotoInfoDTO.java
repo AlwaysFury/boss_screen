@@ -29,11 +29,6 @@ public class PhotoInfoDTO {
     private String photoName;
 
     /**
-     * 照片描述
-     */
-    private String photoDesc;
-
-    /**
      * 标签名称
      */
     private List<String> tagNameList;
@@ -42,9 +37,4 @@ public class PhotoInfoDTO {
      * 照片地址
      */
     private String photoSrc;
-
-    /**
-     * 所属店铺id
-     */
-    private Long shopId;
 }

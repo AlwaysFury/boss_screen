@@ -19,7 +19,8 @@ import java.util.List;
 /**
  * 标签控制器
  */
-@RestController("/tag")
+@RestController
+@RequestMapping("/tag")
 public class TagController {
     @Autowired
     private TagServiceImpl tagService;
@@ -38,13 +39,13 @@ public class TagController {
      * 物理删除
      */
     @PostMapping("/delete")
-    public Result<?> updateRuleStatus(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
+    public Result<?> updateTagStatus(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
         tagService.deleteTag(updateStatusDTO.getIdList());
         return Result.ok();
     }
 
     @GetMapping("/getTag")
-    public Result<TagVO> getCostById(@RequestParam("tag_id") long id) {
+    public Result<TagVO> getTagById(@RequestParam("tag_id") long id) {
         return Result.ok(tagService.getTagById(id));
     }
 
@@ -52,7 +53,7 @@ public class TagController {
      * 插入或更新
      */
     @PostMapping("/saveOrUpdate")
-    public Result<?> saveOrUpdateRule(@Valid @RequestBody TagDTO tagDTO) {
+    public Result<?> saveOrUpdateTag(@Valid @RequestBody TagDTO tagDTO) {
         tagService.saveOrUpdateTag(tagDTO);
         return Result.ok();
     }

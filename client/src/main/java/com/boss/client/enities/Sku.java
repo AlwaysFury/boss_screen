@@ -37,11 +37,6 @@ public class Sku {
     private String relevanceIds;
 
     /**
-     * 所属店铺id
-     */
-    private Long shopId;
-
-    /**
      * 创建时间
      */
     @TableField(fill = FieldFill.INSERT)

@@ -145,7 +145,7 @@ class TaskApplicationTests {
 
     @Test
     void getOrderDetail() {
-        JSONObject object = ShopeeUtil.getOrderDetail("44625a646a6f6778534f57704d5a7a44", 874244879, "240531SAGCUP3N");
+        JSONObject object = ShopeeUtil.getOrderDetail("6666446c516855586358596273654847", 874244879, "240519PEKTS6KE");
         System.out.println(object);
     }
 
@@ -156,8 +156,9 @@ class TaskApplicationTests {
     void saveOrUpdateOrder() {
         log.info("======开始刷新订单信息");
         long startTime =  System.currentTimeMillis();
-
-//        orderService.refreshOrderByTimeStr("2024-06-01", "2024-06-19");
+        List<String> orderSnList = new ArrayList<>();
+        orderSnList.add("240618BK03STS9");
+        orderService.refreshBatchOrderBySn(orderSnList, 874244879);
 
         log.info("更新订单耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
     }
@@ -189,8 +190,8 @@ class TaskApplicationTests {
     @Test
     void getEscrowDetailTest() {
         List<String> objects = new ArrayList<>();
-        objects.add("2405246N2RX9KH");
-        JSONObject object = ShopeeUtil.getEscrowDetail("4762415a576374696571644a6e455750", 874244879, objects);
+        objects.add("240716QJETUDRN");
+        JSONObject object = ShopeeUtil.getEscrowDetail("616f686c4a4947666254654852514162", 874244879, objects);
         System.out.println(object);
     }
 
@@ -261,20 +262,20 @@ class TaskApplicationTests {
 
     @Autowired
     private EscrowInfoServiceImpl escrowInfoService;
-    @Test
-    void refreshEscrowTest() {
-//        escrowInfoService.refreshEscrowByTime("2024-06-18", "2024-06-21");
-        escrowInfoService.refreshOrderNoOnEscrow();
-    }
-
-    @Test
-    void refreshUnPaidEscrowTest() {
-        escrowInfoService.refreshEscrowByStatus("UNPAID");
-    }
+//    @Test
+//    void refreshEscrowTest() {
+////        escrowInfoService.refreshEscrowByTime("2024-06-18", "2024-06-21");
+//        escrowInfoService.refreshOrderNoOnEscrow();
+//    }
+//
+//    @Test
+//    void refreshUnPaidEscrowTest() {
+//        escrowInfoService.refreshEscrowByStatus("UNPAID");
+//    }
 
     @Test
     void refreshUnCompleteOrder() {
-        orderService.refreshOrderByStatus("COMPLETE");
+//        orderService.refreshOrderByStatus("COMPLETE");
     }
 
     @Test
@@ -338,7 +339,15 @@ class TaskApplicationTests {
 
     @Test
     void testDeleteProduct() {
-        productService.refreshDeletedProduct();
+        trackingInfoService.saveTrackingInfoBySn("240630D8T18YJ7", 874244879, "TH243345186878S");
+    }
+
+    @Autowired
+    private FeishuServiceImpl feishuService;
+
+    @Test
+    void getTotalBalance() {
+        feishuService.sendAdsMessage();
     }
 
 }

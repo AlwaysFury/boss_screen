@@ -26,7 +26,7 @@
             tag_name,
             tag_type
         FROM
-        tb_rule as s
+            tb_tag as s
         <where>
             s.id is not null
             <if test="condition.tag_name != null">

@@ -21,6 +21,8 @@ public interface RedisService {
      */
     Set<String> keys(String key);
 
+    String getStr(String key);
+
 
     /**
      * 保存属性

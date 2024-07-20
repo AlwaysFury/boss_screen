@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
+import java.util.Set;
+
 /**
  * @Description
  * @Author 罗宇航
@@ -47,6 +50,15 @@ public class ImportExcelController {
 
     @Autowired
     private FocusGiftServiceImpl focusGiftService;
+
+    @Autowired
+    private ActivityServiceImpl activityService;
+
+    @Autowired
+    private AdsServiceImpl adsService;
+
+    @Autowired
+    private AdsDetailServiceImpl adsDetailService;
 
     // 商品概览
     @PostMapping("/productOverview")
@@ -103,6 +115,35 @@ public class ImportExcelController {
     @PostMapping("/focusGifts")
     public Result<String> saveFocusGifts(@RequestParam("shop_id") long shopId, @RequestParam("file") MultipartFile file) {
         focusGiftService.importExcel(shopId, file);
+        return Result.ok();
+    }
+
+    // 活动
+    @PostMapping("/activity")
+    public Result<String> saveActivity(@RequestParam("shop_id") long shopId,
+                                       @RequestParam("main_name") String mainName,
+                                       @RequestParam("sub_name") String subName,
+                                       @RequestParam("date") String date,
+                                       @RequestParam("file") MultipartFile file) {
+        activityService.importExcel(shopId, mainName, subName, date, file);
+        return Result.ok();
+    }
+
+    // 广告
+    @PostMapping("/ads")
+    public Result<Map<String, Set<Long>>> saveAds(@RequestParam("file") MultipartFile file,
+                                                  @RequestParam("ads_order_count") int adsOrderCount,
+                                                  @RequestParam("search_order_count") int searchOrderCount,
+                                                  @RequestParam("search_auto_order_count") int searchAutoOrderCount,
+                                                  @RequestParam("search_manual_order_count") int searchManualOrderCount,
+                                                  @RequestParam("relation_order_count") int relationOrderCount) {
+        return Result.ok(adsService.importCsv(file, adsOrderCount, searchOrderCount, searchAutoOrderCount, searchManualOrderCount, relationOrderCount));
+    }
+
+    // 广告详情
+    @PostMapping("/adsDetail")
+    public Result<?> saveAdsDetail(@RequestParam("file") MultipartFile file, @RequestParam("type") String type) {
+        adsDetailService.importCsv(file, type);
         return Result.ok();
     }
 }

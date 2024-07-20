@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 
 import static com.boss.common.constant.OptTypeConst.SYSTEM_LOG;
 import static com.boss.common.constant.RedisPrefixConst.PRODUCT_ITEM;
+import static com.boss.common.enums.ProductStatusEnum.SELLER_DELETE;
 
 
 /**
@@ -152,6 +153,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         for (Shop shop : shopList) {
             shopId = shop.getShopId();
             accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
+
             String status = "&item_status=SELLER_DELETE";
             List<String> itemIds = ShopeeUtil.getProducts(accessToken, shopId, 0, new ArrayList<>(), status);
             if (itemIds != null && !itemIds.isEmpty()) {
@@ -167,26 +169,44 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 for (String itemId : tempList) {
                     joiner.add(itemId);
                 }
-                productDao.update(new UpdateWrapper<Product>().set("status", "SELLER_DELETE").in("item_id", joiner));
+                productDao.update(new UpdateWrapper<Product>().set("status", SELLER_DELETE.getCode()).in("item_id", joiner));
             }
 
-            status = "&item_status=SHOPEE_DELETE";
-            itemIds = ShopeeUtil.getProducts(accessToken, shopId, 0, new ArrayList<>(), status);
-            if (itemIds != null && !itemIds.isEmpty()) {
-                StringJoiner joiner = new StringJoiner(",");
-                for (String itemId : itemIds) {
-                    joiner.add(itemId);
-                }
-            }
-            tempList = productDao.selectList(new QueryWrapper<Product>().select("item_id" ).in("item_id", itemIds))
-                    .stream().map(p -> String.valueOf(p.getItemId())).collect(Collectors.toList());
-            if (tempList != null && !tempList.isEmpty()) {
-                StringJoiner joiner = new StringJoiner(",");
-                for (String itemId : tempList) {
-                    joiner.add(itemId);
-                }
-                productDao.update(new UpdateWrapper<Product>().set("status", "SHOPEE_DELETE").in("item_id", joiner));
-            }
+//            status = "&item_status=SHOPEE_DELETE";
+//            itemIds = ShopeeUtil.getProducts(accessToken, shopId, 0, new ArrayList<>(), status);
+//            if (itemIds != null && !itemIds.isEmpty()) {
+//                StringJoiner joiner = new StringJoiner(",");
+//                for (String itemId : itemIds) {
+//                    joiner.add(itemId);
+//                }
+//            }
+//            tempList = productDao.selectList(new QueryWrapper<Product>().select("item_id" ).in("item_id", itemIds))
+//                    .stream().map(p -> String.valueOf(p.getItemId())).collect(Collectors.toList());
+//            if (tempList != null && !tempList.isEmpty()) {
+//                StringJoiner joiner = new StringJoiner(",");
+//                for (String itemId : tempList) {
+//                    joiner.add(itemId);
+//                }
+//                productDao.update(new UpdateWrapper<Product>().set("status", "SHOPEE_DELETE").in("item_id", joiner));
+//            }
+//
+//            status = "&item_status=BANNED";
+//            itemIds = ShopeeUtil.getProducts(accessToken, shopId, 0, new ArrayList<>(), status);
+//            if (itemIds != null && !itemIds.isEmpty()) {
+//                StringJoiner joiner = new StringJoiner(",");
+//                for (String itemId : itemIds) {
+//                    joiner.add(itemId);
+//                }
+//            }
+//            tempList = productDao.selectList(new QueryWrapper<Product>().select("item_id" ).in("item_id", itemIds))
+//                    .stream().map(p -> String.valueOf(p.getItemId())).collect(Collectors.toList());
+//            if (tempList != null && !tempList.isEmpty()) {
+//                StringJoiner joiner = new StringJoiner(",");
+//                for (String itemId : tempList) {
+//                    joiner.add(itemId);
+//                }
+//                productDao.update(new UpdateWrapper<Product>().set("status", "BANNED").in("item_id", joiner));
+//            }
         }
     }
 
@@ -233,7 +253,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
 
         List<List<Product>> splitProduct = CommonUtil.splitListBatches(productList, 100);
-        List<CompletableFuture<Void>> insertProductFutures = new ArrayList<>();
+//        List<CompletableFuture<Void>> insertProductFutures = new ArrayList<>();
         for (List<Product> batch : splitProduct) {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 try {
@@ -246,12 +266,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 }
             }, customThreadPool);
 
-            insertProductFutures.add(future);
+//            insertProductFutures.add(future);
         }
 
 
         List<List<Model>> splitModel = CommonUtil.splitListBatches(modelList, 5000);
-        List<CompletableFuture<Void>> insertModelFutures = new ArrayList<>();
+//        List<CompletableFuture<Void>> insertModelFutures = new ArrayList<>();
         for (List<Model> batch : splitModel) {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 try {
@@ -264,11 +284,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 }
             }, customThreadPool);
 
-            insertModelFutures.add(future);
+//            insertModelFutures.add(future);
         }
 
-        CompletableFuture.allOf(insertProductFutures.toArray(new CompletableFuture[0])).join();
-        CompletableFuture.allOf(insertModelFutures.toArray(new CompletableFuture[0])).join();
+//        CompletableFuture.allOf(insertProductFutures.toArray(new CompletableFuture[0])).join();
+//        CompletableFuture.allOf(insertModelFutures.toArray(new CompletableFuture[0])).join();
 
         log.info("===产品数据落库结束，耗时：{}秒", (System.currentTimeMillis() - startTime) / 1000);
 
@@ -340,6 +360,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
     }
 
-
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void updateStatusByItemId(Long itemId, String status) {
+        productDao.update(new UpdateWrapper<Product>().set("status", status).eq("id", itemId));
+    }
 
 }

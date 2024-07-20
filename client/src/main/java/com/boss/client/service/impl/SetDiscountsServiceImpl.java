@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.SetDiscountsDao;
 import com.boss.client.service.SetDiscountsService;
-import com.boss.common.enities.excelEnities.SetDiscounts;
+import com.boss.client.enities.excelEnities.SetDiscounts;
 import com.boss.common.util.CommonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,12 +51,14 @@ public class SetDiscountsServiceImpl extends ServiceImpl<SetDiscountsDao, SetDis
                         .shopId(shopId)
                         .createTime(dateTime)
                         .setName(map.get("套装名称").toString())
+                        .setCode(map.get("套装编号").toString())
                         .orderCount(Integer.parseInt(map.get("订单（已确认订单）").toString().replace(",", "")))
                         .saleProductCount(Integer.parseInt(map.get("销售商品件数(已确认订单)").toString().replace(",", "")))
                         .customerPrice(new BigDecimal(map.get("客单价（已确认订单）(฿)").toString())).build();
 
                 SetDiscounts existSetDiscounts = setDiscountsDao.selectOne(new LambdaQueryWrapper<SetDiscounts>()
                         .select(SetDiscounts::getId)
+                        .eq(SetDiscounts::getSetCode, couponExpression.getSetCode())
                         .eq(SetDiscounts::getShopId, shopId)
                         .eq(SetDiscounts::getCreateTime, dateTime));
 
@@ -69,7 +71,7 @@ public class SetDiscountsServiceImpl extends ServiceImpl<SetDiscountsDao, SetDis
             }
 
             this.saveOrUpdateBatch(setDiscounts);
-
+            reader.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

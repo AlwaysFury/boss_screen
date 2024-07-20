@@ -20,14 +20,14 @@ public interface PhotoService extends IService<Photo> {
      * @param condition
      * @return
      */
-    PageResult<PhotoVO> photoList(ConditionDTO condition);
+    PageResult<PhotoVO> photoListByCondition(ConditionDTO condition);
 
     /**
      * 根据id获取照片信息
      * @param id
      * @return
      */
-    PhotoInfoVO getPhotoById(Long id);
+    PhotoInfoVO getPhotoById(long id);
 
     /**
      * 更新照片信息
@@ -41,6 +41,6 @@ public interface PhotoService extends IService<Photo> {
      *
      * @param photoIdList 照片id列表
      */
-    void deletePhotos(List<Long> photoIdList);
+    void deleteBatchById(List<Long> photoIdList, boolean isDelete);
 
 }

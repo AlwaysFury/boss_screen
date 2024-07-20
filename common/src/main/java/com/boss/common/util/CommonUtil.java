@@ -6,6 +6,7 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -65,6 +66,32 @@ public class CommonUtil {
             batches.add(records.subList(i, Math.min(i + batchSize, records.size())));
         }
         return batches;
+    }
+
+    /**
+     * 获取时间字符串的开始时间和结束时间
+     * @param timeStr
+     * @param type
+     * @return
+     */
+    public static Long getStartAndEndTimestamp(String timeStr, String type) {
+
+        LocalDate specificDate = LocalDate.parse(timeStr); // 解析日期字符串
+
+        long timestamp = 0;
+        if ("start".equals(type)) {
+            LocalTime startOfDay = LocalTime.of(0, 0, 0); // 00:00:00
+            LocalDateTime startDateTime = LocalDateTime.of(specificDate, startOfDay);
+            timestamp = Date.from(startDateTime.atZone(ZoneId.systemDefault()).toInstant()).getTime();
+        }
+
+        if ("end".equals(type)){
+            LocalTime endOfDay = LocalTime.of(23, 59, 59); // 23:59:59
+            LocalDateTime endDateTime = LocalDateTime.of(specificDate, endOfDay);
+            timestamp = Date.from(endDateTime.atZone(ZoneId.systemDefault()).toInstant()).getTime();
+        }
+
+        return timestamp / 1000;
     }
 
 

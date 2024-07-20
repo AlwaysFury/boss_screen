@@ -1,7 +1,6 @@
 package com.boss.common.enities;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
@@ -48,8 +47,8 @@ public class EscrowInfo {
     /**
      * 买家姓名
      */
-    @TableField(updateStrategy = FieldStrategy.IGNORED, insertStrategy = FieldStrategy.IGNORED, whereStrategy = FieldStrategy.IGNORED)
-    private String buyerUserName;
+//    @TableField(updateStrategy = FieldStrategy.IGNORED, insertStrategy = FieldStrategy.IGNORED, whereStrategy = FieldStrategy.IGNORED)
+//    private String buyerUserName;
 
     /**
      * 买家最终付款金额
@@ -77,12 +76,47 @@ public class EscrowInfo {
     private Long shopId;
 
     /**
-     * 调整交易金额
+     * 退款金額
      */
-//    private BigDecimal adjustmentAmount;
+    private BigDecimal sellerReturnRefund;
 
     /**
-     * 调整原因
+     * Shopee回扣金额
      */
-//    private String adjustmentReason;
+    private BigDecimal shopeeDiscount;
+
+    /**
+     * 卖家优惠券金额
+     */
+    private BigDecimal voucherFromSeller;
+
+    /**
+     * 退货运费
+     */
+    private BigDecimal reverseShippingFee;
+
+    /**
+     * 联盟营销方案佣金
+     */
+    private BigDecimal orderAmsCommissionFee;
+
+    /**
+     * 佣金
+     */
+    private BigDecimal commissionFee;
+
+    /**
+     * 服务费
+     */
+    private BigDecimal serviceFee;
+
+    /**
+     * 交易手续费
+     */
+    private BigDecimal sellerTransactionFee;
+
+    /**
+     * 汇率
+     */
+    private double exchangeRate;
 }

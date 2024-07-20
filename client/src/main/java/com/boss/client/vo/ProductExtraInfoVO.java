@@ -47,4 +47,44 @@ public class ProductExtraInfoVO {
      * 评论数
      */
     private int commentCount;
+
+    /**
+     * 等级
+     */
+    private String grade;
+
+    /**
+     * 近3天销量
+     */
+    private int salesVolume3daysCount;
+
+    /**
+     * 近7天销量
+     */
+    private int salesVolume7daysCount;
+
+    /**
+     * 近15天销量
+     */
+    private int salesVolume15daysCount;
+
+    /**
+     * 近30天销量
+     */
+    private int salesVolume30daysCount;
+
+    /**
+     * 转化率 (加入购物车率)
+     */
+    private double addCartRate;
+
+    /**
+     * 转化率（已下订单）
+     */
+    private double orderRate;
+
+    /**
+     * 件数（已确定订单）
+     */
+    private int productCount;
 }

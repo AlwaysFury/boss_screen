@@ -19,7 +19,7 @@ public class TagVO {
     /**
      * id
      */
-    private Integer id;
+    private Long id;
 
     /**
      * 标签名

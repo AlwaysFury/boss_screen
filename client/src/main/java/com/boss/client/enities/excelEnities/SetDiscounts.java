@@ -1,4 +1,4 @@
-package com.boss.common.enities.excelEnities;
+package com.boss.client.enities.excelEnities;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * @Description 关注礼
+ * @Description 套装优惠
  * @Author 罗宇航
  * @Date 2024/6/15
  */
@@ -21,8 +21,8 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("tb_focus_gift")
-public class FocusGift {
+@TableName("tb_set_discounts")
+public class SetDiscounts {
 
     private Long id;
 
@@ -43,32 +43,27 @@ public class FocusGift {
     private Long shopId;
 
     /**
-     * 独立领取数
+     * 套装名称
      */
-    private Integer receiveCount;
+    private String setName;
 
     /**
-     * 新关注者
+     * 套装编号
      */
-    private Integer newFollowerCount;
+    private String setCode;
 
     /**
-     * 订单
+     * 订单数
      */
-    private Integer orderCount;
+    private int orderCount;
 
     /**
-     * 花费
+     * 销售商品件数
      */
-    private BigDecimal spend;
+    private int saleProductCount;
 
     /**
-     * 使用率
+     * 客单价
      */
-    private Double useRate;
-
-    /**
-     * 销售额
-     */
-    private BigDecimal salesAmount;
+    private BigDecimal customerPrice;
 }

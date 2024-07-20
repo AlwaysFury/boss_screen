@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.FlowOverviewDao;
 import com.boss.client.service.FlowOverviewService;
-import com.boss.common.enities.excelEnities.FlowOverview;
+import com.boss.client.enities.excelEnities.FlowOverview;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,6 +57,20 @@ public class FlowOverviewServiceImpl extends ServiceImpl<FlowOverviewDao, FlowOv
                         .avgStayTime(map.get("平均停留时长").toString())
                         .bounceRate(string2Double(map.get("跳出率").toString())).build();
 
+                if (flowOverview.getNewFollowerCount() != 0) {
+                    double result = (double) flowOverview.getVisitorCount() / flowOverview.getNewFollowerCount();
+                    double finalResult = Double.parseDouble(new DecimalFormat("#.##").format(result));
+
+                    flowOverview.setNewVisitorRate(finalResult);
+                }
+
+                if (flowOverview.getCurrentVisitorCount() != 0) {
+                    double result = (double) flowOverview.getVisitorCount() / flowOverview.getCurrentVisitorCount();
+                    double finalResult = Double.parseDouble(new DecimalFormat("#.##").format(result));
+
+                    flowOverview.setCurrentVisitorRate(finalResult);
+                }
+
                 String dateStr = map.get("日期").toString();
                 String[] dateSplit = dateStr.split("-");
                 LocalDateTime createTime;
@@ -87,7 +101,7 @@ public class FlowOverviewServiceImpl extends ServiceImpl<FlowOverviewDao, FlowOv
             }
 
             this.saveOrUpdateBatch(flowOverviews);
-
+            reader.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

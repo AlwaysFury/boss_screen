@@ -55,3 +55,6 @@ shopeeApi:
   partner_key: 636a44756841535751715058756d4173505a5a63495a766f515372447a664a43
   shop_redirect_url: http://120.79.52.53:8991/api/shopee/saveOrUpdateShop
   account_redirect_url: http://120.79.52.53:8991/api/shopee/saveOrUpdateAccount
+
+feishu:
+  url: https://open.feishu.cn/open-apis/bot/v2/hook/3180aa6f-9447-4ebd-aa68-9c1b0e932068

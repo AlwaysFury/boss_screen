@@ -507,8 +507,6 @@ public class ShopeeUtil {
             retryCount++;
         }
 
-        log.info(result.toJSONString());
-
         return result;
     }
 
@@ -1010,6 +1008,59 @@ public class ShopeeUtil {
 //        String tmp_url = host + path + "?partner_id=" + partner_id + "&timestamp=" + timest + "&access_token=" + accessToken + "&shop_id=" + shopId + "&sign=" + String.format("%032x",sign) + "&page_siz=100&item_status=NORMAL&offset=0&update_time_to="+ timest;
         String tmp_url = host + path + String.format("?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&item_id_list=%s",
                 partner_id, timest, String.format("%032x",sign), accessToken, shopId, itemId);
+
+        String result;
+        try {
+            result = HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8);
+        } catch (Exception e) {
+            JSONObject temp = new JSONObject();
+            temp.put("error", "error");
+            return temp;
+        }
+
+        return JSONObject.parseObject(result);
+    }
+
+
+    /**
+     * 获取广告信息
+     * @param accessToken
+     * @param shopId
+     * @return
+     */
+    public static JSONObject getTotalBalance(String accessToken, long shopId) {
+
+        JSONObject result = getTotalBalanceByHttp(accessToken, shopId);
+
+        int retryCount = 0;
+        final int maxRetries = 5;
+        final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
+
+        while ((result == null || result.getString("error").contains("error")) && retryCount < maxRetries) {
+            try {
+                Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // 保持中断状态
+                throw new RuntimeException("Thread interrupted", e);
+            }
+
+            result = getTotalBalanceByHttp(accessToken, shopId);
+            retryCount++;
+        }
+
+        return result;
+    }
+
+    private static JSONObject getTotalBalanceByHttp(String accessToken, long shopId) {
+        long timest = System.currentTimeMillis() / 1000L;
+        String host = ShopAuthDTO.getHost();
+        String path = "/api/v2/ads/get_total_balance";
+        long partner_id = ShopAuthDTO.getPartnerId();
+        String tmp_partner_key = ShopAuthDTO.getTempPartnerKey();
+        BigInteger sign = getShopTokenSign(partner_id, path,timest, accessToken, shopId, tmp_partner_key);
+//        String tmp_url = host + path + "?partner_id=" + partner_id + "&timestamp=" + timest + "&access_token=" + accessToken + "&shop_id=" + shopId + "&sign=" + String.format("%032x",sign) + "&page_siz=100&item_status=NORMAL&offset=0&update_time_to="+ timest;
+        String tmp_url = host + path + String.format("?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s",
+                partner_id, timest, String.format("%032x",sign), accessToken, shopId);
 
         String result;
         try {

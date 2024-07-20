@@ -30,6 +30,12 @@ public class RedisPrefixConst {
 
     public static final String CATEGORY = "category:";
 
-    public static final String RULE = "rule:";
+    public static final String RULE_ITEM = "rule:item:";
+
+    public static final String RULE_IMG = "rule:img:";
+
+    public static final String GRADE_PRODUCT = "grade:product:";
+
+    public static final String GRADE_PHOTO = "grade:photo:";
 
 }

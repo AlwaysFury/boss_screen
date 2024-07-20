@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/payoutInfo")
 @Slf4j
-public class PayoutInfoController {
+public class  PayoutInfoController {
 
     @Autowired
     private PayoutInfoServiceImpl payoutInfoService;

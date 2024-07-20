@@ -1,4 +1,4 @@
-package com.boss.common.enities.excelEnities;
+package com.boss.client.enities.excelEnities;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -8,20 +8,20 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * @Description 商品概述
+ * @Description 流量概述
  * @Author 罗宇航
  * @Date 2024/6/15
  */
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("tb_product_overview")
-public class ProductOverview {
+@TableName("tb_flow_overview")
+public class FlowOverview {
 
     private Long id;
 
@@ -47,42 +47,52 @@ public class ProductOverview {
     private String dateType;
 
     /**
-     * 转化率 (加入购物车率)
-     */
-    private double addCartRate;
-
-    /**
-     * 转化率（已下订单）
-     */
-    private double orderRate;
-
-    /**
-     * 转化率（已确定订单）
-     */
-    private double confirmOrderRate;
-
-    /**
-     * 买家数（已确定订单）
-     */
-    private int buyerCount;
-
-    /**
-     * 已确定的商品
-     */
-    private int confirmProductCount;
-
-    /**
-     * 件数（已确定订单）
-     */
-    private int productCount;
-
-    /**
      * 访客数
      */
     private int visitorCount;
 
     /**
-     * 销售额
+     * 新访客数
      */
-    private BigDecimal salesAmount;
+    private int newVisitorCount;
+
+    /**
+     * 现有访客数
+     */
+    private int currentVisitorCount;
+
+    /**
+     * 新访客数占比
+     */
+    private double newVisitorRate;
+
+    /**
+     * 老访客数占比
+     */
+    private double currentVisitorRate;
+
+    /**
+     * 新关注者
+     */
+    private int newFollowerCount;
+
+    /**
+     * 页面浏览数
+     */
+    private int pageViewCount;
+
+    /**
+     * 平均页面访问数
+     */
+    private double avgPageViewCount;
+
+    /**
+     * 平均停留时长
+     */
+    private String avgStayTime;
+
+    /**
+     * 跳出率
+     */
+    private double bounceRate;
 }

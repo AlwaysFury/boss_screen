@@ -1,4 +1,4 @@
-package com.boss.common.enities.excelEnities;
+package com.boss.client.enities.excelEnities;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * @Description 套装优惠
+ * @Description 店内限时秒杀
  * @Author 罗宇航
  * @Date 2024/6/15
  */
@@ -21,8 +21,8 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("tb_set_discounts")
-public class SetDiscounts {
+@TableName("tb_seckill_index")
+public class SeckillIndex {
 
     private Long id;
 
@@ -43,22 +43,32 @@ public class SetDiscounts {
     private Long shopId;
 
     /**
-     * 套装名称
+     * 销售额
      */
-    private String setName;
+    private BigDecimal salesAmount;
 
     /**
-     * 订单数
+     * 订单
      */
     private int orderCount;
 
     /**
-     * 销售商品件数
+     * 商品展示量
      */
-    private int saleProductCount;
+    private int displayVolume;
+
+    /**
+     * 商品点击量
+     */
+    private int clickVolume;
 
     /**
      * 客单价
      */
     private BigDecimal customerPrice;
+
+    /**
+     * 点击率
+     */
+    private double clickRate;
 }

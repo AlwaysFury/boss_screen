@@ -12,7 +12,7 @@ import com.boss.common.enities.TrackingInfo;
  */
 public interface TrackingInfoService extends IService<TrackingInfo> {
 
-    void saveTrackingInfoBySn(String orderSn, long shopId, String trackingNumber);
+//    void saveTrackingInfoBySn(String orderSn, long shopId, String trackingNumber);
 
     TrackingInfoVO getTrackInfoBySn(String orderSn);
 }

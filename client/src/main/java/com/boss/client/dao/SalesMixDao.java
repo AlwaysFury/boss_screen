@@ -1,7 +1,7 @@
 package com.boss.client.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.boss.common.enities.excelEnities.SalesMix;
+import com.boss.client.enities.excelEnities.SalesMix;
 import org.springframework.stereotype.Repository;
 
 

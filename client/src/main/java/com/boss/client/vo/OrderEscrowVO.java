@@ -48,35 +48,10 @@ public class OrderEscrowVO {
      */
     private String shopName;
 
-//    /**
-//     * T恤数量
-//     */
-//    private int tShirtCount = 0;
-//
-//    /**
-//     * 双面数量
-//     */
-//    private int doubleCount = 0;
-//
-//    /**
-//     * 短款T恤数量
-//     */
-//    private int shortCount = 0;
-//
-//    /**
-//     * 卫衣数量
-//     */
-//    private int hoodieCount = 0;
-//
-//    /**
-//     * 成品数量
-//     */
-//    private int finishCount = 0;
-//
-//    /**
-//     * 聚酯纤维数量
-//     */
-//    private int fiberCount = 0;
+    /**
+     * 是否为新品订单
+     */
+    private boolean isNew;
 
     /**
      * 总件数

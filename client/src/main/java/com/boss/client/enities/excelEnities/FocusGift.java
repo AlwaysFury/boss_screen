@@ -1,4 +1,4 @@
-package com.boss.common.enities.excelEnities;
+package com.boss.client.enities.excelEnities;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -8,10 +8,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * @Description 流量概述
+ * @Description 关注礼
  * @Author 罗宇航
  * @Date 2024/6/15
  */
@@ -20,8 +21,8 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("tb_flow_overview")
-public class FlowOverview {
+@TableName("tb_focus_gift")
+public class FocusGift {
 
     private Long id;
 
@@ -42,47 +43,37 @@ public class FlowOverview {
     private Long shopId;
 
     /**
-     * 时间类型
+     * 独立领取数
      */
-    private String dateType;
-
-    /**
-     * 访客数
-     */
-    private int visitorCount;
-
-    /**
-     * 新访客数
-     */
-    private int newVisitorCount;
-
-    /**
-     * 现有访客数
-     */
-    private int currentVisitorCount;
+    private Integer receiveCount;
 
     /**
      * 新关注者
      */
-    private int newFollowerCount;
+    private Integer newFollowerCount;
 
     /**
-     * 页面浏览数
+     * 订单
      */
-    private int pageViewCount;
+    private Integer orderCount;
 
     /**
-     * 平均页面访问数
+     * 花费
      */
-    private double avgPageViewCount;
+    private BigDecimal spend;
 
     /**
-     * 平均停留时长
+     * 使用率
      */
-    private String avgStayTime;
+    private Double useRate;
 
     /**
-     * 跳出率
+     * 销售额
      */
-    private double bounceRate;
+    private BigDecimal salesAmount;
+
+    /**
+     * 转粉率
+     */
+    private Double newFollowerRate;
 }

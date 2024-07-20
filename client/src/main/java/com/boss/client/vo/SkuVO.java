@@ -17,8 +17,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SkuVO {
 
-//    @TableId(value = "id", type = IdType.AUTO)
-private Long id;
+    //    @TableId(value = "id", type = IdType.AUTO)
+    private Long id;
 
     /**
      * 款号
@@ -29,11 +29,6 @@ private Long id;
      * 关联款号个数
      */
     private int count;
-
-    /**
-     * 所属店铺id
-     */
-    private Long shopId;
 
     /**
      * 创建时间

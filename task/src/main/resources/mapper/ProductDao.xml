@@ -2,5 +2,24 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.boss.task.dao.ProductDao">
 
+    <resultMap id="createIn30DaysMap" type="map">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+    </resultMap>
 
+    <select id="getCreateIn30Days" resultMap="createIn30DaysMap">
+        select
+            s.id as id,
+            ifnull(t.tag_name, "") as name
+        from
+            tb_product as s
+            left join tb_productorimg_tag as p on p.itemOrImg_id = s.id
+            left join tb_tag as t on t.id = p.tag_id and t.tag_type = 'AUTO'
+        WHERE
+        s.id IN
+        <foreach item="id" index="index" collection="itemIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and s.create_time >= UNIX_TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 30 DAY));
+    </select>
 </mapper>

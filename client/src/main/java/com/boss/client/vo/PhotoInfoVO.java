@@ -30,11 +30,6 @@ public class PhotoInfoVO {
     private String photoName;
 
     /**
-     * 照片描述
-     */
-    private String photoDesc;
-
-    /**
      * 照片地址
      */
     private String photoSrc;
@@ -45,9 +40,9 @@ public class PhotoInfoVO {
     private Long skuId;
 
     /**
-     * 所属店铺id
+     * 款号
      */
-    private Long shopId;
+    private String skuName;
 
     /**
      * 创建时间
@@ -58,4 +53,14 @@ public class PhotoInfoVO {
      * 标签
      */
     private List<TagVO> tagVOList;
+
+    /**
+     * 销量
+     */
+    private int salesVolume;
+
+    /**
+     * 等级
+     */
+    private String grade;
 }

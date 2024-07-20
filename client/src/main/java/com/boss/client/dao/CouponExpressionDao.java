@@ -1,7 +1,7 @@
 package com.boss.client.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.boss.common.enities.excelEnities.CouponExpression;
+import com.boss.client.enities.excelEnities.CouponExpression;
 import org.springframework.stereotype.Repository;
 
 

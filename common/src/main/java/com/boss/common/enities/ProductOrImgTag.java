@@ -1,4 +1,4 @@
-package com.boss.client.enities;
+package com.boss.common.enities;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("tb_productOrImg_tag")
+@TableName("tb_productorimg_tag")
 public class ProductOrImgTag {
 
     /**

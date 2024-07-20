@@ -10,9 +10,4 @@ import com.boss.common.enities.ReturnOrder;
  */
 public interface ReturnOrderService extends IService<ReturnOrder> {
 
-    void saveOrUpdateReturnOrder();
-//
-//    void deleteCost(List<Integer> ids);
-//
-//    PageResult<CostVO> costListByCondition(ConditionDTO condition);
 }

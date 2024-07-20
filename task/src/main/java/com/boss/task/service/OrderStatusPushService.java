@@ -11,4 +11,6 @@ import com.boss.common.enities.OrderStatusPush;
  */
 public interface OrderStatusPushService extends IService<OrderStatusPush> {
 
+    void saveOrUpdateOrderStatusPush(OrderStatusPush orderStatusPush);
+
 }

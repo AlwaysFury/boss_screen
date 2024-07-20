@@ -64,6 +64,11 @@ public class OrderItem {
     private String itemSku;
 
     /**
+     * 款号
+     */
+    private String skuName;
+
+    /**
      * model id
      */
     private Long modelId;

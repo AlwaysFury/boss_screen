@@ -1,7 +1,7 @@
 package com.boss.client.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.boss.common.enities.excelEnities.CouponExpression;
+import com.boss.client.enities.excelEnities.CouponExpression;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
