@@ -1,5 +1,6 @@
 package com.boss.client.strategy;
 
+import com.boss.client.dto.UploadChunkFileDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
@@ -19,6 +20,8 @@ public interface FileTransferStrategy {
      * @return {@link String} 文件地址
      */
     Map<String, String> uploadFile(MultipartFile file, String path);
+
+    Map<String, Object> uploadChunkFile(UploadChunkFileDTO uploadChunkFileDTO, String fileName);
 
     /**
      * 下载文件

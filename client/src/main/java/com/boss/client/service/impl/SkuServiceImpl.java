@@ -6,6 +6,7 @@ import com.boss.client.dao.SkuDao;
 import com.boss.client.dto.ConditionDTO;
 import com.boss.client.dto.SkuDTO;
 import com.boss.client.enities.Sku;
+import com.boss.client.exception.BizException;
 import com.boss.client.service.SkuService;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.SkuInfoVO;
@@ -61,9 +62,9 @@ public class SkuServiceImpl extends ServiceImpl<SkuDao, Sku> implements SkuServi
                         skuVO.setCount(relevanceIds.split(",").length);
                     }
                     skuVO.setCreateTime(CommonUtil.localDateTime2String(sku.getCreateTime()));
-
                     return skuVO;
                 }).collect(Collectors.toList());
+        System.out.println(skuList);
 
         return new PageResult<>(skuList, count);
     }
@@ -71,18 +72,15 @@ public class SkuServiceImpl extends ServiceImpl<SkuDao, Sku> implements SkuServi
     @Override
     public SkuInfoVO getSkuById(long id) {
         Sku sku = this.getOne(new QueryWrapper<Sku>().eq("id", id));
+        if (sku == null) {
+            throw new BizException("该款号不存在");
+        }
         SkuInfoVO skuInfoVO = BeanCopyUtils.copyObject(sku, SkuInfoVO.class);
         skuInfoVO.setCreateTime(CommonUtil.localDateTime2String(sku.getCreateTime()));
         String relevanceIds = sku.getRelevanceIds();
         if (relevanceIds != null && !relevanceIds.isEmpty()) {
-            List<Map<String, Object>> relevanceNames = skuDao.selectList(new QueryWrapper<Sku>().select("id", "name").in("id", relevanceIds))
-                            .stream().map(s -> {
-                                Map<String, Object> map = new HashMap<>();
-                                map.put("id", s.getId());
-                                map.put("name", s.getName());
-                                return map;
-                            }).collect(Collectors.toList());
-            skuInfoVO.setRelevanceList(relevanceNames);
+            List<Long> relevanceIdList = Arrays.stream(relevanceIds.split(",")).map(Long::valueOf).collect(Collectors.toList());
+            skuInfoVO.setRelevanceIds(relevanceIdList);
         }
 
         return skuInfoVO;

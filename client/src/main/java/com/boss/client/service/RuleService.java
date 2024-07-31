@@ -7,6 +7,7 @@ import com.boss.client.enities.Rule;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.RuleInfoVO;
 import com.boss.client.vo.RuleVO;
+import com.boss.common.vo.SelectVO;
 
 import java.util.List;
 
@@ -26,6 +27,8 @@ public interface RuleService extends IService<Rule>  {
     RuleInfoVO getRuleById(int id);
 
     List<Rule> getRuleList(String type);
+
+    List<SelectVO> gradeSelect(String type);
 
 //    String getGrade(Product product, int salesVolume);
 }

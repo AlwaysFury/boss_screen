@@ -17,8 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.boss.common.constant.RedisPrefixConst.GRADE_PRODUCT;
-
 /**
  * @Description
  * @Author 罗宇航
@@ -93,13 +91,14 @@ public class RedisUtil {
         return result;
     }
 
-    public static void getIdsByGrade(RedisServiceImpl redisService, ConditionDTO condition, List<Long> ids, String preKey) {
+    public static List<Long> getIdsByGrade(RedisServiceImpl redisService, ConditionDTO condition, String preKey) {
+        List<Long> ids = new ArrayList<>();
         if (condition.getRule_grade() != null) {
             if (condition.getOrderBy_name().contains("grade")) {
                 condition.setOrderBy_name("");
             }
 
-            ids = redisService.keys(GRADE_PRODUCT + "*")
+            ids = redisService.keys(preKey + "*")
                     .stream().map(key -> Long.valueOf(key.split(":")[2]))
                     .filter(key -> redisService.get(String.valueOf(key)).equals(condition.getRule_grade()))
                     .collect(Collectors.toList());
@@ -122,9 +121,13 @@ public class RedisUtil {
             }
 
             // 根据值对ID进行排序，这里以值的自然顺序升序排序为例
-            List<Map.Entry<Long, String>> sortedEntries = idToValueMap.entrySet().stream()
-                    .sorted(Map.Entry.comparingByValue())
-                    .collect(Collectors.toList());
+            List<Map.Entry<Long, String>> sortedEntries = new ArrayList<>();
+
+            if (condition.getOrderBy_name().contains("asc")) {
+                sortedEntries = idToValueMap.entrySet().stream()
+                        .sorted(Map.Entry.comparingByValue())
+                        .collect(Collectors.toList());
+            }
 
             if (condition.getOrderBy_name().contains("desc")) {
                 sortedEntries = idToValueMap.entrySet().stream()
@@ -138,5 +141,7 @@ public class RedisUtil {
                 ids.add(entry.getKey());
             }
         }
+
+        return ids;
     }
 }

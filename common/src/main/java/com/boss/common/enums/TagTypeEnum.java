@@ -17,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 public enum TagTypeEnum {
 
-    PHOTO("PHOTO", "图片"),
+    PHOTO("PHOTO", "图案"),
     ITEM("ITEM", "链接");
 
     private String code;

@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 /**
  * @Description
  * @Author 罗宇航
@@ -79,6 +77,11 @@ public class ConditionDTO {
     private Long category_id;
 
     /**
+     * 产品分类名称
+     */
+    private String category_name;
+
+    /**
      * 订单 id
      */
     private String order_sn;
@@ -113,6 +116,11 @@ public class ConditionDTO {
      */
     private String rule_name;
 
+    /**
+     * 规则类型
+     */
+    private String rule_type;
+
 
     /**
      * 排序名称
@@ -122,7 +130,7 @@ public class ConditionDTO {
     /**
      * 标签id
      */
-    private List<Long> tag_ids;
+    private Long tag_id;
 
     /**
      * 标签名称
@@ -143,4 +151,24 @@ public class ConditionDTO {
      * 款号
      */
     private String sku_name;
+
+    /**
+     * 等级
+     */
+    private String grade;
+
+    /**
+     * 图案名称
+     */
+    private String photo_name;
+
+    /**
+     * 最大值
+     */
+    private int max_value;
+
+    /**
+     * 最小值
+     */
+    private int min_value;
 }

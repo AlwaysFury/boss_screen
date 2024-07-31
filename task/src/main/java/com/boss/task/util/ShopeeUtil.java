@@ -270,6 +270,69 @@ public class ShopeeUtil {
         return JSONObject.parseObject(result);
     }
 
+    public static List<String> getProductsByTime(String accessToken, long shopId, int offset, List<String> itemIds, long startTime, long endTime) {
+        JSONObject result = getProductByHttpTime(accessToken, shopId, offset, startTime, endTime);
+
+        int retryCount = 0;
+        final int maxRetries = 5;
+        final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
+
+        while ((result == null || result.getString("error").contains("error")) && retryCount < maxRetries) {
+            try {
+                Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // 保持中断状态
+                throw new RuntimeException("Thread interrupted", e);
+            }
+
+            result = getProductByHttpTime(accessToken, shopId, offset, startTime, endTime);
+            retryCount++;
+        }
+
+        if ((result == null || result.getString("error").contains("error"))) {
+            return itemIds;
+        }
+
+        JSONObject responseObject = result.getJSONObject("response");
+        JSONArray tempArray = responseObject.getJSONArray("item");
+        if (tempArray == null) {
+            return itemIds;
+        }
+        for (int i = 0; i < tempArray.size(); i++) {
+            itemIds.add(tempArray.getJSONObject(i).getString("item_id"));
+        }
+
+        if (responseObject.getBoolean("has_next_page")) {
+            getProducts(accessToken, shopId, responseObject.getInteger("next_offset"), itemIds, "&item_status=NORMAL&item_status=UNLIST&item_status=REVIEWING");
+        }
+
+        return itemIds;
+    }
+
+    private static JSONObject getProductByHttpTime(String accessToken, long shopId, int offset, long startTime, long endTime) {
+        long timest = System.currentTimeMillis() / 1000L;
+        String host = ShopAuthDTO.getHost();
+        String path = "/api/v2/product/get_item_list";
+        long partner_id = ShopAuthDTO.getPartnerId();
+        String tmp_partner_key = ShopAuthDTO.getTempPartnerKey();
+        BigInteger sign = getShopTokenSign(partner_id, path,timest, accessToken, shopId, tmp_partner_key);
+//        String tmp_url = host + path + "?partner_id=" + partner_id + "&timestamp=" + timest + "&access_token=" + accessToken + "&shop_id=" + shopId + "&sign=" + String.format("%032x",sign) + "&page_siz=100&item_status=NORMAL&offset=0&update_time_to="+ timest;
+        String tmp_url = host + path + String.format("?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&page_size=100" +
+                        "%s&item_status=NORMAL&item_status=UNLIST&item_status=REVIEWING&offset=%s&update_time_from=%s&update_time_to=%s",
+                partner_id, timest, String.format("%032x",sign), accessToken, shopId, offset, startTime, endTime);
+
+        String result;
+        try {
+            result = HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8);
+        } catch (Exception e) {
+            JSONObject temp = new JSONObject();
+            temp.put("error", "error");
+            return temp;
+        }
+
+        return JSONObject.parseObject(result);
+    }
+
     /**
      * 获取产品的基本信息
      * @param accessToken

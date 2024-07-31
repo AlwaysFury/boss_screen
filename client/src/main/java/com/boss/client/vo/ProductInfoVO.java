@@ -84,5 +84,5 @@ public class ProductInfoVO {
     /**
      * 标签
      */
-    private List<TagVO> tagVOList;
+    private List<String> tagNameList;
 }

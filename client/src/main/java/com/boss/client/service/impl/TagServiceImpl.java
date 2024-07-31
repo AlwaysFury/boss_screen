@@ -7,6 +7,7 @@ import com.boss.client.dao.ProductOrImgTagDao;
 import com.boss.client.dao.TagDao;
 import com.boss.client.dto.ConditionDTO;
 import com.boss.client.dto.TagDTO;
+import com.boss.client.enities.Rule;
 import com.boss.common.enities.ProductOrImgTag;
 import com.boss.common.enities.Tag;
 import com.boss.client.exception.BizException;
@@ -86,6 +87,15 @@ public class TagServiceImpl extends ServiceImpl<TagDao, Tag> implements TagServi
     @Override
     public List<SelectVO> getTypeSelect() {
         return TagTypeEnum.getTagTypeEnum();
+    }
+
+    @Override
+    public List<SelectVO> tagSelect(String type) {
+        List<SelectVO> selectVOS = tagDao.selectList(new QueryWrapper<Tag>().eq("tag_type", type)).stream()
+                .map(tag -> SelectVO.builder()
+                        .key(tag.getId())
+                        .value(tag.getTagName()).build()).collect(Collectors.toList());
+        return selectVOS;
     }
 
 }

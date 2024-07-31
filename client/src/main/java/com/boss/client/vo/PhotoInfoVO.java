@@ -1,5 +1,6 @@
 package com.boss.client.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -37,6 +38,7 @@ public class PhotoInfoVO {
     /**
      * skuId
      */
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long skuId;
 
     /**
@@ -52,7 +54,9 @@ public class PhotoInfoVO {
     /**
      * 标签
      */
-    private List<TagVO> tagVOList;
+    private List<String> tagNameList;
+
+    private List<Long> relevanceIds;
 
     /**
      * 销量

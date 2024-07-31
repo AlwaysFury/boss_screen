@@ -27,4 +27,6 @@ public class RuleInfoVO {
     private Boolean allOrNot;
 
     private JSONObject rule;
+
+    private String type;
 }

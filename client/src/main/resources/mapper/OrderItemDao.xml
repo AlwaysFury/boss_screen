@@ -4,7 +4,7 @@
 
     <select id="countByCreateTimeRange" resultType="java.lang.Integer">
         SELECT
-            sum(count)
+            IFNUll(sum(count), 0)
         FROM
             tb_order_item as s,
             tb_order as d
@@ -25,7 +25,7 @@
 
     <select id="itemCountByCreateTime" resultType="java.lang.Integer">
         SELECT
-            sum(d.count)
+            IFNUll(sum(count), 0)
         FROM
             tb_order as s,
             tb_order_item as d
@@ -40,7 +40,7 @@
 
     <select id="itemMinPrice" resultType="java.math.BigDecimal">
         SELECT
-            min(current_price)
+            IFNUll(min(current_price), 0.00)
         FROM
             tb_model as s
         where
@@ -49,7 +49,7 @@
 
     <select id="salesVolumeByItemId" resultType="java.lang.Integer">
         SELECT
-            sum(count)
+            IFNUll(sum(count), 0)
         FROM
             tb_order_item as s
         where
@@ -58,7 +58,7 @@
 
     <select id="salesVolumeByModelId" resultType="java.lang.Integer">
         SELECT
-            sum(count)
+            IFNUll(sum(count), 0)
         FROM
             tb_order_item as s
         where
@@ -69,7 +69,7 @@
         SELECT
             s.sku_name as itemSku,
             min(s.current_price) as price,
-            min(p.create_time) as createTime
+            min(t.create_time) as createTime
         FROM
             tb_model as s
             left join tb_product as t on s.item_id = t.id

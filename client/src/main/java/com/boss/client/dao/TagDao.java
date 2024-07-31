@@ -22,4 +22,7 @@ public interface TagDao extends BaseMapper<Tag> {
 
     List<TagVO> tagList(@Param("current") Long current, @Param("size") Long size, @Param("condition") ConditionDTO condition);
 
+
+    List<Tag> getTagListByItemOrImgId(@Param("itemOrImg_id") Long id);
+
 }

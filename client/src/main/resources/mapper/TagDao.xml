@@ -16,6 +16,7 @@
             <if test="condition.tag_type != null">
                 and s.tag_type = #{condition.tag_type}
             </if>
+            and s.tag_type != 'AUTO'
         </where>
     </select>
 
@@ -35,8 +36,22 @@
             <if test="condition.tag_type != null">
                 and s.tag_type = #{condition.tag_type}
             </if>
+            and s.tag_type != 'AUTO'
         </where>
         LIMIT #{current},#{size}
+    </select>
+
+
+    <select id="getTagListByItemOrImgId" resultType="com.boss.common.enities.Tag">
+        SELECT
+            s.tag_name
+        FROM
+            tb_tag as s
+        left join tb_productorimg_tag as t on t.tag_id = s.id
+        <where>
+            s.id is not null
+            and t.itemOrImg_id = #{itemOrImg_id}
+        </where>
     </select>
 
 </mapper>

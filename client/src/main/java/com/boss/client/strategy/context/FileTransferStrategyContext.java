@@ -1,5 +1,6 @@
 package com.boss.client.strategy.context;
 
+import com.boss.client.dto.UploadChunkFileDTO;
 import com.boss.client.strategy.FileTransferStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +37,10 @@ public class FileTransferStrategyContext {
      */
     public Map<String, String> executeUploadStrategy(MultipartFile file, String path) {
         return uploadStrategyMap.get(getStrategy(uploadMode)).uploadFile(file, path);
+    }
+
+    public Map<String, Object> executeUploadChunkStrategy(UploadChunkFileDTO uploadChunkFileDTO) {
+        return uploadStrategyMap.get(getStrategy(uploadMode)).uploadChunkFile(uploadChunkFileDTO, "");
     }
 
     /**

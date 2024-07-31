@@ -4,16 +4,19 @@
 
 
     <select id="photoCount" resultType="java.lang.Integer">
+        select count(*) from (
         SELECT
-            count(*)
+        count(*)
         FROM
-            tb_photo as s
-        <if test="condition.tag_ids != null">
-            left join tb_productorimg_tag as t on t.itemOrImg_id = s.id
-        </if>
+        tb_photo as s
+        left join tb_sku as t on s.sku_id = t.id
+        left join tb_order_item as p on p.sku_name = t.name
         <where>
+            <if test="condition.photo_name != null">
+                s.photo_name = #{condition.photo_name}
+            </if>
             <if test="condition.sku_id != null">
-                s.name = #{condition.sku_id}
+                t.id = #{condition.sku_id}
             </if>
             <if test="condition.start_time != null">
                 and s.create_time >= #{condition.start_time}
@@ -21,19 +24,18 @@
             <if test="condition.end_time != null">
                 and s.create_time &lt;= #{condition.end_time}
             </if>
-            <if test="condition.tag_ids != null">
-                and t.tag_id IN
-                <foreach item="id" index="tagId" collection="tag_ids" open="(" separator="," close=")">
-                    #{tagId}
-                </foreach>
+            <if test="condition.grade != null">
+                t.grade = #{condition.grade}
             </if>
-            <if test="condition.rule_grade != null">
-                and id IN
-                <foreach item="id" index="index" collection="ids" open="(" separator="," close=")">
-                    #{id}
-                </foreach>
+            <if test="condition.max_value != 0">
+                and IFNULL(sum(p.count), 0) &lt;= #{condition.max_value}
+            </if>
+            <if test="condition.min_value != 0">
+                and IFNULL(sum(p.count), 0) >= #{condition.min_value}
             </if>
         </where>
+        group by s.id
+        ) as a
     </select>
 
 
@@ -45,17 +47,18 @@
             s.create_time,
             t.id as skuId,
             t.name as skuName,
-            IFNULL(p.count, 0) as salesVolume
+            t.grade,
+            IFNULL(sum(p.count), 0) as salesVolume
         FROM
-            tb_photo as s, tb_sku as t
+            tb_photo as s
+            left join tb_sku as t on s.sku_id = t.id
             left join tb_order_item as p on p.sku_name = t.name
-        <if test="condition.tag_ids != null">
-            left join tb_productorimg_tag as tag on tag.itemOrImg_id = s.id
-        </if>
         <where>
-            s.sku_id = t.id
+            <if test="condition.photo_name != null">
+                s.photo_name = #{condition.photo_name}
+            </if>
             <if test="condition.sku_id != null">
-                s.name = #{condition.sku_id}
+                t.id = #{condition.sku_id}
             </if>
             <if test="condition.start_time != null">
                 and s.create_time >= #{condition.start_time}
@@ -63,67 +66,51 @@
             <if test="condition.end_time != null">
                 and s.create_time &lt;= #{condition.end_time}
             </if>
-            <if test="condition.tag_ids != null">
-                and tag.tag_id IN
-                <foreach item="id" index="tagId" collection="tag_ids" open="(" separator="," close=")">
-                    #{tagId}
-                </foreach>
+            <if test="condition.grade != null">
+                and s.grade = #{condition.grade}
             </if>
-            <if test="condition.rule_grade != null">
-                and id IN
-                <foreach item="id" index="index" collection="ids" open="(" separator="," close=")">
-                    #{id}
-                </foreach>
+            <if test="condition.max_value != 0">
+                and IFNULL(sum(p.count), 0) &lt;= #{condition.max_value}
+            </if>
+            <if test="condition.min_value != 0">
+                and IFNULL(sum(p.count), 0) >= #{condition.min_value}
             </if>
         </where>
-        <if test="condition.orderBy_name != null and condition.orderBy_name.contains('grade')">
-            ORDER BY FIELD(id,
-            <foreach item="id" index="index" collection="itemIds" separator=",">
-                #{id}
-            </foreach>)
-        </if>
-        <if test="condition.orderBy_name != null and !condition.orderBy_name.contains('grade')">
+        group by s.id
+        <if test="condition.orderBy_name != null">
             order by ${condition.orderBy_name}
         </if>
         LIMIT #{current},#{size}
     </select>
 
 
-    <resultMap id="photoResultMap" type="com.boss.client.vo.PhotoInfoVO">
-        <id column="id" property="id"/>
-        <result column="photo_name" property="photoName"/>
-        <result column="photo_src" property="photoSrc"/>
-        <result column="create_time" property="createTime"/>
-        <result column="sku_id" property="skuId"/>
-        <result column="sku_name" property="skuName"/>
-        <result column="salesVolume" property="salesVolume"/>
-        <collection property="tagVOList" ofType="com.boss.client.vo.TagVO">
-            <id column="tag_id" property="id"/>
-            <result column="tag_name" property="tagName"/>
-            <result column="tag_type" property="tagType"/>
-        </collection>
-    </resultMap>
+<!--    <resultMap id="photoResultMap" type="com.boss.client.vo.PhotoInfoVO">-->
+<!--        <id column="id" property="id"/>-->
+<!--        <result column="photo_name" property="photoName"/>-->
+<!--        <result column="photo_src" property="photoSrc"/>-->
+<!--        <result column="create_time" property="createTime"/>-->
+<!--        <result column="sku_id" property="skuId"/>-->
+<!--        <result column="sku_name" property="skuName"/>-->
+<!--        <result column="salesVolume" property="salesVolume"/>-->
+<!--    </resultMap>-->
 
-    <select id="getPhotoInfoById" resultMap="photoResultMap">
+    <select id="getPhotoInfoById" resultType="com.boss.client.vo.PhotoInfoVO">
         SELECT
             s.id,
             s.photo_name,
             s.photo_src,
             s.sku_id,
             p.name as sku_name,
+            p.grade,
             DATE_FORMAT(s.create_time, '%Y-%m-%d %H:%i:%s') as create_time,
-            t.id AS tag_id,
-            t.tag_name,
-            t.tag_type,
-            IFNULL(ocount, 0) as salesVolume
+            IFNULL(o.count, 0) as salesVolume
         FROM
             tb_photo as s
         left join tb_sku as p ON s.sku_id = p.id
-        left JOIN tb_productorimg_tag as d ON s.id = d.itemOrImg_id  and d.tag_type = "PHOTO"
-        left JOIN tb_tag as t ON t.id = d.tag_id
         left join tb_order_item as o on o.sku_name = p.name
         WHERE
             s.id = #{photoId}
+        group by s.id
     </select>
 
 </mapper>

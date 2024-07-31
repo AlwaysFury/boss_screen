@@ -75,7 +75,7 @@ public class Order {
     private String cancelReason;
 
     /**
-     * 取消通过
+     * 取消方
      */
     @TableField(updateStrategy = FieldStrategy.IGNORED, insertStrategy = FieldStrategy.IGNORED, whereStrategy = FieldStrategy.IGNORED)
     private String cancelBy;

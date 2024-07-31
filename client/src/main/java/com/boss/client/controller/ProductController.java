@@ -3,9 +3,7 @@ package com.boss.client.controller;
 
 import com.boss.client.dto.ConditionDTO;
 import com.boss.client.dto.ProductTagDTO;
-import com.boss.client.service.impl.GradeServiceImpl;
-import com.boss.client.service.impl.ProductOrImgTagServiceImpl;
-import com.boss.client.service.impl.ProductServiceImpl;
+import com.boss.client.service.impl.*;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.ProductInfoVO;
 import com.boss.client.vo.ProductVO;
@@ -36,6 +34,12 @@ public class ProductController {
 
     @Autowired
     private GradeServiceImpl gradeService;
+
+    @Autowired
+    private RuleServiceImpl ruleService;
+
+    @Autowired
+    private TagServiceImpl tagService;
 
     @Autowired
     private ProductOrImgTagServiceImpl productOrImgTagService;
@@ -108,6 +112,21 @@ public class ProductController {
     public Result<?> refreshGrade() {
         gradeService.refreshGrade(ITEM.getCode());
         return Result.ok();
+    }
+
+    @GetMapping("/getNewerSaleProduct")
+    public Result<List<String>> getNewerSaleProduct() {
+        return Result.ok(productService.getNewerSaleProductNames());
+    }
+
+    @GetMapping("/gradeSelect")
+    public Result<List<SelectVO>> gradeSelect() {
+        return Result.ok(ruleService.gradeSelect(ITEM.getCode()));
+    }
+
+    @GetMapping("/tagSelect")
+    public Result<List<SelectVO>> tagSelect() {
+        return Result.ok(tagService.tagSelect(ITEM.getCode()));
     }
 
 }

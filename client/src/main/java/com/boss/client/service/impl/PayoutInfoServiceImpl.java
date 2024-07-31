@@ -35,6 +35,9 @@ public class PayoutInfoServiceImpl extends ServiceImpl<PayoutInfoDao, PayoutInfo
     @Override
     public PayoutInfoVO getPayoutInfoBySn(String orderSn) {
         PayoutInfo payoutInfo = payoutInfoDao.selectOne(new QueryWrapper<PayoutInfo>().eq("id", orderSn));
+        if (payoutInfo == null) {
+            return null;
+        }
         PayoutInfoVO payoutInfoVO = BeanCopyUtils.copyObject(payoutInfo, PayoutInfoVO.class);
         payoutInfoVO.setData(payoutInfo.getData() == null || payoutInfo.getData().isEmpty() ? new JSONArray() : JSONArray.parseArray(payoutInfo.getData()));
 

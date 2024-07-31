@@ -38,4 +38,6 @@ public class RedisPrefixConst {
 
     public static final String GRADE_PHOTO = "grade:photo:";
 
+    public static final String ALI_OSS_KEY = "ali:oss:key:";
+
 }

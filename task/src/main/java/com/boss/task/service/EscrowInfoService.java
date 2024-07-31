@@ -17,6 +17,8 @@ public interface EscrowInfoService extends IService<EscrowInfo> {
 
     void refreshEscrowInfoBySn(List<List<String>> orderSnLists, long shopId);
 
+    void refreshSingleEscrowInfoBySn(List<String> orderSnList, long shopId);
+
 //    void refreshEscrowByTime(long startTime, long endTime);
 
 //    void refreshEscrowByStatus(String... status);

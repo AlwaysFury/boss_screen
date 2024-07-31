@@ -209,6 +209,35 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
         log.info("===支付信息数据落库结束，耗时：{}秒", (System.currentTimeMillis() - startTime) / 1000);
     }
 
+    @Override
+    public void refreshSingleEscrowInfoBySn(List<String> orderSnList, long shopId) {
+        List<EscrowInfo> escrowInfoList =  new ArrayList<>();
+        List<EscrowItem> escrowItemList = new ArrayList<>();
+
+        String token = shopService.getAccessTokenByShopId(String.valueOf(shopId));
+        JSONObject escrowResult = ShopeeUtil.getEscrowDetail(token, shopId, orderSnList);
+        if (escrowResult == null || escrowResult.getString("error").contains("error")) {
+            return;
+        }
+        JSONArray escrowInfoArray = escrowResult.getJSONArray("response");
+        if (escrowInfoArray.isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < escrowInfoArray.size(); i++) {
+            JSONObject escrowDetailObject = escrowInfoArray.getJSONObject(i).getJSONObject("escrow_detail");
+            JSONObject orderIncomeObject = escrowDetailObject.getJSONObject("order_income");
+            String sn = escrowDetailObject.getString("order_sn");
+            saveEscrowInfoByOrderSn(orderIncomeObject, sn, escrowInfoList, shopId);
+            saveEscrowItem(orderIncomeObject, sn, escrowItemList, shopId);
+        }
+        try {
+            this.saveOrUpdateBatch(escrowInfoList);
+            escrowItemService.saveBatch(escrowItemList);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     @Override
     public void refreshEscrowBySn(List<List<String>> orderSnList, long shopId) {
@@ -256,7 +285,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
         List<List<EscrowInfo>> batchesEscrowInfoList = CommonUtil.splitListBatches(escrowInfoList, 100);
 //        List<CompletableFuture<Void>> insertEscrowInfoFutures = new ArrayList<>();
         for (List<EscrowInfo> batch : batchesEscrowInfoList) {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(() -> {
                 try {
                     transactionTemplate.executeWithoutResult(status -> {
                         this.saveOrUpdateBatch(batch);
@@ -272,7 +301,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
         List<List<EscrowItem>> batchesEscrowItemList = CommonUtil.splitListBatches(escrowItemList, 1000);
 //        List<CompletableFuture<Void>> insertEscrowItemFutures = new ArrayList<>();
         for (List<EscrowItem> batch : batchesEscrowItemList) {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(() -> {
                 try {
                     transactionTemplate.executeWithoutResult(status -> {
                         escrowItemService.saveBatch(batch);

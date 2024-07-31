@@ -86,7 +86,7 @@ public class TrackingInfoServiceImpl extends ServiceImpl<TrackingInfoDao, Tracki
 
     }
 
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     @Override
     public void refreshTrackInfoByStatus(String... status) {
         List<TrackingInfo> trackingInfos = trackingInfoDao.selectList(new QueryWrapper<TrackingInfo>().select("order_sn", "shop_id").in("logistics_status", status));

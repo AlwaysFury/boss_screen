@@ -8,22 +8,16 @@ import lombok.NoArgsConstructor;
 /**
  * @Description
  * @Author 罗宇航
- * @Date 2024/5/9
+ * @Date 2024/4/24
  */
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RuleVO {
-
-    private Integer id;
+public class CategoryVO {
+    private Long id;
 
     private String name;
 
-    private String grade;
-
-    private String type;
-
-    private int weight;
 }

@@ -1,6 +1,5 @@
 package com.boss.task.service.impl;
 
-import cn.hutool.core.thread.ExecutorBuilder;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -16,6 +15,7 @@ import com.boss.task.service.ProductExtraInfoService;
 import com.boss.task.util.ShopeeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 /**
@@ -44,6 +45,10 @@ public class ProductExtraInfoServiceImpl extends ServiceImpl<ProductExtraInfoDao
 
     @Autowired
     private ShopServiceImpl shopService;
+
+    @Autowired
+    @Qualifier("customThreadPool")
+    private ThreadPoolExecutor customThreadPool;
 
 
     private final TransactionTemplate transactionTemplate;
@@ -90,7 +95,7 @@ public class ProductExtraInfoServiceImpl extends ServiceImpl<ProductExtraInfoDao
                     return CompletableFuture.runAsync(() -> {
                         String accessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
                         getProductExtraInfo(itemId, accessToken, finalShopId, productExtraInfoList);
-                    }, ExecutorBuilder.create().setCorePoolSize(itemIdList.size()).build());
+                    }, customThreadPool);
                 }).collect(Collectors.toList());
 
         CompletableFuture.allOf(productExtraInfoFutures.toArray(new CompletableFuture[0])).join();
@@ -99,7 +104,7 @@ public class ProductExtraInfoServiceImpl extends ServiceImpl<ProductExtraInfoDao
         List<List<ProductExtraInfo>> splitProduct = CommonUtil.splitListBatches(productExtraInfoList, 100);
 //        List<CompletableFuture<Void>> insertProductFutures = new ArrayList<>();
         for (List<ProductExtraInfo> batch : splitProduct) {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(() -> {
                 try {
 //                    TransactionTemplate transactionTemplate = new TransactionTemplate();
                     transactionTemplate.executeWithoutResult(status -> {
@@ -108,7 +113,7 @@ public class ProductExtraInfoServiceImpl extends ServiceImpl<ProductExtraInfoDao
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }, ExecutorBuilder.create().setCorePoolSize(splitProduct.size()).build());
+            }, customThreadPool);
 
 //            insertProductFutures.add(future);
         }

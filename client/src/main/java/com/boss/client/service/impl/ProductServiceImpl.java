@@ -1,6 +1,5 @@
 package com.boss.client.service.impl;
 
-import cn.hutool.core.thread.ExecutorBuilder;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -8,7 +7,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.*;
 import com.boss.client.dto.ConditionDTO;
-import com.boss.client.dto.GradeObject;
 import com.boss.client.exception.BizException;
 import com.boss.client.service.ProductOverviewService;
 import com.boss.client.service.ProductService;
@@ -18,11 +16,8 @@ import com.boss.client.vo.PageResult;
 import com.boss.client.vo.ProductExtraInfoVO;
 import com.boss.client.vo.ProductInfoVO;
 import com.boss.client.vo.ProductVO;
-import com.boss.common.enities.Model;
-import com.boss.common.enities.OperationLog;
-import com.boss.common.enities.Product;
+import com.boss.common.enities.*;
 import com.boss.common.enums.ProductStatusEnum;
-import com.boss.common.util.BeanCopyUtils;
 import com.boss.common.util.CommonUtil;
 import com.boss.common.util.PageUtils;
 import com.boss.common.vo.SelectVO;
@@ -41,7 +36,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 import static com.boss.common.constant.OptTypeConst.SYSTEM_LOG;
-import static com.boss.common.constant.RedisPrefixConst.*;
+import static com.boss.common.constant.RedisPrefixConst.CATEGORY;
+import static com.boss.common.constant.RedisPrefixConst.PRODUCT_ITEM;
 import static com.boss.common.enums.TagTypeEnum.ITEM;
 
 /**
@@ -61,7 +57,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
     private ProductDao productDao;
 
     @Autowired
-    private OrderItemDao orderItemDao;
+    private CategoryDao categoryDao;
+
+    @Autowired
+    private TagDao tagDao;
 
     @Autowired
     private ProductExtraInfoDao productExtraInfoDao;
@@ -209,11 +208,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
 
         List<List<Product>> splitProduct = CommonUtil.splitListBatches(productList, 100);
-        List<CompletableFuture<Void>> insertProductFutures = new ArrayList<>();
         for (List<Product> batch : splitProduct) {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(() -> {
                 try {
-//                    TransactionTemplate transactionTemplate = new TransactionTemplate();
                     transactionTemplate.executeWithoutResult(status -> {
                         this.saveOrUpdateBatch(batch);
                     });
@@ -221,30 +218,23 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                     e.printStackTrace();
                 }
             }, customThreadPool);
-
-            insertProductFutures.add(future);
         }
 
 
         List<List<Model>> splitModel = CommonUtil.splitListBatches(modelList, 5000);
         List<CompletableFuture<Void>> insertModelFutures = new ArrayList<>();
         for (List<Model> batch : splitModel) {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(() -> {
                 try {
-//                    TransactionTemplate transactionTemplate = new TransactionTemplate();
                     transactionTemplate.executeWithoutResult(status -> {
                         modelService.saveOrUpdateBatch(batch);
                     });
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }, ExecutorBuilder.create().setCorePoolSize(splitModel.size()).build());
+            }, customThreadPool);
 
-            insertModelFutures.add(future);
         }
-
-        CompletableFuture.allOf(insertProductFutures.toArray(new CompletableFuture[0])).join();
-        CompletableFuture.allOf(insertModelFutures.toArray(new CompletableFuture[0])).join();
 
         log.info("===产品数据落库结束，耗时：{}秒", (System.currentTimeMillis() - startTime) / 1000);
 
@@ -317,29 +307,23 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
     }
 
     public PageResult<ProductVO> productListByCondition(ConditionDTO condition) {
-        List<Long> itemIds = new ArrayList<>();
-        RedisUtil.getIdsByGrade(redisService, condition, itemIds, GRADE_PRODUCT);
-
         // 查询分类数量
-        Integer count = productDao.productCount(condition, itemIds);
+        Integer count = productDao.productCount(condition);
         if (count == 0) {
             return new PageResult<>();
         }
         // 分页查询分类列表
-        List<ProductVO> productList = productDao.productList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition, itemIds)
+        List<ProductVO> productList = productDao.productList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition)
                 .stream().map(productVO -> {
-                    Object redisCategoryObj = redisService.get(CATEGORY + productVO.getCategoryId());
-                    if (redisCategoryObj != null) {
-                        productVO.setCategoryName(JSONObject.parseObject(redisCategoryObj.toString()).getString("display_category_name"));
+
+                    List<Tag> tagList = tagDao.getTagListByItemOrImgId(productVO.getId());
+                    if (tagList != null) {
+                        List<String> tagNameList = tagList.stream().map(Tag::getTagName).toList();
+                        productVO.setTagNameList(tagNameList);
                     }
+
 //                    productVO.setCreateTime(CommonUtil.timestamp2String((Long) productVO.getCreateTime()));
                     productVO.setStatus(ProductStatusEnum.getDescByCode(productVO.getStatus()));
-
-                    // 判断规则设置产品等级
-                    GradeObject gradeObject = BeanCopyUtils.copyObject(productVO, GradeObject.class);
-                    gradeObject.setCreateTime(CommonUtil.string2Timestamp(String.valueOf(productVO.getCreateTime())));
-                    productVO.setGrade(redisService.getStr(GRADE_PRODUCT + productVO.getItemId()));
-
 
                     return productVO;
                 }).collect(Collectors.toList());
@@ -357,24 +341,26 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
             throw new BizException("该产品不存在");
         }
 
-        Object redisCategoryObj = redisService.get(CATEGORY + productInfoVO.getCategoryId());
-        if (redisCategoryObj != null) {
-            productInfoVO.setCategoryName(JSONObject.parseObject(redisCategoryObj.toString()).getString("display_category_name"));
+        List<Tag> tagList = tagDao.getTagListByItemOrImgId(productInfoVO.getId());
+        if (tagList != null) {
+            List<String> tagNameList = tagList.stream().map(Tag::getTagName).toList();
+            productInfoVO.setTagNameList(tagNameList);
         }
+
+//        Object redisCategoryObj = redisService.get(CATEGORY + productInfoVO.getCategoryId());
+//        if (redisCategoryObj != null) {
+//            productInfoVO.setCategoryName(JSONObject.parseObject(redisCategoryObj.toString()).getString("display_category_name"));
+//        }
 
         productInfoVO.setStatus(ProductStatusEnum.getDescByCode(productInfoVO.getStatus()));
 
         ProductExtraInfoVO productExtraInfoVO = productExtraInfoService.getProductExtraInfoByItemId(itemId);
 
-//        GradeObject gradeObject = BeanCopyUtils.copyObject(productInfoVO, GradeObject.class);
-//        gradeObject.setCreateTime(CommonUtil.string2Timestamp(productInfoVO.getCreateTime()));
-        productExtraInfoVO.setGrade(String.valueOf(redisService.get(GRADE_PRODUCT + productExtraInfoVO.getItemId())));
-
         productInfoVO.setExtraInfo(productExtraInfoVO);
 
         Date nowDate = new Date();
 
-        productExtraInfoVO.setSalesVolume7daysCount(orderItemService.countByCreateTimeRange(nowDate, -3, productInfoVO.getItemId(), "", ITEM.getCode()));
+        productExtraInfoVO.setSalesVolume3daysCount(orderItemService.countByCreateTimeRange(nowDate, -3, productInfoVO.getItemId(), "", ITEM.getCode()));
         productExtraInfoVO.setSalesVolume7daysCount(orderItemService.countByCreateTimeRange(nowDate, -7, productInfoVO.getItemId(), "", ITEM.getCode()));
         productExtraInfoVO.setSalesVolume15daysCount(orderItemService.countByCreateTimeRange(nowDate, -15, productInfoVO.getItemId(), "", ITEM.getCode()));
         productExtraInfoVO.setSalesVolume30daysCount(orderItemService.countByCreateTimeRange(nowDate, -30, productInfoVO.getItemId(), "", ITEM.getCode()));
@@ -386,25 +372,23 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
     @Override
     public List<SelectVO> getCategorySelect() {
-        List<SelectVO> list = new ArrayList<>();
-        List<Product> categoryId = productDao.selectList(new QueryWrapper<Product>().select("category_id").groupBy("category_id"));
-        for (Product product : categoryId) {
-            Long id = product.getCategoryId();
-            Object redisCategoryObj = redisService.get(CATEGORY + product.getCategoryId());
-            if (redisCategoryObj == null) {
-                continue;
-            }
-            String name = JSONObject.parseObject(redisCategoryObj.toString()).getString("display_category_name");
-            SelectVO vo = SelectVO.builder()
-                    .key(id)
-                    .value(name).build();
-            list.add(vo);
-        }
+        List<SelectVO> list = categoryDao.selectList(new QueryWrapper<Category>()).stream()
+                .map(category -> SelectVO.builder().key(category.getId()).value(category.getName()).build()).collect(Collectors.toList());
+
         return list;
     }
 
     @Override
     public List<SelectVO> getStatusSelect() {
         return ProductStatusEnum.getProductStatusEnum();
+    }
+
+    @Override
+    public List<String> getNewerSaleProductNames() {
+        List<String> ids = productDao.getNewerSaleProductNames();
+        if (ids == null || ids.size() == 0) {
+            ids = new ArrayList<>();
+        }
+        return ids;
     }
 }

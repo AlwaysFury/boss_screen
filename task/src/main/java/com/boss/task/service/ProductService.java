@@ -12,6 +12,8 @@ public interface ProductService extends IService<Product> {
 
     void refreshProductByStatus(String status);
 
+    void refreshProductByTime(String startTimeStr, String endTimeStr);
+
     void refreshDeletedProduct();
 
     void initProduct(long shopId);

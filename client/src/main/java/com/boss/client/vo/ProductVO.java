@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * @Description
  * @Author 罗宇航
@@ -78,4 +80,9 @@ public class ProductVO {
      * 总销量
      */
     private int salesVolume;
+
+    /**
+     * 标签
+     */
+    private List<String> tagNameList;
 }

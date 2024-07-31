@@ -37,4 +37,6 @@ public interface ProductService extends IService<Product> {
     void refreshProducts(List<Long> itemIds);
 
     void initProduct(long shopId);
+
+    List<String> getNewerSaleProductNames();
 }

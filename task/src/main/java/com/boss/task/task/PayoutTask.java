@@ -4,6 +4,7 @@ package com.boss.task.task;
 import com.boss.task.service.impl.PayoutInfoServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
@@ -29,7 +30,7 @@ public class PayoutTask {
      * 周几（ 可填1-7 或 SUN/MON/TUE/WED/THU/FRI/SAT）
      */
 
-//    @Scheduled(cron = "0 */20 * * * ?")
+    @Scheduled(cron = "0 */20 * * * ?")
     public void refreshPayoutInfo() {
         log.info("======开始刷新调整信息");
         long startTime = System.currentTimeMillis();

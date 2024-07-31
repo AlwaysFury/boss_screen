@@ -1,6 +1,5 @@
 package com.boss.client.dto;
 
-import com.alibaba.fastjson.JSONObject;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,26 +8,16 @@ import lombok.NoArgsConstructor;
 /**
  * @Description
  * @Author 罗宇航
- * @Date 2024/5/9
+ * @Date 2024/4/24
  */
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RuleDTO {
-
-    private Integer id;
+public class CategoryDTO {
+    private Long id;
 
     private String name;
 
-    private String grade;
-
-    private boolean allOrNot;
-
-    private JSONObject rule;
-
-    private String type;
-
-    private int weight;
 }

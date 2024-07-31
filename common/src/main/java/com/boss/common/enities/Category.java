@@ -1,6 +1,8 @@
-package com.boss.client.enities;
+package com.boss.common.enities;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,18 +13,17 @@ import java.time.LocalDateTime;
 /**
  * @Description
  * @Author 罗宇航
- * @Date 2024/5/9
+ * @Date 2024/7/30
  */
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("tb_rule")
-public class Rule {
+@TableName("tb_category")
+public class Category {
 
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+    private Long id;
 
     /**
      * 创建时间
@@ -36,15 +37,8 @@ public class Rule {
     @TableField(fill = FieldFill.UPDATE)
     private LocalDateTime updateTime;
 
+    /**
+     * 分类名称
+     */
     private String name;
-
-    private String grade;
-
-    private Boolean allOrNot;
-
-    private String ruleData;
-
-    private String type;
-
-    private Integer weight;
 }

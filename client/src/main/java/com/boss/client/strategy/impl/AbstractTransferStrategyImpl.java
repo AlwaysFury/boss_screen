@@ -2,9 +2,11 @@ package com.boss.client.strategy.impl;
 
 
 import cn.hutool.core.io.FileUtil;
+import com.boss.client.dto.UploadChunkFileDTO;
 import com.boss.client.exception.BizException;
 import com.boss.client.strategy.FileTransferStrategy;
 import com.boss.common.enums.FilePathEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,6 +21,7 @@ import java.util.Map;
  * 抽象上传模板
  */
 @Service
+@Slf4j
 public abstract class AbstractTransferStrategyImpl implements FileTransferStrategy {
 
     @Override
@@ -28,10 +31,11 @@ public abstract class AbstractTransferStrategyImpl implements FileTransferStrate
             final long LIMITSIZE = 50 * 1024 * 1024L;
             String fileName = FileUtil.getName(file.getOriginalFilename());
             if (file.getSize() >= LIMITSIZE) {
-
+                log.info("文件大于50m，开始分片上传");
                 multipartUpload(path, fileName, file);
 
             } else {
+                log.info("文件开始上传");
                 upload(path, fileName, file.getInputStream());
             }
 
@@ -39,12 +43,18 @@ public abstract class AbstractTransferStrategyImpl implements FileTransferStrate
             map.put("name", FileUtil.getName(file.getOriginalFilename()));
             map.put("src", getFileAccessUrl(path + fileName));
 
+            log.info("文件结束上传");
+
             // 返回文件访问路径
             return map;
         } catch (Exception e) {
             e.printStackTrace();
             throw new BizException("文件上传失败");
         }
+    }
+
+    public Map<String, Object> uploadChunkFile(UploadChunkFileDTO uploadChunkFileDTO, String fileName) {
+        return uploadChunk(uploadChunkFileDTO);
     }
 
     /**
@@ -69,6 +79,8 @@ public abstract class AbstractTransferStrategyImpl implements FileTransferStrate
      * 分片上传
      */
     public abstract void multipartUpload(String path, String fileName, MultipartFile file) throws Exception;
+
+    public abstract Map<String, Object> uploadChunk(UploadChunkFileDTO uploadChunkFileDTO);
 
     /**
      * 获取文件访问url

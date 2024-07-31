@@ -9,30 +9,32 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.OrderItemDao;
 import com.boss.client.dao.PhotoDao;
 import com.boss.client.dao.SkuDao;
+import com.boss.client.dao.TagDao;
 import com.boss.client.dto.ConditionDTO;
-import com.boss.client.dto.GradeObject;
 import com.boss.client.dto.PhotoInfoDTO;
 import com.boss.client.enities.Photo;
 import com.boss.client.enities.Sku;
 import com.boss.client.exception.BizException;
 import com.boss.client.service.PhotoService;
 import com.boss.client.strategy.context.FileTransferStrategyContext;
-import com.boss.client.util.RedisUtil;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.PhotoInfoVO;
 import com.boss.client.vo.PhotoVO;
-import com.boss.client.vo.TagVO;
+import com.boss.client.vo.Result;
+import com.boss.common.enities.Tag;
 import com.boss.common.util.BeanCopyUtils;
 import com.boss.common.util.PageUtils;
+import com.boss.common.vo.SelectVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.boss.common.constant.RedisPrefixConst.GRADE_PHOTO;
 import static com.boss.common.enums.TagTypeEnum.PHOTO;
 
 /**
@@ -45,6 +47,9 @@ public class PhotoServiceImpl extends ServiceImpl<PhotoDao, Photo> implements Ph
 
     @Autowired
     private SkuDao skuDao;
+
+    @Autowired
+    private TagDao tagDao;
 
     @Autowired
     private ProductOrImgTagServiceImpl productOrImgTagService;
@@ -64,23 +69,24 @@ public class PhotoServiceImpl extends ServiceImpl<PhotoDao, Photo> implements Ph
     @Autowired
     private RedisServiceImpl redisService;
 
+    @Autowired
+    private RuleServiceImpl ruleService;
+
+    @Autowired
+    private TagServiceImpl tagService;
+
     @Override
     public PageResult<PhotoVO> photoListByCondition(ConditionDTO condition) {
-        List<Long> ids = new ArrayList<>();
-        RedisUtil.getIdsByGrade(redisService, condition, ids, GRADE_PHOTO);
+//        List<Long> ids = RedisUtil.getIdsByGrade(redisService, condition, GRADE_PHOTO);
 
         // 查询照片列表
         // 查询分类数量
-        int count = photoDao.photoCount(condition, ids);
+        int count = photoDao.photoCount(condition);
         if (count == 0) {
             return new PageResult<>();
         }
         // 分页查询分类列表
-        List<PhotoVO> accountList = photoDao.photoList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition, ids)
-                .stream().map(photoVO -> {
-                    photoVO.setGrade(redisService.getStr(GRADE_PHOTO + photoVO.getId()));
-                    return photoVO;
-                }).collect(Collectors.toList());
+        List<PhotoVO> accountList = photoDao.photoList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition);
         return new PageResult<>(accountList, count);
     }
 
@@ -100,12 +106,16 @@ public class PhotoServiceImpl extends ServiceImpl<PhotoDao, Photo> implements Ph
             sku = Sku.builder()
                     .id(id)
                     .name(name).build();
-            skuService.saveOrUpdate(sku);
         }
+        List<Long> relevanceIds = photoInfoDTO.getRelevanceIds();
+        if (relevanceIds != null) {
+            sku.setRelevanceIds(relevanceIds.stream().map(String::valueOf).collect(Collectors.joining(",")));
+        }
+        skuService.saveOrUpdate(sku);
         photo.setSkuId(sku.getId());
         this.saveOrUpdate(photo);
         // 保存照片标签
-        productOrImgTagService.saveProductOrImgTag(photoInfoDTO.getTagNameList(), photo.getId(), PHOTO.getCode());
+        productOrImgTagService.saveProductOrImgTag(photoInfoDTO.getTagNameList(), sku.getId(), PHOTO.getCode());
     }
 
     @Override
@@ -115,14 +125,23 @@ public class PhotoServiceImpl extends ServiceImpl<PhotoDao, Photo> implements Ph
             throw new BizException("该图案不存在");
         }
 
-        GradeObject gradeObject = orderItemDao.skuMinPriceAndCreateTime(photoInfoVO.getSkuName());
+//        GradeObject gradeObject = orderItemDao.skuMinPriceAndCreateTime(photoInfoVO.getSkuName());
 
-        List<TagVO> tagVOList = photoInfoVO.getTagVOList();
-        if (tagVOList != null) {
-            List<Long> skuIds = tagVOList.stream().map(TagVO::getId).toList();
-            gradeObject.setTagIds(skuIds);
+        List<Tag> tagList = tagDao.getTagListByItemOrImgId(photoInfoVO.getId());
+        if (tagList != null) {
+//            List<Long> skuIds = tagList.stream().map(Tag::getId).toList();
+            List<String> tagNameList = tagList.stream().map(Tag::getTagName).toList();
+            photoInfoVO.setTagNameList(tagNameList);
+//            gradeObject.setTagIds(skuIds);
         }
-        photoInfoVO.setGrade(redisService.getStr(GRADE_PHOTO + photoInfoVO.getId()));
+        String relevanceIds = skuDao.selectOne(new QueryWrapper<Sku>().eq("id", photoInfoVO.getSkuId())).getRelevanceIds();
+        if (relevanceIds != null && !relevanceIds.isEmpty()) {
+            List<Long> relevanceIdList = Arrays.stream(relevanceIds.split(",")).map(Long::valueOf).collect(Collectors.toList());
+            photoInfoVO.setRelevanceIds(relevanceIdList);
+        }
+
+//        Object grade = redisService.get(GRADE_PHOTO + photoInfoVO.getSkuId());
+//        photoInfoVO.setGrade(grade == null ? "未设置" : String.valueOf(grade));
 
         return photoInfoVO;
     }
@@ -147,6 +166,16 @@ public class PhotoServiceImpl extends ServiceImpl<PhotoDao, Photo> implements Ph
         productOrImgTagService.deleteBatch(photoIdList);
         fileTransferStrategyContext.executeDeleteStrategy(photoNameList);
         photoDao.deleteBatchIds(photoIdList);
+    }
+
+    @GetMapping("/gradeSelect")
+    public Result<List<SelectVO>> gradeSelect() {
+        return Result.ok(ruleService.gradeSelect(PHOTO.getCode()));
+    }
+
+    @GetMapping("/tagSelect")
+    public Result<List<SelectVO>> tagSelect() {
+        return Result.ok(tagService.tagSelect(PHOTO.getCode()));
     }
 }
 

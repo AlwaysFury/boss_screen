@@ -2,6 +2,8 @@ package com.boss.common.util;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.swing.text.DateFormatter;
+import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -44,6 +46,11 @@ public class CommonUtil {
 
     public static String localDateTime2String(LocalDateTime timeStr) {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return timeStr.format(fmt);
+    }
+
+    public static String localDateTime2String(LocalDateTime timeStr, String format) {
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern(format);
         return timeStr.format(fmt);
     }
 

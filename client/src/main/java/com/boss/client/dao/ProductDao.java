@@ -18,12 +18,13 @@ import java.util.List;
 public interface ProductDao extends BaseMapper<Product> {
 
 
-    Integer productCount(@Param("condition") ConditionDTO condition, @Param("itemIds") List<Long> itemIds);
+    Integer productCount(@Param("condition") ConditionDTO condition);
 
-    List<ProductVO> productList(@Param("current") Long current, @Param("size") Long size, @Param("condition") ConditionDTO condition, @Param("itemIds") List<Long> itemIds);
+    List<ProductVO> productList(@Param("current") Long current, @Param("size") Long size, @Param("condition") ConditionDTO condition);
 
     ProductInfoVO getProductInfo(@Param("item_id") Long itemId);
 
+    List<String> getNewerSaleProductNames();
 //    List<ProductVO> productListByGrade(String itemIds);
 
 }

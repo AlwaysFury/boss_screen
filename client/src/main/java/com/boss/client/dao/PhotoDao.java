@@ -18,10 +18,10 @@ import java.util.List;
 public interface PhotoDao extends BaseMapper<Photo> {
 
 
-    int photoCount(@Param("condition") ConditionDTO condition, @Param("ids") List<Long> ids);
+    int photoCount(@Param("condition") ConditionDTO condition);
 
 
-    List<PhotoVO> photoList(@Param("current") Long current, @Param("size") Long size, @Param("condition") ConditionDTO condition, @Param("ids") List<Long> ids);
+    List<PhotoVO> photoList(@Param("current") Long current, @Param("size") Long size, @Param("condition") ConditionDTO condition);
 
 
     /**

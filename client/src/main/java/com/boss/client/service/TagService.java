@@ -40,4 +40,6 @@ public interface TagService extends IService<Tag> {
 
     List<SelectVO> getTypeSelect();
 
+    List<SelectVO> tagSelect(String type);
+
 }

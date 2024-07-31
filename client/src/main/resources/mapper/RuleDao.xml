@@ -16,6 +16,9 @@
             <if test="condition.rule_grade != null">
                 and s.grade = #{condition.rule_grade}
             </if>
+            <if test="condition.rule_type != null">
+                and s.type = #{condition.rule_type}
+            </if>
         </where>
     </select>
 
@@ -24,7 +27,8 @@
         SELECT
             id,
             name,
-            grade
+            grade,
+            type
         FROM
             tb_rule as s
         <where>
@@ -34,6 +38,9 @@
             </if>
             <if test="condition.rule_grade != null">
                 and s.grade = #{condition.rule_grade}
+            </if>
+            <if test="condition.rule_type != null">
+                and s.type = #{condition.rule_type}
             </if>
         </where>
         LIMIT #{current},#{size}

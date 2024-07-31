@@ -37,4 +37,9 @@ public class PhotoInfoDTO {
      * 照片地址
      */
     private String photoSrc;
+
+    /**
+     * 关联款号id
+     */
+    private List<Long> relevanceIds;
 }

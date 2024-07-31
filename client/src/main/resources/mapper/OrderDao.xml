@@ -28,10 +28,10 @@
                 and s.shop_id = #{condition.shop_id}
             </if>
             <if test="condition.start_time != null">
-                and s.create_time >= #{condition.start_time}
+                and s.create_time >= UNIX_TIMESTAMP(STR_TO_DATE(#{condition.start_time}, '%Y-%m-%d %H:%i:%s'))
             </if>
             <if test="condition.end_time != null">
-                and s.create_time &lt;= #{condition.end_time}
+                and s.create_time &lt;= UNIX_TIMESTAMP(STR_TO_DATE(#{condition.end_time}, '%Y-%m-%d %H:%i:%s'))
             </if>
         </where>
     </select>
@@ -65,10 +65,10 @@
                 and s.shop_id = #{condition.shop_id}
             </if>
             <if test="condition.start_time != null">
-                and s.create_time >= #{condition.start_time}
+                and s.create_time >= UNIX_TIMESTAMP(STR_TO_DATE(#{condition.start_time}, '%Y-%m-%d %H:%i:%s'))
             </if>
             <if test="condition.end_time != null">
-                and s.create_time &lt;= #{condition.end_time}
+                and s.create_time &lt;= UNIX_TIMESTAMP(STR_TO_DATE(#{condition.end_time}, '%Y-%m-%d %H:%i:%s'))
             </if>
         </where>
         <if test="condition.orderBy_name != null">

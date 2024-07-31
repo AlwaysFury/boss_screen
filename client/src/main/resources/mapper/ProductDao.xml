@@ -8,7 +8,7 @@
             count(*)
         FROM
             tb_product s
-        <if test="condition.tag_ids != null">
+        <if test="condition.tag_id != null">
             left join tb_productorimg_tag as t on t.itemOrImg_id = s.id
         </if>
         <where>
@@ -29,22 +29,16 @@
                 and s.shop_id = #{condition.shop_id}
             </if>
             <if test="condition.start_time != null">
-                and s.create_time >= #{condition.start_time}
+                and s.create_time >= UNIX_TIMESTAMP(STR_TO_DATE(#{condition.start_time}, '%Y-%m-%d %H:%i:%s'))
             </if>
             <if test="condition.end_time != null">
-                and s.create_time &lt;= #{condition.end_time}
+                and s.create_time &lt;= UNIX_TIMESTAMP(STR_TO_DATE(#{condition.end_time}, '%Y-%m-%d %H:%i:%s'))
             </if>
-            <if test="condition.tag_ids != null">
-                and t.tag_id IN
-                <foreach item="id" index="tagId" collection="tag_ids" open="(" separator="," close=")">
-                    #{tagId}
-                </foreach>
+            <if test="condition.grade != null">
+                and s.grade = #{condition.grade}
             </if>
-            <if test="condition.rule_grade != null">
-                and s.id IN
-                <foreach item="id" index="index" collection="itemIds" open="(" separator="," close=")">
-                    #{id}
-                </foreach>
+            <if test="condition.tag_id != null">
+                and t.tag_id  = #{condition.tag_id}
             </if>
         </where>
     </select>
@@ -52,16 +46,29 @@
 
     <select id="productList" resultType="com.boss.client.vo.ProductVO">
         SELECT
-            s.id, s.item_id, s.category_id, s.item_name, s.item_sku, s.mainImg_url, s.grade, t.name as shop_name, s.status, FROM_UNIXTIME(s.create_time, '%Y-%m-%d %H:%i:%s') as create_time, IFNULL(d.sale, 0) as salesVolume
+            s.id,
+            s.item_id,
+            s.category_id,
+            c.name as category_name,
+            s.item_name,
+            s.item_sku,
+            s.mainImg_url,
+            s.grade,
+            t.name as shop_name,
+            s.status, FROM_UNIXTIME(s.create_time, '%Y-%m-%d %H:%i:%s') as create_time,
+            IFNULL(d.sale, 0) as salesVolume
         FROM
             tb_product s
         left join tb_product_extra_info d
             on s.item_id = d.item_id
         left join tb_shop as t
             on s.shop_id = t.shop_id
-        <if test="condition.tag_ids != null">
-            left join tb_productorimg_tag as tag on tag.itemOrImg_id = s.id
+        <if test="condition.tag_id != null">
+            left join tb_productorimg_tag as tag
+                on tag.itemOrImg_id = s.id
         </if>
+        left join tb_category as c
+            on s.category_id = c.id
         <where>
             s.id is not null
             <if test="condition.item_id != null">
@@ -80,74 +87,63 @@
                 and s.shop_id = #{condition.shop_id}
             </if>
             <if test="condition.start_time != null">
-                and s.create_time >= #{condition.start_time}
+                and s.create_time >= UNIX_TIMESTAMP(STR_TO_DATE(#{condition.start_time}, '%Y-%m-%d %H:%i:%s'))
             </if>
             <if test="condition.end_time != null">
-                and s.create_time &lt;= #{condition.end_time}
+                and s.create_time &lt;= UNIX_TIMESTAMP(STR_TO_DATE(#{condition.end_time}, '%Y-%m-%d %H:%i:%s'))
             </if>
-            <if test="condition.tag_ids != null">
-                and tag.tag_id IN
-                <foreach item="id" index="tagId" collection="tag_ids" open="(" separator="," close=")">
-                    #{tagId}
-                </foreach>
+            <if test="condition.grade != null">
+                and s.grade = #{condition.grade}
             </if>
-            <if test="condition.rule_grade != null">
-                and id IN
-                <foreach item="id" index="index" collection="itemIds" open="(" separator="," close=")">
-                    #{id}
-                </foreach>
+            <if test="condition.tag_id != null">
+                and tag.tag_id  = #{condition.tag_id}
             </if>
         </where>
-        <if test="condition.orderBy_name != null and condition.orderBy_name.contains('grade')">
-            ORDER BY FIELD(id,
-            <foreach item="id" index="index" collection="itemIds" separator=",">
-                #{id}
-            </foreach>)
-        </if>
-        <if test="condition.orderBy_name != null and !condition.orderBy_name.contains('grade')">
+        <if test="condition.orderBy_name != null">
             order by ${condition.orderBy_name}
         </if>
         LIMIT #{current},#{size}
     </select>
 
-    <resultMap id="productResultMap" type="com.boss.client.vo.ProductInfoVO">
-        <id column="id" property="id"/>
-        <result column="item_id" property="itemId"/>
-        <result column="create_time" property="createTime"/>
-        <result column="update_time" property="updateTime"/>
-        <result column="category_id" property="categoryId"/>
-        <result column="item_name" property="itemName"/>
-        <result column="item_sku" property="itemSku"/>
-        <result column="status" property="status"/>
-        <result column="shop_id" property="shopId"/>
-        <result column="shop_name" property="shopName"/>
-        <collection property="tagVOList" ofType="com.boss.client.vo.TagVO">
-            <id column="tag_id" property="id"/>
-            <result column="tag_name" property="tagName"/>
-            <result column="tag_type" property="tagType"/>
-        </collection>
-    </resultMap>
+<!--    <resultMap id="productResultMap" type="com.boss.client.vo.ProductInfoVO">-->
+<!--        <id column="id" property="id"/>-->
+<!--        <result column="item_id" property="itemId"/>-->
+<!--        <result column="create_time" property="createTime"/>-->
+<!--        <result column="update_time" property="updateTime"/>-->
+<!--        <result column="category_id" property="categoryId"/>-->
+<!--        <result column="category_name" property="categoryName"/>-->
+<!--        <result column="item_name" property="itemName"/>-->
+<!--        <result column="item_sku" property="itemSku"/>-->
+<!--        <result column="status" property="status"/>-->
+<!--        <result column="shop_id" property="shopId"/>-->
+<!--        <result column="shop_name" property="shopName"/>-->
+<!--        <collection property="tagVOList" ofType="com.boss.client.vo.TagVO">-->
+<!--            <id column="tag_id" property="id"/>-->
+<!--            <result column="tag_name" property="tagName"/>-->
+<!--            <result column="tag_type" property="tagType"/>-->
+<!--        </collection>-->
+<!--    </resultMap>-->
 
-    <select id="getProductInfo" resultMap="productResultMap">
+    <select id="getProductInfo" resultType="com.boss.client.vo.ProductInfoVO">
         select
             s.id,
             s.item_id,
             FROM_UNIXTIME(s.create_time, '%Y-%m-%d %H:%i:%s') as create_time,
             FROM_UNIXTIME(s.update_time, '%Y-%m-%d %H:%i:%s') as update_time,
             s.category_id,
+            c.name as category_name,
             s.item_name,
             s.item_sku,
             s.status,
             s.shop_id,
-            t.name as shop_name,
-            tt.id AS tag_id,
-            tt.tag_name,
-            tt.tag_type
+            s.grade,
+            t.name as shop_name
         from
             tb_product as s
-        left JOIN tb_shop as t on s.shop_id = t.shop_id
-        left JOIN tb_productorimg_tag as pt ON s.id = pt.itemOrImg_id and pt.tag_type = 'ITEM'
-        left JOIN tb_tag as tt ON tt.id = pt.tag_id
+        left JOIN tb_shop as t
+            on s.shop_id = t.shop_id
+        left join tb_category as c
+            on s.category_id = c.id
         where s.id = #{item_id}
     </select>
 
@@ -164,5 +160,16 @@
             tb_product as s
                 left JOIN tb_product_extra_info as d on s.id = d.id
 
+    </select>
+
+    <select id="getNewerSaleProductNames" resultType="java.lang.String">
+        SELECT
+            s.item_name
+        FROM
+            tb_product AS s, tb_product_extra_info As p
+        where
+            s.id = p.id
+          and s.create_time >= UNIX_TIMESTAMP(NOW()) - 2592000
+          and p.sale > 0
     </select>
 </mapper>

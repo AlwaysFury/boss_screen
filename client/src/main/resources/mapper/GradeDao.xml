@@ -8,44 +8,24 @@
             s.item_id as itemId,
             s.create_time as createTime,
             s.category_id as categoryId,
-            s.status,
-            t.id as tagIds
+            s.status
         FROM
-            tb_produtc as s
-            left JOIN tb_productorimg_tag as pt ON s.id = pt.itemOrImg_id and pt.tag_type = 'ITEM'
-            left JOIN tb_tag as tt ON tt.id = pt.tag_id
+            tb_product as s
         where
             s.status in ('NORMAL', 'UNLIST', 'REVIEWING')
     </select>
 
-<!--    itemSku,tagList,createTime,price,salesVolume-->
-
-    <resultMap id="photoResultMap" type="com.boss.client.dto.GradeObject">
-        <result column="itemId" property="itemId"/>
-        <result column="itemSku" property="itemSku"/>
-        <result column="createTime" property="createTime"/>
-        <result column="price" property="price"/>
-        <result column="salesVolume" property="createTime"/>
-        <collection property="tagIds" ofType="java.util.List">
-
-        </collection>
-    </resultMap>
-
-    <select id="getSku" resultMap="photoResultMap">
+    <select id="getSku" resultType="com.boss.client.dto.GradeObject">
         SELECT
             s.id as itemId,
             s.name as itemSku,
-            min(m.create_time) as createTime,
-            min(m.price) as price,
-            sum(o.count) as salesVolume,
-            t.id AS tagIds
+            UNIX_TIMESTAMP(min(m.create_time)) as createTime,
+            min(m.current_price) as price,
+            ifnull(sum(o.count), 0) as salesVolume
         FROM
             tb_sku as s
         left join tb_model as m on s.name = m.sku_name
         left join tb_order_item as o on s.name = o.sku_name
-        left JOIN tb_productorimg_tag as d ON s.id = d.itemOrImg_id  and d.tag_type = "PHOTO"
-        left JOIN tb_tag as t ON t.id = d.tag_id
-        where
 
     </select>
 

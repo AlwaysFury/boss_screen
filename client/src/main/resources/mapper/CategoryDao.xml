@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boss.client.dao.CategoryDao">
+
+
+    <select id="categoryCount" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        FROM
+            tb_category as s
+        <where>
+            <if test="condition.category_name != null">
+                s.name = #{condition.category_name}
+            </if>
+            <if test="condition.category_id != null">
+                s.id = #{condition.category_id}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="categoryList" resultType="com.boss.client.vo.CategoryVO">
+        SELECT
+            id,
+            name
+        FROM
+            tb_category as s
+        <where>
+            <if test="condition.category_name != null">
+                s.name = #{condition.category_name}
+            </if>
+            <if test="condition.category_id != null">
+                s.id = #{condition.category_id}
+            </if>
+        </where>
+        LIMIT #{current},#{size}
+    </select>
+
+</mapper>

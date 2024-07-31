@@ -79,11 +79,9 @@ public class WebhookServiceImpl implements WebhookService {
 
                 if (READY_TO_SHIP.getCode().equals(status)) {
                     log.info("====订单已支付，更新订单支付信息");
-                    List<List<String>> allOrderSnList = new ArrayList<>();
                     List<String> orderSnList = new ArrayList<>();
                     orderSnList.add(orderSn);
-                    allOrderSnList.add(orderSnList);
-                    escrowInfoService.refreshEscrowBySn(allOrderSnList, shopId);
+                    escrowInfoService.refreshSingleEscrowInfoBySn(orderSnList, shopId);
                 }
 
                 break;

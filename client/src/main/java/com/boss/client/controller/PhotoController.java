@@ -2,8 +2,11 @@ package com.boss.client.controller;
 
 import com.boss.client.dto.ConditionDTO;
 import com.boss.client.dto.PhotoInfoDTO;
+import com.boss.client.dto.UploadChunkFileDTO;
 import com.boss.client.service.impl.GradeServiceImpl;
 import com.boss.client.service.impl.PhotoServiceImpl;
+import com.boss.client.service.impl.RuleServiceImpl;
+import com.boss.client.service.impl.TagServiceImpl;
 import com.boss.client.strategy.context.FileTransferStrategyContext;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.PhotoInfoVO;
@@ -11,6 +14,7 @@ import com.boss.client.vo.PhotoVO;
 import com.boss.client.vo.Result;
 import com.boss.common.dto.UpdateStatusDTO;
 import com.boss.common.enums.FilePathEnum;
+import com.boss.common.vo.SelectVO;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -24,6 +28,7 @@ import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.List;
 import java.util.Map;
 
 import static com.boss.common.enums.TagTypeEnum.PHOTO;
@@ -43,6 +48,12 @@ public class PhotoController {
 
     @Autowired
     private GradeServiceImpl gradeService;
+
+    @Autowired
+    private RuleServiceImpl ruleService;
+
+    @Autowired
+    private TagServiceImpl tagService;
 
     @Autowired
     private FileTransferStrategyContext fileTransferStrategyContext;
@@ -65,7 +76,7 @@ public class PhotoController {
      * @return
      */
     @GetMapping("/photoList")
-    public Result<PageResult<PhotoVO>> skuList(ConditionDTO condition) {
+    public Result<PageResult<PhotoVO>> photoList(ConditionDTO condition) {
         return Result.ok(photoService.photoListByCondition(condition));
     }
 
@@ -81,7 +92,6 @@ public class PhotoController {
 
     /**
      * 刷新图片等级
-     * @param id
      * @return
      */
     @GetMapping("/refreshGrade")
@@ -104,6 +114,11 @@ public class PhotoController {
     /**
      * 批量上传
      */
+    @PostMapping("/uploadChunk")
+    public Result<Map<String, Object>> uploadChunkPhoto(UploadChunkFileDTO param) {
+        return Result.ok();
+    }
+
 
     /**
      * 下载
@@ -146,6 +161,16 @@ public class PhotoController {
     public Result<?> deleteBatch(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
         photoService.deleteBatchById(updateStatusDTO.getIdList(), updateStatusDTO.getIsDelete());
         return Result.ok();
+    }
+
+    @GetMapping("/gradeSelect")
+    public Result<List<SelectVO>> gradeSelect() {
+        return Result.ok(ruleService.gradeSelect(PHOTO.getCode()));
+    }
+
+    @GetMapping("/tagSelect")
+    public Result<List<SelectVO>> tagSelect() {
+        return Result.ok(tagService.tagSelect(PHOTO.getCode()));
     }
 
 

@@ -12,13 +12,16 @@ import com.boss.client.service.RuleService;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.RuleInfoVO;
 import com.boss.client.vo.RuleVO;
+import com.boss.common.enums.TagTypeEnum;
 import com.boss.common.util.BeanCopyUtils;
 import com.boss.common.util.PageUtils;
+import com.boss.common.vo.SelectVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -50,7 +53,16 @@ public class RuleServiceImpl extends ServiceImpl<RuleDao, Rule> implements RuleS
 
     @Override
     public List<Rule> getRuleList(String type) {
-        return ruleDao.selectList(new QueryWrapper<Rule>().eq("type", type));
+        return ruleDao.selectList(new QueryWrapper<Rule>().eq("type", type).orderByDesc("weight"));
+    }
+
+    @Override
+    public List<SelectVO> gradeSelect(String type) {
+        List<SelectVO> selectVOS = ruleDao.selectList(new QueryWrapper<Rule>().eq("type", type)).stream()
+                .map(rule -> SelectVO.builder()
+                        .key(rule.getGrade())
+                        .value(rule.getGrade()).build()).collect(Collectors.toList());
+        return selectVOS;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -70,7 +82,11 @@ public class RuleServiceImpl extends ServiceImpl<RuleDao, Rule> implements RuleS
             return new PageResult<>();
         }
         // 分页查询分类列表
-        List<RuleVO> ruleList = ruleDao.ruleList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition);
+        List<RuleVO> ruleList = ruleDao.ruleList(PageUtils.getLimitCurrent(), PageUtils.getSize(), condition).stream()
+                .map(ruleVO -> {
+                    ruleVO.setType(TagTypeEnum.getDescByCode(ruleVO.getType()));
+                    return ruleVO;
+                }).collect(Collectors.toList());
 
         return new PageResult<>(ruleList, count);
     }

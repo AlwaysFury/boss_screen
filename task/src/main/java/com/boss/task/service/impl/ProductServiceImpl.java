@@ -1,22 +1,17 @@
 package com.boss.task.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.boss.common.enities.Category;
 import com.boss.common.enities.Model;
-import com.boss.common.enities.OperationLog;
 import com.boss.common.enities.Product;
 import com.boss.common.enities.Shop;
 import com.boss.common.util.CommonUtil;
-import com.boss.task.dao.OperationLogDao;
-import com.boss.task.dao.OrderItemDao;
-import com.boss.task.dao.ProductDao;
-import com.boss.task.dao.ShopDao;
+import com.boss.task.dao.*;
 import com.boss.task.service.ProductService;
-import com.boss.task.util.RedisUtil;
 import com.boss.task.util.ShopeeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +29,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
-import static com.boss.common.constant.OptTypeConst.SYSTEM_LOG;
-import static com.boss.common.constant.RedisPrefixConst.PRODUCT_ITEM;
+import static com.boss.common.constant.RedisPrefixConst.CATEGORY;
 import static com.boss.common.enums.ProductStatusEnum.SELLER_DELETE;
 
 
@@ -57,6 +51,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
     @Autowired
     private OrderItemDao orderItemDao;
+
+    @Autowired
+    private CategoryDao categoryDao;
 
     @Autowired
     private ModelServiceImpl modelService;
@@ -102,6 +99,45 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         }
 
         refreshProductByItemId(itemIdList, shopId);
+    }
+
+    @Override
+    public void refreshProductByTime(String startTimeStr, String endTimeStr) {
+        long startTime = CommonUtil.string2Timestamp(startTimeStr);
+        long endTime = CommonUtil.string2Timestamp(endTimeStr);
+        // 遍历所有未冻结店铺获取 token 和 shopId
+        QueryWrapper<Shop> shopQueryWrapper = new QueryWrapper<>();
+        shopQueryWrapper.select("shop_id").eq("status", "1");
+        List<Shop> shopList = shopDao.selectList(shopQueryWrapper);
+
+        // 根据每个店铺的 token 和 shopId 获取订单
+        long shopId;
+        String accessToken;
+        for (Shop shop : shopList) {
+            shopId = shop.getShopId();
+            accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
+
+            List<String> itemIdList = new ArrayList<>();
+
+            List<Long[]> result = CommonUtil.splitIntoEveryNDaysTimestamp(startTime, endTime, 14);
+
+            for (Long[] pair : result) {
+                List<String> object = ShopeeUtil.getProductsByTime(accessToken, shopId, 0, new ArrayList<>(), pair[0], pair[1]);
+                log.info(pair[0] + "---" + pair[1] + ":  " + object.size());
+                itemIdList.addAll(object);
+            }
+
+            if (itemIdList == null || itemIdList.isEmpty()) {
+                continue;
+            }
+
+            List<String> newOrderSnList = new ArrayList<>();
+            for (int i = 0; i < itemIdList.size(); i += 50) {
+                newOrderSnList.add(String.join(",", itemIdList.subList(i, Math.min(i + 50, itemIdList.size()))));
+            }
+
+            refreshProductByItemId(itemIdList, shopId);
+        }
     }
 
     /**
@@ -255,7 +291,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         List<List<Product>> splitProduct = CommonUtil.splitListBatches(productList, 100);
 //        List<CompletableFuture<Void>> insertProductFutures = new ArrayList<>();
         for (List<Product> batch : splitProduct) {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(() -> {
                 try {
 //                    TransactionTemplate transactionTemplate = new TransactionTemplate();
                     transactionTemplate.executeWithoutResult(status -> {
@@ -273,7 +309,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
         List<List<Model>> splitModel = CommonUtil.splitListBatches(modelList, 5000);
 //        List<CompletableFuture<Void>> insertModelFutures = new ArrayList<>();
         for (List<Model> batch : splitModel) {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(() -> {
                 try {
 //                    TransactionTemplate transactionTemplate = new TransactionTemplate();
                     transactionTemplate.executeWithoutResult(status -> {
@@ -337,22 +373,28 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                     product.setMainImgUrl(imgUrlArray.getString(0));
                 }
 
-
-                String judgeResult = RedisUtil.judgeRedis(redisService,PRODUCT_ITEM + itemId, productList, product, Product.class);
-                if (!"".equals(judgeResult)) {
-                    JSONArray diffArray = JSON.parseObject(judgeResult).getJSONArray("defectsList");
-                    if (diffArray.size() != 0) {
-                        StringJoiner joiner = new StringJoiner(",");
-                        OperationLog operationLog = new OperationLog();
-                        operationLog.setOptType(SYSTEM_LOG);
-                        for (int j = 0; j < diffArray.size(); j++) {
-                            String key = diffArray.getJSONObject(j).getJSONObject("travelPath").getString("abstractTravelPath");
-                            joiner.add(key.substring(key.indexOf(".") + 1, key.length()));
-                        }
-                        operationLog.setOptDesc("产品 " + itemId + " 字段发生变化：" + joiner.toString());
-                        operationLogDao.insert(operationLog);
-                    }
+                long categoryId = itemObject.getLong("category_id");
+                Boolean flag = redisService.setnx(CATEGORY + categoryId, categoryId);
+                if (flag) {
+                    categoryDao.insert(Category.builder().id(categoryId).build());
                 }
+
+
+//                String judgeResult = RedisUtil.judgeRedis(redisService,PRODUCT_ITEM + itemId, productList, product, Product.class);
+//                if (!"".equals(judgeResult)) {
+//                    JSONArray diffArray = JSON.parseObject(judgeResult).getJSONArray("defectsList");
+//                    if (diffArray.size() != 0) {
+//                        StringJoiner joiner = new StringJoiner(",");
+//                        OperationLog operationLog = new OperationLog();
+//                        operationLog.setOptType(SYSTEM_LOG);
+//                        for (int j = 0; j < diffArray.size(); j++) {
+//                            String key = diffArray.getJSONObject(j).getJSONObject("travelPath").getString("abstractTravelPath");
+//                            joiner.add(key.substring(key.indexOf(".") + 1, key.length()));
+//                        }
+//                        operationLog.setOptDesc("产品 " + itemId + " 字段发生变化：" + joiner.toString());
+//                        operationLogDao.insert(operationLog);
+//                    }
+//                }
             }
         } catch (Exception e) {
             e.printStackTrace();

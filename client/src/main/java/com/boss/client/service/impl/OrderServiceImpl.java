@@ -13,10 +13,7 @@ import com.boss.client.util.ShopeeUtil;
 import com.boss.client.vo.OrderEscrowInfoVO;
 import com.boss.client.vo.OrderEscrowVO;
 import com.boss.client.vo.PageResult;
-import com.boss.common.enities.EscrowInfo;
-import com.boss.common.enities.Order;
-import com.boss.common.enities.OrderItem;
-import com.boss.common.enities.Shop;
+import com.boss.common.enities.*;
 import com.boss.common.enums.OrderStatusEnum;
 import com.boss.common.util.BeanCopyUtils;
 import com.boss.common.util.CommonUtil;
@@ -30,7 +27,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -99,7 +98,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
-    @Transactional(rollbackFor = Exception.class)
+//    @Transactional(rollbackFor = Exception.class)
     @Override
     public void initOrder(long shopId) {
         // 获取Calendar实例并设置为当前时间
@@ -172,9 +171,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         startTime =  System.currentTimeMillis();
 
         List<List<Order>> batchesOrderList = CommonUtil.splitListBatches(ordertList, 100);
-        List<CompletableFuture<Void>> insertOrderFutures = new ArrayList<>();
+//        List<CompletableFuture<Void>> insertOrderFutures = new ArrayList<>();
         for (List<Order> batch : batchesOrderList) {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(() -> {
                 try {
                     transactionTemplate.executeWithoutResult(status -> {
                         this.saveOrUpdateBatch(batch);
@@ -184,14 +183,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                 }
             }, customThreadPool);
 
-            insertOrderFutures.add(future);
+//            insertOrderFutures.add(future);
         }
-        CompletableFuture.allOf(insertOrderFutures.toArray(new CompletableFuture[0])).join();
+//        CompletableFuture.allOf(insertOrderFutures.toArray(new CompletableFuture[0])).join();
 
         List<List<OrderItem>> batchesOrderItemList = CommonUtil.splitListBatches(orderItemList, 1000);
-        List<CompletableFuture<Void>> insertOrderItemFutures = new ArrayList<>();
+//        List<CompletableFuture<Void>> insertOrderItemFutures = new ArrayList<>();
         for (List<OrderItem> batch : batchesOrderItemList) {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(() -> {
                 try {
                     transactionTemplate.executeWithoutResult(status -> {
                         orderItemService.saveOrUpdateBatch(batch);
@@ -200,9 +199,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                     e.printStackTrace();
                 }
             }, customThreadPool);
-            insertOrderItemFutures.add(future);
+//            insertOrderItemFutures.add(future);
         }
-        CompletableFuture.allOf(insertOrderItemFutures.toArray(new CompletableFuture[0])).join();
+//        CompletableFuture.allOf(insertOrderItemFutures.toArray(new CompletableFuture[0])).join();
 
 
         log.info("===订单数据落库结束，耗时：{}秒", (System.currentTimeMillis() - startTime) / 1000);
@@ -291,7 +290,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
     public OrderEscrowInfoVO getOrderInfo(String orderSn) {
 
         Order order = orderDao.selectOne(new QueryWrapper<Order>().eq("order_sn", orderSn));
-
+        OrderStatusPush statusPush = orderStatusPushDao.selectOne(new QueryWrapper<OrderStatusPush>().eq("order_sn", orderSn));
+        order.setStatus(statusPush.getStatus());
         OrderEscrowInfoVO orderEscrowInfoVO = BeanCopyUtils.copyObject(order, OrderEscrowInfoVO.class);
         orderEscrowInfoVO.setCreateTime(CommonUtil.timestamp2String(order.getCreateTime()));
         if (order.getPayTime() != null) {
