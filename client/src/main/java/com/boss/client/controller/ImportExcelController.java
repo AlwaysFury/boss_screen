@@ -60,6 +60,9 @@ public class ImportExcelController {
     @Autowired
     private AdsDetailServiceImpl adsDetailService;
 
+    @Autowired
+    private ProductExpressionServiceImpl productExpressionService;
+
     // 商品概览
     @PostMapping("/productOverview")
     public Result<?> saveProductOverview(@RequestParam("shop_id") long shopId, String dateType, @RequestParam("file") MultipartFile file) {
@@ -144,6 +147,13 @@ public class ImportExcelController {
     @PostMapping("/adsDetail")
     public Result<?> saveAdsDetail(@RequestParam("file") MultipartFile file, @RequestParam("type") String type) {
         adsDetailService.importCsv(file, type);
+        return Result.ok();
+    }
+
+    // 广告详情
+    @PostMapping("/productExpression")
+    public Result<?> saveProductExpression(@RequestParam("file") MultipartFile file) {
+        productExpressionService.importExcel(file);
         return Result.ok();
     }
 }

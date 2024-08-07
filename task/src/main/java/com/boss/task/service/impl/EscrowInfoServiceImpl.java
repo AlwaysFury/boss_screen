@@ -3,12 +3,13 @@ package com.boss.task.service.impl;
 import cn.hutool.core.util.IdUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.common.enities.EscrowInfo;
 import com.boss.common.enities.EscrowItem;
 import com.boss.common.util.CommonUtil;
 import com.boss.task.dao.EscrowInfoDao;
-import com.boss.task.dao.OrderDao;
+import com.boss.task.dao.EscrowItemDao;
 import com.boss.task.dao.ShopDao;
 import com.boss.task.service.EscrowInfoService;
 import com.boss.task.util.RedisUtil;
@@ -45,7 +46,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
     private ShopDao shopDao;
 
     @Autowired
-    private OrderDao orderDao;
+    private EscrowItemDao escrowItemDao;
 
     @Autowired
     private ShopServiceImpl shopService;
@@ -209,6 +210,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
         log.info("===支付信息数据落库结束，耗时：{}秒", (System.currentTimeMillis() - startTime) / 1000);
     }
 
+    @Transactional
     @Override
     public void refreshSingleEscrowInfoBySn(List<String> orderSnList, long shopId) {
         List<EscrowInfo> escrowInfoList =  new ArrayList<>();
@@ -240,7 +242,7 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
 
 
     @Override
-    public void refreshEscrowBySn(List<List<String>> orderSnList, long shopId) {
+    public void refreshEscrowBySn(List<List<String>> orderSnList, long shopId, int flag) {
         List<EscrowInfo> escrowInfoList =  new CopyOnWriteArrayList<>();
         List<EscrowItem> escrowItemList = new CopyOnWriteArrayList<>();
 
@@ -251,8 +253,6 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
                 .map(orderSn -> {
                     long finalShopId = shopId;
                     return CompletableFuture.runAsync(() -> {
-//                        String[] splitOrderSns = orderSn.split(",");
-//                        for (String sn : splitOrderSns) {
                         String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
                         JSONObject escrowResult = ShopeeUtil.getEscrowDetail(finalAccessToken, finalShopId, orderSn);
                         if (escrowResult == null || escrowResult.getString("error").contains("error")) {
@@ -267,10 +267,15 @@ public class EscrowInfoServiceImpl extends ServiceImpl<EscrowInfoDao, EscrowInfo
                             JSONObject orderIncomeObject = escrowDetailObject.getJSONObject("order_income");
                             String sn = escrowDetailObject.getString("order_sn");
                             saveEscrowInfoByOrderSn(orderIncomeObject, sn, escrowInfoList, finalShopId);
-                            saveEscrowItem(orderIncomeObject, sn, escrowItemList, finalShopId);
+                            if (flag == 1) {
+                                saveEscrowItem(orderIncomeObject, sn, escrowItemList, finalShopId);
+                            } else if (flag == 0) {
+                                Long itemCount = escrowItemDao.selectCount(new QueryWrapper<EscrowItem>().eq("order_sn", sn));
+                                if (itemCount == 0) {
+                                    saveEscrowItem(orderIncomeObject, sn, escrowItemList, finalShopId);
+                                }
+                            }
                         }
-
-//                        }
                     }, customThreadPool);
                 }).collect(Collectors.toList());
 

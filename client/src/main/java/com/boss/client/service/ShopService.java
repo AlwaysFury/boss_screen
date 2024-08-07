@@ -24,11 +24,11 @@ public interface ShopService extends IService<Shop>  {
 
     void updateShopsStatus(UpdateStatusDTO updateStatusDTO);
 
-    void refreshShopToken();
-
-    void refreshShopTokenByAccount();
-
-    String getAccessTokenByShopId(String shopId);
+//    void refreshShopToken();
+//
+//    void refreshShopTokenByAccount();
+//
+//    String getAccessTokenByShopId(String shopId);
 
     List<SelectVO> getShopSelect();
 

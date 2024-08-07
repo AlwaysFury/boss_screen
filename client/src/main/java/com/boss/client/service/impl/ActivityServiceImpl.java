@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.ActivityDao;
 import com.boss.client.enities.excelEnities.Activity;
 import com.boss.client.service.ActivityService;
+import com.boss.client.vo.ActivityVO;
+import com.boss.common.util.BeanCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
 
 /**
  * 操作日志服务
@@ -87,5 +90,26 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityDao, Activity> impl
             throw new RuntimeException(e);
         }
 
+    }
+
+    @Override
+    public List<ActivityVO> getActivityInfoByItemId(long itemId) {
+        List<ActivityVO> activityVOS = activityDao.selectList(new LambdaQueryWrapper<Activity>()
+                        .select(Activity::getId,
+                                Activity::getItemId,
+                                Activity::getModelId,
+                                Activity::getPrice,
+                                Activity::getSubName,
+                                Activity::getMainName,
+                                Activity::getDate)
+                        .eq(Activity::getItemId, itemId)
+                        .eq(Activity::getStatus, "已通过")
+                        .orderByDesc(Activity::getCreateTime))
+                .stream()
+                .map(activity -> {
+                    return BeanCopyUtils.copyObject(activity, ActivityVO.class);
+
+                }).collect(Collectors.toList());
+        return activityVOS;
     }
 }

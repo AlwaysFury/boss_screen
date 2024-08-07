@@ -2,6 +2,7 @@ package com.boss.client.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.boss.client.dto.ConditionDTO;
+import com.boss.client.dto.RuleConditionDTO;
 import com.boss.client.enities.Sku;
 import com.boss.client.vo.SkuStatisticsVO;
 import org.apache.ibatis.annotations.Param;
@@ -26,5 +27,9 @@ public interface SkuDao extends BaseMapper<Sku> {
     List<SkuStatisticsVO> skuSaleVolume(@Param("ids") String ids);
 
     List<Map<String, String>> skuItemShop(@Param("ids") String ids);
+
+    List<Long> getRuleSku(@Param("ruleCondition") RuleConditionDTO ruleConditionDTO);
+
+    List<Long> getRuleSkuByTime(@Param("ruleCondition") RuleConditionDTO ruleConditionDTO);
 
 }

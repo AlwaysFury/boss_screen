@@ -11,6 +11,7 @@ import com.boss.common.enities.OrderItem;
 import com.boss.common.enities.Shop;
 import com.boss.common.util.CommonUtil;
 import com.boss.task.dao.OrderDao;
+import com.boss.task.dao.OrderItemDao;
 import com.boss.task.dao.ProductDao;
 import com.boss.task.dao.ShopDao;
 import com.boss.task.service.OrderService;
@@ -51,6 +52,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
     private OrderDao orderDao;
 
     @Autowired
+    private OrderItemDao orderItemDao;
+
+    @Autowired
     private ProductDao productDao;
 
     @Autowired
@@ -58,6 +62,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
     @Autowired
     private OrderItemServiceImpl orderItemService;
+
+    @Autowired
+    private EscrowInfoServiceImpl escrowInfoService;
+
+    @Autowired
+    private TrackingInfoServiceImpl trackingInfoService;
 
     @Autowired
     private ProductOrImgTagServiceImpl productOrImgTagService;
@@ -78,7 +88,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
 
 //    @Transactional(rollbackFor = Exception.class)
     @Override
-    public void refreshOrderByTimeStr(long startTime, long endTime) {
+    public void refreshOrderByTime(String startTimeStr, String endTimeStr) {
+        long startTime = CommonUtil.string2Timestamp(startTimeStr);
+        long endTime = CommonUtil.string2Timestamp(endTimeStr);
         // 遍历所有未冻结店铺获取 token 和 shopId
         QueryWrapper<Shop> shopQueryWrapper = new QueryWrapper<>();
         shopQueryWrapper.select("shop_id").eq("status", "1");
@@ -108,7 +120,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
             for (int i = 0; i < orderSnList.size(); i += 50) {
                 newOrderSnList.add(String.join(",", orderSnList.subList(i, Math.min(i + 50, orderSnList.size()))));
             }
-            refreshBatchOrderBySn(newOrderSnList, shopId);
+            refreshBatchOrderBySn(newOrderSnList, shopId, 0);
         }
     }
 
@@ -140,111 +152,67 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         }
 
         List<String> newOrderSnList = new ArrayList<>();
+        List<List<String>> escrowSnList = new ArrayList<>();
         for (int i = 0; i < orderSnList.size(); i += 50) {
             newOrderSnList.add(String.join(",", orderSnList.subList(i, Math.min(i + 50, orderSnList.size()))));
+            escrowSnList.add(orderSnList.subList(i, Math.min(i + 50, orderSnList.size())));
         }
 
-        refreshBatchOrderBySn(newOrderSnList, shopId);
+        refreshBatchOrderBySn(newOrderSnList, shopId, 0);
+        escrowInfoService.refreshEscrowBySn(escrowSnList, shopId, 0);
+        for (String sn : orderSnList) {
+            trackingInfoService.saveTrackingInfoBySn(sn, shopId, "");
+        }
     }
 
-//    @Transactional(rollbackFor = Exception.class)
-//    @Override
-//    public void refreshOrder(List<String> sns) {
-//        StringJoiner sj = new StringJoiner(",");
-//        for (int i = 0; i < sns.size(); i ++) {
-//            sj.add(String.valueOf(sns.get(i)));
-//        }
-//        List<Order> orders = orderDao.selectList(new QueryWrapper<Order>().select("order_sn", "shop_id").in("order_sn", sj.toString()));
-//
-//        Map<Long, List<String>> map = new HashMap<>();
-//
-//        for (Order order : orders) {
-//            String orderSn = order.getOrderSn();
-//            long shop_id = order.getShopId();
-//
-//            if (!map.containsKey(shop_id)) {
-//                List<String> temp = new ArrayList<>();
-//                temp.add(orderSn);
-//                map.put(shop_id, temp);
-//            } else {
-//                List<String> temp = map.get(shop_id);
-//                temp.add(orderSn);
-//                map.put(shop_id, temp);
-//            }
-//        }
-//
-//        for (long shopId : map.keySet()) {
-//            List<String> oldSnList = map.get(shopId);
-//
-//            List<String> snList = new ArrayList<>();
-//            for (int i = 0; i < oldSnList.size(); i += 50) {
-//                snList.add(String.join(",", oldSnList.subList(i, Math.min(i + 50, oldSnList.size()))));
-//            }
-//
-//            refreshOrderDetail(snList, shopId);
-//        }
-//    }
+    @Override
+    public void refreshOrderBySn(List<String> sns) {
+        StringJoiner sj = new StringJoiner(",");
+        for (int i = 0; i < sns.size(); i ++) {
+            sj.add(String.valueOf(sns.get(i)));
+        }
+        List<Order> orders = orderDao.selectList(new QueryWrapper<Order>().select("order_sn", "shop_id").in("order_sn", sj.toString()));
 
-//    public void refreshOrderDetail(List<String> orderSnList, long shopId) {
-//        List<Order> ordertList = new CopyOnWriteArrayList<>();
-//
-//        log.info("===订单发送请求及处理开始");
-//        long startTime =  System.currentTimeMillis();
-//
-//        List<CompletableFuture<Void>> orderFutures = orderSnList.stream()
-//                .map(orderSn -> {
-//                    long finalShopId = shopId;
-//                    return CompletableFuture.runAsync(() -> {
-//                        String finalAccessToken = shopService.getAccessTokenByShopId(String.valueOf(finalShopId));
-//                        JSONObject orderObject = ShopeeUtil.getOrderDetail(finalAccessToken, finalShopId, orderSn);
-//                        if (orderObject.getString("error").contains("error") || orderObject == null || orderObject.getJSONObject("response") == null) {
-//                            return;
-//                        }
-//                        JSONArray orderArray = orderObject.getJSONObject("response").getJSONArray("order_list");
-//                        JSONObject orderDetailObject;
-//                        for (int j = 0; j < orderArray.size(); j++) {
-//                            orderDetailObject = orderArray.getJSONObject(j);
-//                            getOrderDetail(orderDetailObject, ordertList, finalShopId);
-//                        }
-//                    }, customThreadPool);
-//                }).collect(Collectors.toList());
-//
-//        CompletableFuture.allOf(orderFutures.toArray(new CompletableFuture[0])).join();
-//
-//        log.info("===订单发送请求并处理结束，耗时：{}秒", (System.currentTimeMillis() - startTime) / 1000);
-//
-//        log.info("===开始订单数据落库");
-//        startTime =  System.currentTimeMillis();
-//
-//        List<List<Order>> batchesOrderList = CommonUtil.splitListBatches(ordertList, 100);
-//        List<CompletableFuture<Void>> insertOrderFutures = new ArrayList<>();
-//        for (List<Order> batch : batchesOrderList) {
-//            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-//                try {
-//                    transactionTemplate.executeWithoutResult(status -> {
-//                        this.saveOrUpdateBatch(batch);
-//                    });
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }, customThreadPool);
-//
-//            insertOrderFutures.add(future);
-//        }
-//        CompletableFuture.allOf(insertOrderFutures.toArray(new CompletableFuture[0])).join();
-//
-//        log.info("===订单数据落库结束，耗时：{}秒", (System.currentTimeMillis() - startTime) / 1000);
-//
-//    }
+        Map<Long, List<String>> map = new HashMap<>();
+
+        for (Order order : orders) {
+            String orderSn = order.getOrderSn();
+            long shop_id = order.getShopId();
+
+            if (!map.containsKey(shop_id)) {
+                List<String> temp = new ArrayList<>();
+                temp.add(orderSn);
+                map.put(shop_id, temp);
+            } else {
+                List<String> temp = map.get(shop_id);
+                temp.add(orderSn);
+                map.put(shop_id, temp);
+            }
+        }
+
+        for (long shopId : map.keySet()) {
+            List<String> oldSnList = map.get(shopId);
+
+            List<String> snList = new ArrayList<>();
+            List<List<String>> escrowSnList = new ArrayList<>();
+            for (int i = 0; i < oldSnList.size(); i += 50) {
+                snList.add(String.join(",", oldSnList.subList(i, Math.min(i + 50, oldSnList.size()))));
+                escrowSnList.add(oldSnList.subList(i, Math.min(i + 50, oldSnList.size())));
+            }
+
+            refreshBatchOrderBySn(snList, shopId, 2);
+            escrowInfoService.refreshEscrowBySn(escrowSnList, shopId, 0);
+            for (String sn : oldSnList) {
+                trackingInfoService.saveTrackingInfoBySn(sn, shopId, "");
+            }
+        }
+    }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void refreshSingleOrderBySn(String orderSn, long shopId, String status) {
         List<Order> ordertList = new ArrayList<>();
         List<OrderItem> orderItemList =  new ArrayList<>();
-
-        log.info("===开始处理推送订单：{}", orderSn);
-        long startTime =  System.currentTimeMillis();
 
         String token = shopService.getAccessTokenByShopId(String.valueOf(shopId));
         JSONObject orderObject = ShopeeUtil.getOrderDetail(token, shopId, orderSn);
@@ -270,7 +238,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
         }
     }
 
-    public void refreshBatchOrderBySn(List<String> orderSnList, long shopId) {
+    public void refreshBatchOrderBySn(List<String> orderSnList, long shopId, int flag) {
         if (orderSnList.isEmpty()) {
             return;
         }
@@ -295,7 +263,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements Or
                         for (int j = 0; j < orderArray.size(); j++) {
                             orderDetailObject = orderArray.getJSONObject(j);
                             getOrderDetail(orderDetailObject, ordertList, finalShopId);
-                            getOrderItem(orderDetailObject, orderItemList, finalShopId);
+                            if (flag == 1) {
+                                getOrderItem(orderDetailObject, orderItemList, finalShopId);
+                            } else if (flag == 0) {
+                                Long itemCount = orderItemDao.selectCount(new QueryWrapper<OrderItem>().eq("order_sn", orderObject.getString("order_sn")));
+                                if (itemCount == 0) {
+                                    getOrderItem(orderDetailObject, orderItemList, finalShopId);
+                                }
+                            }
                         }
                     }, customThreadPool);
                 }).collect(Collectors.toList());

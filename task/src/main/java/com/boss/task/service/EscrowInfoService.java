@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface EscrowInfoService extends IService<EscrowInfo> {
 
-    void refreshEscrowBySn(List<List<String>> orderSnList, long shopId);
+    void refreshEscrowBySn(List<List<String>> orderSnList, long shopId, int flag);
 
     void refreshEscrowInfoBySn(List<List<String>> orderSnLists, long shopId);
 

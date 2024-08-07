@@ -8,7 +8,7 @@
             count(*)
         FROM
             tb_product s
-        <if test="condition.tag_id != null">
+        <if test="condition.tag_ids != null">
             left join tb_productorimg_tag as t on t.itemOrImg_id = s.id
         </if>
         <where>
@@ -34,11 +34,14 @@
             <if test="condition.end_time != null">
                 and s.create_time &lt;= UNIX_TIMESTAMP(STR_TO_DATE(#{condition.end_time}, '%Y-%m-%d %H:%i:%s'))
             </if>
-            <if test="condition.grade != null">
-                and s.grade = #{condition.grade}
+            <if test="condition.rule_grade != null">
+                and s.grade = #{condition.rule_grade}
             </if>
-            <if test="condition.tag_id != null">
-                and t.tag_id  = #{condition.tag_id}
+            <if test="condition.tag_ids != null">
+                and t.tag_id in
+                <foreach item="id" index="index" collection="condition.tag_ids" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
             </if>
         </where>
     </select>
@@ -63,7 +66,7 @@
             on s.item_id = d.item_id
         left join tb_shop as t
             on s.shop_id = t.shop_id
-        <if test="condition.tag_id != null">
+        <if test="condition.tag_ids != null">
             left join tb_productorimg_tag as tag
                 on tag.itemOrImg_id = s.id
         </if>
@@ -92,11 +95,14 @@
             <if test="condition.end_time != null">
                 and s.create_time &lt;= UNIX_TIMESTAMP(STR_TO_DATE(#{condition.end_time}, '%Y-%m-%d %H:%i:%s'))
             </if>
-            <if test="condition.grade != null">
-                and s.grade = #{condition.grade}
+            <if test="condition.rule_grade != null">
+                and s.grade = #{condition.rule_grade}
             </if>
-            <if test="condition.tag_id != null">
-                and tag.tag_id  = #{condition.tag_id}
+            <if test="condition.tag_ids != null">
+                and tag.tag_id in
+                <foreach item="id" index="index" collection="condition.tag_ids" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
             </if>
         </where>
         <if test="condition.orderBy_name != null">
@@ -171,5 +177,98 @@
             s.id = p.id
           and s.create_time >= UNIX_TIMESTAMP(NOW()) - 2592000
           and p.sale > 0
+    </select>
+
+    <select id="getRuleProduct" resultType="java.lang.Long">
+        select
+        s.id
+        from
+        tb_product as s
+        where s.id is not null
+        <choose>
+            <when test="ruleCondition.allOrNot == true">
+                <if test="ruleCondition.itemId != null">
+                    and s.id = #{ruleCondition.itemId}
+                </if>
+                <if test="ruleCondition.status != null">
+                    and s.status = #{ruleCondition.status}
+                </if>
+                <if test="ruleCondition.categoryId != null">
+                    and s.category_id = #{ruleCondition.categoryId}
+                </if>
+                <if test="ruleCondition.createStartTime != null">
+                    and s.create_time >= #{ruleCondition.createStartTime}
+                </if>
+                <if test="ruleCondition.createEndTime != null">
+                    and s.create_time &lt;= #{ruleCondition.createEndTime}
+                </if>
+            </when>
+            <when test="ruleCondition.allOrNot == false">
+                <if test="ruleCondition.itemId != null">
+                    or s.id = #{ruleCondition.itemId}
+                </if>
+                <if test="ruleCondition.status != null">
+                    or s.status = #{ruleCondition.status}
+                </if>
+                <if test="ruleCondition.categoryId != null">
+                    or s.category_id = #{ruleCondition.categoryId}
+                </if>
+                <if test="ruleCondition.createStartTime != null and ruleCondition.createEndTime == null">
+                    or s.create_time >= #{ruleCondition.createStartTime}
+                </if>
+                <if test="ruleCondition.createStartTime == null and ruleCondition.createEndTime != null">
+                    or s.create_time &lt;= #{ruleCondition.createEndTime}
+                </if>
+                <if test="ruleCondition.createStartTime != null and ruleCondition.createEndTime != null">
+                    or (s.create_time >= #{ruleCondition.createStartTime} and s.create_time &lt;= #{ruleCondition.createEndTime})
+                </if>
+            </when>
+        </choose>
+        group by s.id
+    </select>
+
+    <select id="getRuleProductByPrice" resultType="java.lang.Long">
+        select
+            s.id
+        from
+            tb_product as s
+        left join tb_model as m on s.id = m.item_id
+        where s.id is not null
+        group by s.id
+        having
+        <if test="ruleCondition.minPrice != 0 and ruleCondition.maxPrice == 0">
+            IFNUll(min(m.current_price), 0.00) >= #{ruleCondition.minPrice}
+        </if>
+        <if test="ruleCondition.minPrice == 0 and ruleCondition.maxPrice != 0">
+            IFNUll(min(m.current_price), 0.00) &lt;= #{ruleCondition.maxPrice}
+        </if>
+        <if test="ruleCondition.minPrice != 0 and ruleCondition.maxPrice != 0">
+            IFNUll(min(m.current_price), 0.00) >= #{ruleCondition.minPrice} and IFNUll(min(m.current_price), 0.00) &lt;= #{ruleCondition.maxPrice}
+        </if>
+    </select>
+
+
+    <select id="getRuleProductBySales" resultType="java.lang.Long">
+        select
+            s.id
+        from
+        tb_product as s
+            left join tb_product_extra_info as m on s.id = m.id
+        where
+            s.id is not null
+        <if test="minSales != 0">
+            and m.sale >= #{minSales}
+        </if>
+        <if test="maxSales != 0">
+            and m.sale &lt;= #{maxSales}
+        </if>
+        group by s.id
+    </select>
+
+    <select id="getAllIds" resultType="java.lang.Long">
+        select
+            s.id
+        from
+            tb_product as s
     </select>
 </mapper>

@@ -4,11 +4,8 @@ package com.boss.client.controller;
 import com.boss.client.dto.ConditionDTO;
 import com.boss.client.dto.ProductTagDTO;
 import com.boss.client.service.impl.*;
-import com.boss.client.vo.PageResult;
-import com.boss.client.vo.ProductInfoVO;
-import com.boss.client.vo.ProductVO;
-import com.boss.client.vo.Result;
-import com.boss.common.dto.UpdateStatusDTO;
+import com.boss.client.vo.*;
+import com.boss.common.dto.RefreshDTO;
 import com.boss.common.vo.SelectVO;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +40,12 @@ public class ProductController {
 
     @Autowired
     private ProductOrImgTagServiceImpl productOrImgTagService;
+
+    @Autowired
+    private ProductExpressionServiceImpl productExpressionService;
+
+    @Autowired
+    private ActivityServiceImpl activityService;
 
     /**
      * 获取产品列表
@@ -84,13 +87,13 @@ public class ProductController {
 
     /**
      * 刷新产品
-     * @param updateStatusDTO
+     * @param refreshDTO
      * @return
      */
     @PostMapping("/refreshProducts")
-    public Result<?> refreshProducts(@Valid @RequestBody UpdateStatusDTO updateStatusDTO) {
-        productService.refreshProducts(updateStatusDTO.getIdList());
-        return Result.ok();
+    public Result<?> refreshProducts(@Valid @RequestBody RefreshDTO refreshDTO) {
+        productService.refreshProducts(refreshDTO);
+        return Result.ok("", "已提交后台任务，请稍后查看");
     }
 
     /**
@@ -111,7 +114,7 @@ public class ProductController {
     @GetMapping("/refreshGrade")
     public Result<?> refreshGrade() {
         gradeService.refreshGrade(ITEM.getCode());
-        return Result.ok();
+        return Result.ok("", "已提交后台任务，请稍后查看");
     }
 
     @GetMapping("/getNewerSaleProduct")
@@ -127,6 +130,16 @@ public class ProductController {
     @GetMapping("/tagSelect")
     public Result<List<SelectVO>> tagSelect() {
         return Result.ok(tagService.tagSelect(ITEM.getCode()));
+    }
+
+    @GetMapping("/getProductExpressionInfo")
+    public Result<List<ProductExpressionVO>> getProductExpressionInfo(@RequestParam("item_id") Long itemId) {
+        return Result.ok(productExpressionService.getProductExpressionInfoById(itemId));
+    }
+
+    @GetMapping("/getActivityInfo")
+    public Result<List<ActivityVO>> getActivityInfoByItemId(@RequestParam("item_id") Long itemId) {
+        return Result.ok(activityService.getActivityInfoByItemId(itemId));
     }
 
 }

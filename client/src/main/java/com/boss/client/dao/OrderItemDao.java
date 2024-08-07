@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 
 /**
@@ -23,6 +24,10 @@ public interface OrderItemDao extends BaseMapper<OrderItem> {
 
 
     Integer countByCreateTimeRange(@Param("item_id") long itemId, @Param("sku_name") String skuName, @Param("start_time") long startTime, @Param("end_time") long endTime, @Param("type") String type);
+
+    List<Long> getProductBySalesCreateTimeRange(@Param("start_time") long startTime, @Param("end_time") long endTime, @Param("minSales") int minSales, @Param("maxSales") int maxSales);
+
+    List<Long> getSkuBySalesCreateTimeRange(@Param("start_time") long startTime, @Param("end_time") long endTime, @Param("minSales") int minSales, @Param("maxSales") int maxSales);
 
     Integer itemCountByCreateTime(@Param("item_id") long itemId, @Param("time") long time);
 

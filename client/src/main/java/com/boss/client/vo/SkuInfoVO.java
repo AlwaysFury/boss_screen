@@ -1,5 +1,6 @@
 package com.boss.client.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,11 +17,15 @@ public class SkuInfoVO {
     /**
      * id
      */
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long id;
 
     private String name;
 
-    private List<Long> relevanceIds;
+    /**
+     * 关联款号列表
+     */
+    private List<RelevanceSkuVO> relevanceSku;
 
     private String createTime;
 }

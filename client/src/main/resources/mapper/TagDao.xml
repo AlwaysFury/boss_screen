@@ -44,7 +44,9 @@
 
     <select id="getTagListByItemOrImgId" resultType="com.boss.common.enities.Tag">
         SELECT
-            s.tag_name
+            s.id,
+            s.tag_name,
+            s.tag_type
         FROM
             tb_tag as s
         left join tb_productorimg_tag as t on t.tag_id = s.id

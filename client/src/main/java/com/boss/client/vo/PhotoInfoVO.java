@@ -52,11 +52,14 @@ public class PhotoInfoVO {
     private String createTime;
 
     /**
-     * 标签
+     * 标签列表
      */
-    private List<String> tagNameList;
+    private List<TagVO> tagList;
 
-    private List<Long> relevanceIds;
+    /**
+     * 关联款号列表
+     */
+    private List<RelevanceSkuVO> relevanceSku;
 
     /**
      * 销量

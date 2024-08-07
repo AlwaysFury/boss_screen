@@ -28,7 +28,8 @@
             id,
             name,
             grade,
-            type
+            type,
+            weight
         FROM
             tb_rule as s
         <where>

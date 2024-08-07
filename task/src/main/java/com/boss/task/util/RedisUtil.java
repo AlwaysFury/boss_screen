@@ -85,4 +85,18 @@ public class RedisUtil {
         }
         return result;
     }
+
+    public static void main(String[] args) {
+        String newJsonStr = "{\"id\":\"1\",\"name\":\"张三\",\"age\":\"18\",\"sex\":\"男\"}";
+        String oldJsonStr = "{\"id\":\"2\",\"name\":\"张三\",\"age\":\"18\",\"sex\":\"男\"}";
+        JsonComparedOption jsonComparedOption = new JsonComparedOption().setIgnoreOrder(true);
+        JsonCompareResult jsonCompareResult = new DefaultJsonDifference()
+                .option(jsonComparedOption)
+                .detectDiff(newJsonStr, oldJsonStr);
+        if (!jsonCompareResult.isMatch()) {
+
+            String result = JSON.toJSONString(jsonCompareResult);
+            System.out.println(result);
+        }
+    }
 }

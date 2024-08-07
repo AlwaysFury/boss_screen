@@ -27,7 +27,9 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -97,7 +99,7 @@ public class PhotoController {
     @GetMapping("/refreshGrade")
     public Result<?> refreshGrade() {
         gradeService.refreshGrade(PHOTO.getCode());
-        return Result.ok();
+        return Result.ok("", "已提交后台任务，请稍后查看");
     }
 
 
@@ -108,17 +110,38 @@ public class PhotoController {
      */
     @PostMapping("/upload")
     public Result<Map<String, String>> uploadPhoto(MultipartFile file) {
-        return Result.ok(fileTransferStrategyContext.executeUploadStrategy(file, FilePathEnum.PHOTO.getPath()));
+        return Result.ok(photoService.upload(file));
+    }
+
+    @GetMapping("/getUploadId")
+    public Result<Map<String, String>> getUploadId(@RequestParam("fileName") String fileName) {
+        return Result.ok(photoService.getUploadId(fileName));
+    }
+
+    /**
+     * 分片上传
+     */
+    @PostMapping("/uploadChunk")
+    public Result<Map<String, Object>> uploadChunk(UploadChunkFileDTO uploadChunkFileDTO) {
+        return Result.ok(photoService.uploadChunk(uploadChunkFileDTO));
+    }
+
+    @PostMapping("/saveUploadInfo")
+    public Result<?> saveUploadInfo(@RequestBody String body) {
+        photoService.saveUploadInfo(URLDecoder.decode(body, StandardCharsets.UTF_8));
+        return Result.ok();
     }
 
     /**
      * 批量上传
+     * @param files
+     * @return
      */
-    @PostMapping("/uploadChunk")
-    public Result<Map<String, Object>> uploadChunkPhoto(UploadChunkFileDTO param) {
-        return Result.ok();
-    }
-
+//    @PostMapping("/uploadBatch")
+//    public Result<?> uploadBatch(@RequestParam("files") List<MultipartFile> files) {
+//        photoService.uploadBatch(files);
+//        return Result.ok();
+//    }
 
     /**
      * 下载

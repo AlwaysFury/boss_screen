@@ -742,7 +742,67 @@ public class ShopeeUtil {
     }
 
     /**
-     * 获取订单物流号
+     * 获取订单物流
+     * @param accessToken
+     * @param shopId
+     * @param orderSn
+     * @return
+     */
+    public static JSONObject getTrackingNumber(String accessToken, long shopId, String orderSn) {
+        JSONObject result = getTrackingInfoByHttp(accessToken, shopId, orderSn);
+
+        int retryCount = 0;
+        final int maxRetries = 5;
+        final int baseDelayMs = 100; // 初始延迟时间，例如100毫秒
+
+        while ((result == null || (result == null || result.getString("error").contains("error"))) && retryCount < maxRetries) {
+            try {
+                Thread.sleep(baseDelayMs * (int)Math.pow(2, retryCount)); // 指数级增长的延迟
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // 保持中断状态
+                throw new RuntimeException("Thread interrupted", e);
+            }
+
+            try {
+                result = getTrackingInfoByHttp(accessToken, shopId, orderSn);
+            } catch (Exception e) {
+                JSONObject temp = new JSONObject();
+                temp.put("error", "error");
+                return temp;
+            }
+            retryCount++;
+        }
+
+        return result;
+    }
+
+    public static JSONObject getTrackingNumberByHttp(String accessToken, long shopId, String orderSn) {
+
+
+        long timest = System.currentTimeMillis() / 1000L;
+        String host = ShopAuthDTO.getHost();
+        String path = "/api/v2/logistics/get_tracking_number";
+        long partner_id = ShopAuthDTO.getPartnerId();
+        String tmp_partner_key = ShopAuthDTO.getTempPartnerKey();
+        BigInteger sign = getShopTokenSign(partner_id, path,timest, accessToken, shopId, tmp_partner_key);
+        // "https://partner.shopeemobile.com/api/v2/order/get_order_list?page_size=20&response_optional_fields=order_status&timestamp=timestamp&shop_id=shop_id&order_status=READY_TO_SHIP&partner_id=partner_id&access_token=access_token&cursor=""&time_range_field=create_time&time_from=1607235072&time_to=1608271872&sign=sign"
+        String tmp_url = host + path + String.format("?&partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&order_sn=%s",
+                partner_id, timest, String.format("%032x",sign), accessToken, shopId, orderSn);
+
+        String result;
+        try {
+            result = HttpUtil.get(tmp_url, CharsetUtil.CHARSET_UTF_8);
+        } catch (Exception e) {
+            JSONObject temp = new JSONObject();
+            temp.put("error", "error");
+            return temp;
+        }
+
+        return JSONObject.parseObject(result);
+    }
+
+    /**
+     * 获取订单物流
      * @param accessToken
      * @param shopId
      * @param orderSn
@@ -767,7 +827,9 @@ public class ShopeeUtil {
             try {
                 result = getTrackingInfoByHttp(accessToken, shopId, orderSn);
             } catch (Exception e) {
-
+                JSONObject temp = new JSONObject();
+                temp.put("error", "error");
+                return temp;
             }
             retryCount++;
         }

@@ -4,7 +4,6 @@ import cn.hutool.core.util.IdUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.common.enities.TrackingInfo;
 import com.boss.common.util.CommonUtil;
@@ -67,7 +66,6 @@ public class TrackingInfoServiceImpl extends ServiceImpl<TrackingInfoDao, Tracki
                 .id(IdUtil.getSnowflakeNextId())
                 .shopId(shopId)
                 .orderSn(orderSn)
-                .trackingNumber(trackingNumber)
                 .logisticsStatus(response.getString("logistics_status"))
                 .build();
 
@@ -76,13 +74,26 @@ public class TrackingInfoServiceImpl extends ServiceImpl<TrackingInfoDao, Tracki
             trackingInfo.setLogisticsData(infoArray.toJSONString());
         }
 
+        if (trackingNumber == null || "".equals(trackingNumber)) {
+            accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
+            JSONObject trackingNumberObject = ShopeeUtil.getTrackingNumberByHttp(accessToken, shopId, orderSn);
+
+            if (trackingNumberObject.getString("error").contains("error") || trackingNumberObject == null || trackingNumberObject.getJSONObject("response") == null) {
+                trackingNumber = "";
+            } else {
+                trackingNumber = trackingNumberObject.getString("tracking_number");
+            }
+        }
+
+        trackingInfo.setTrackingNumber(trackingNumber);
+
         TrackingInfo existTrackingInfo = this.getOne(new QueryWrapper<TrackingInfo>().eq("order_sn", orderSn));
 
         if (Objects.nonNull(existTrackingInfo)) {
-            this.update(trackingInfo, new UpdateWrapper<TrackingInfo>().eq("order_sn", orderSn));
-        } else {
-            this.save(trackingInfo);
+            trackingInfo.setId(existTrackingInfo.getId());
         }
+
+        this.saveOrUpdate(trackingInfo);
 
     }
 
@@ -156,9 +167,8 @@ public class TrackingInfoServiceImpl extends ServiceImpl<TrackingInfoDao, Tracki
         startTime =  System.currentTimeMillis();
 
         List<List<TrackingInfo>> batchesTrackingInfoList = CommonUtil.splitListBatches(trackingInfoList, 100);
-//        List<CompletableFuture<Void>> insertTrackingInfoFutures = new ArrayList<>();
         for (List<TrackingInfo> batch : batchesTrackingInfoList) {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(() -> {
                 try {
                     transactionTemplate.executeWithoutResult(status -> {
                         this.saveOrUpdateBatch(batch);
@@ -167,10 +177,7 @@ public class TrackingInfoServiceImpl extends ServiceImpl<TrackingInfoDao, Tracki
                     e.printStackTrace();
                 }
             }, customThreadPool);
-
-//            insertTrackingInfoFutures.add(future);
         }
-//        CompletableFuture.allOf(insertTrackingInfoFutures.toArray(new CompletableFuture[0])).join();
 
         log.info("===运单数据落库结束，耗时：{}秒", (System.currentTimeMillis() - startTime) / 1000);
     }

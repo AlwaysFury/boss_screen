@@ -1,6 +1,7 @@
 package com.boss.client.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.boss.client.dto.RuleConditionDTO;
 import com.boss.client.vo.ProductInfoVO;
 import com.boss.client.vo.ProductVO;
 import com.boss.client.dto.ConditionDTO;
@@ -26,5 +27,13 @@ public interface ProductDao extends BaseMapper<Product> {
 
     List<String> getNewerSaleProductNames();
 //    List<ProductVO> productListByGrade(String itemIds);
+
+    List<Long> getRuleProduct(@Param("ruleCondition") RuleConditionDTO ruleConditionDTO);
+
+    List<Long> getRuleProductByPrice(@Param("ruleCondition") RuleConditionDTO ruleConditionDTO);
+
+    List<Long> getRuleProductBySales(@Param("minSales") int minSales, @Param("maxSales") int maxSales);
+
+    List<Long> getAllIds();
 
 }

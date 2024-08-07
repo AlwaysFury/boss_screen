@@ -21,6 +21,8 @@
         <module>client</module>
         <module>common</module>
         <module>task</module>
+        <module>shopee_receiver</module>
+        <module>canal_client</module>
     </modules>
 
     <packaging>pom</packaging>

@@ -40,6 +40,11 @@ spring:
           min-idle: 8
           max-idle: 0
           max-wait: -1
+  rabbitmq:
+    host: 120.76.157.173
+    port: 5672
+    username: mq
+    password: Hxt@102620
 
 # 配置MybatisPlus
 mybatis-plus:

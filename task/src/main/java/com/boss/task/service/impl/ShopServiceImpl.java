@@ -1,9 +1,12 @@
 package com.boss.task.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.boss.common.dto.ShopDTO;
 import com.boss.common.enities.Shop;
 import com.boss.task.dao.ShopDao;
 import com.boss.task.service.ShopService;
@@ -14,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 import static com.boss.common.constant.RedisPrefixConst.SHOP_TOKEN;
 
@@ -32,6 +36,28 @@ public class ShopServiceImpl extends ServiceImpl<ShopDao, Shop> implements ShopS
 
     @Autowired
     private RedisServiceImpl redisService;
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void saveOrUpdateToken(ShopDTO shopDTO) {
+        Shop existShop = shopDao.selectOne(new LambdaQueryWrapper<Shop>()
+                .select(Shop::getId)
+                .eq(Shop::getShopId, shopDTO.getShopId()));
+        if (Objects.nonNull(existShop) && !existShop.getId().equals(shopDTO.getId())) {
+            UpdateWrapper<Shop> wrapper = new UpdateWrapper<>();
+            wrapper.set("access_token", shopDTO.getAccessToken());
+            wrapper.set("refresh_token", shopDTO.getRefreshToken());
+            wrapper.eq("id", existShop.getId());
+
+            this.update(wrapper);
+        } else {
+            Shop shop = new Shop();
+            BeanUtil.copyProperties(shopDTO, shop);
+            this.save(shop);
+        }
+
+        redisService.set(SHOP_TOKEN + shopDTO.getShopId(), shopDTO.getAccessToken());
+    }
 
 
     @Transactional(rollbackFor = Exception.class)

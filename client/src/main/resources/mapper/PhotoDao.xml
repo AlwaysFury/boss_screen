@@ -24,17 +24,23 @@
             <if test="condition.end_time != null">
                 and s.create_time &lt;= #{condition.end_time}
             </if>
-            <if test="condition.grade != null">
-                t.grade = #{condition.grade}
-            </if>
-            <if test="condition.max_value != 0">
-                and IFNULL(sum(p.count), 0) &lt;= #{condition.max_value}
-            </if>
-            <if test="condition.min_value != 0">
-                and IFNULL(sum(p.count), 0) >= #{condition.min_value}
+            <if test="condition.rule_grade != null">
+                t.grade = #{condition.rule_grade}
             </if>
         </where>
         group by s.id
+        <if test="condition.max_value != 0 and condition.min_value != 0">
+            having
+            <if test="condition.max_value != 0 and condition.min_value == 0">
+                IFNULL(sum(p.count), 0) &lt;= #{condition.max_value}
+            </if>
+            <if test="condition.min_value != 0 and condition.max_value == 0">
+                IFNULL(sum(p.count), 0) >= #{condition.min_value}
+            </if>
+            <if test="condition.max_value != 0 and condition.min_value != 0">
+                IFNULL(sum(p.count), 0) >= #{condition.min_value} and IFNULL(sum(p.count), 0) &lt;= #{condition.max_value}
+            </if>
+        </if>
         ) as a
     </select>
 
@@ -66,17 +72,23 @@
             <if test="condition.end_time != null">
                 and s.create_time &lt;= #{condition.end_time}
             </if>
-            <if test="condition.grade != null">
-                and s.grade = #{condition.grade}
-            </if>
-            <if test="condition.max_value != 0">
-                and IFNULL(sum(p.count), 0) &lt;= #{condition.max_value}
-            </if>
-            <if test="condition.min_value != 0">
-                and IFNULL(sum(p.count), 0) >= #{condition.min_value}
+            <if test="condition.rule_grade != null">
+                and t.grade = #{condition.rule_grade}
             </if>
         </where>
         group by s.id
+        <if test="condition.max_value != 0 and condition.min_value != 0">
+            having
+            <if test="condition.max_value != 0 and condition.min_value == 0">
+                IFNULL(sum(p.count), 0) &lt;= #{condition.max_value}
+            </if>
+            <if test="condition.min_value != 0 and condition.max_value == 0">
+                IFNULL(sum(p.count), 0) >= #{condition.min_value}
+            </if>
+            <if test="condition.max_value != 0 and condition.min_value != 0">
+                IFNULL(sum(p.count), 0) >= #{condition.min_value} and IFNULL(sum(p.count), 0) &lt;= #{condition.max_value}
+            </if>
+        </if>
         <if test="condition.orderBy_name != null">
             order by ${condition.orderBy_name}
         </if>

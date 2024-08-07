@@ -1,6 +1,7 @@
 package com.boss.client.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -8,11 +9,11 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.boss.client.dao.MainAccountDao;
 import com.boss.client.dao.ShopDao;
+import com.boss.client.dto.ConditionDTO;
 import com.boss.client.service.MainAccountService;
 import com.boss.client.util.ShopeeUtil;
 import com.boss.client.vo.MainAccountVO;
 import com.boss.client.vo.PageResult;
-import com.boss.client.dto.ConditionDTO;
 import com.boss.common.dto.MainAccountDTO;
 import com.boss.common.dto.ShopDTO;
 import com.boss.common.dto.UpdateStatusDTO;
@@ -20,6 +21,9 @@ import com.boss.common.enities.MainAccount;
 import com.boss.common.enities.Shop;
 import com.boss.common.util.PageUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +32,8 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Objects;
+
+import static com.boss.common.constant.MQPrefixConst.SHOP_EXCHANGE;
 
 /**
  * @Description
@@ -47,6 +53,9 @@ public class MainAccountServiceImpl extends ServiceImpl<MainAccountDao, MainAcco
 
     @Autowired
     private ShopServiceImpl shopService;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -92,6 +101,14 @@ public class MainAccountServiceImpl extends ServiceImpl<MainAccountDao, MainAcco
             shopDTO.setAccountId(mainAccountId);
 
             shopService.saveOrUpdateToken(shopDTO);
+
+            log.info("开始向mq推送授权消息");
+            try {
+                rabbitTemplate.convertAndSend(SHOP_EXCHANGE, "*", new Message(JSON.toJSONBytes(shopDTO), new MessageProperties()));
+            } catch (Exception e) {
+                log.error("向mq推送消息失败：" + e);
+            }
+            log.info("推送结束");
         }
     }
 

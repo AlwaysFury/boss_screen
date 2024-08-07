@@ -158,7 +158,7 @@ class TaskApplicationTests {
         long startTime =  System.currentTimeMillis();
         List<String> orderSnList = new ArrayList<>();
         orderSnList.add("240618BK03STS9");
-        orderService.refreshBatchOrderBySn(orderSnList, 874244879);
+//        orderService.refreshBatchOrderBySn(orderSnList, 874244879);
 
         log.info("更新订单耗时： {}秒", (System.currentTimeMillis() - startTime) / 1000);
     }

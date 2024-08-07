@@ -39,9 +39,6 @@ public class RuleServiceImpl extends ServiceImpl<RuleDao, Rule> implements RuleS
     @Autowired
     private OrderItemServiceImpl orderItemService;
 
-    @Autowired
-    private RedisServiceImpl redisService;
-
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void saveOrUpdateRule(RuleDTO ruleDTO) {

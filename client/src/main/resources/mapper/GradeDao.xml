@@ -3,30 +3,30 @@
 <mapper namespace="com.boss.client.dao.GradeDao">
 
 <!--    itemId,tagList,categoryId,status,createTime-->
-    <select id="getProduct" resultType="com.boss.client.dto.GradeObject">
-        SELECT
-            s.item_id as itemId,
-            s.create_time as createTime,
-            s.category_id as categoryId,
-            s.status
-        FROM
-            tb_product as s
-        where
-            s.status in ('NORMAL', 'UNLIST', 'REVIEWING')
-    </select>
+<!--    <select id="getProduct" resultType="com.boss.client.dto.GradeObject">-->
+<!--        SELECT-->
+<!--            s.item_id as itemId,-->
+<!--            s.create_time as createTime,-->
+<!--            s.category_id as categoryId,-->
+<!--            s.status-->
+<!--        FROM-->
+<!--            tb_product as s-->
+<!--        where-->
+<!--            s.status in ('NORMAL', 'UNLIST', 'REVIEWING')-->
+<!--    </select>-->
 
-    <select id="getSku" resultType="com.boss.client.dto.GradeObject">
-        SELECT
-            s.id as itemId,
-            s.name as itemSku,
-            UNIX_TIMESTAMP(min(m.create_time)) as createTime,
-            min(m.current_price) as price,
-            ifnull(sum(o.count), 0) as salesVolume
-        FROM
-            tb_sku as s
-        left join tb_model as m on s.name = m.sku_name
-        left join tb_order_item as o on s.name = o.sku_name
+<!--    <select id="getSku" resultType="com.boss.client.dto.GradeObject">-->
+<!--        SELECT-->
+<!--            s.id as itemId,-->
+<!--            s.name as itemSku,-->
+<!--            UNIX_TIMESTAMP(min(m.create_time)) as createTime,-->
+<!--            min(m.current_price) as price,-->
+<!--            ifnull(sum(o.count), 0) as salesVolume-->
+<!--        FROM-->
+<!--            tb_sku as s-->
+<!--        left join tb_model as m on s.name = m.sku_name-->
+<!--        left join tb_order_item as o on s.name = o.sku_name-->
 
-    </select>
+<!--    </select>-->
 
 </mapper>

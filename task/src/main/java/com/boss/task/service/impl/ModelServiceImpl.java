@@ -113,13 +113,15 @@ public class ModelServiceImpl extends ServiceImpl<ModelDao, Model> implements Mo
                         OperationLog operationLog = new OperationLog();
                         operationLog.setOptType(SYSTEM_LOG);
                         for (int j = 0; j < diffArray.size(); j++) {
-                            String key = diffArray.getJSONObject(j).getJSONObject("travelPath").getString("abstractTravelPath");
-                            if (key.contains("updateTime")) {
-                                continue;
+                            JSONObject defectsObject = diffArray.getJSONObject(j);
+                            String key = defectsObject.getJSONObject("travelPath").getString("abstractTravelPath");
+                            // "{\"imageId\":\"sg-11134201-7qvfk-lj49s5nrs2kgf7\",\"originalPrice\":299,\"modelId\":184422415413,\"currentPrice\":165,\"modelSku\":\"A742-White-3XL(85-100kg)\",\"promotionId\":444890270810112,\"skuName\":\"A742\",\"itemId\":10199520044,\"modelName\":\"White,3XL(85-100kg)\",\"imageUrl\":\"https://cf.shopee.co.th/file/sg-11134201-7qvfk-lj49s5nrs2kgf7\",\"shopId\":874244879,\"id\":184422415413,\"stock\":9999,\"status\":\"MODEL_NORMAL\"}"
+                            if (key.contains("currentPrice")) {
+                                joiner.add("价格由 " + defectsObject.getString("expect") + " 变为 " + defectsObject.getString("actual"));
                             }
-                            joiner.add(key.substring(key.indexOf(".") + 1, key.length()));
+
                         }
-                        operationLog.setOptDesc("产品 " + itemId + " 规格字段发生变化：" + joiner);
+                        operationLog.setOptDesc("产品 " + itemId + " 规格 " + modelId + " 发生变化：" + joiner);
                         operationLogDao.insert(operationLog);
                     }
                 }

@@ -7,13 +7,12 @@ import com.boss.client.dao.ProductOrImgTagDao;
 import com.boss.client.dao.TagDao;
 import com.boss.client.dto.ConditionDTO;
 import com.boss.client.dto.TagDTO;
-import com.boss.client.enities.Rule;
-import com.boss.common.enities.ProductOrImgTag;
-import com.boss.common.enities.Tag;
 import com.boss.client.exception.BizException;
 import com.boss.client.service.TagService;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.TagVO;
+import com.boss.common.enities.ProductOrImgTag;
+import com.boss.common.enities.Tag;
 import com.boss.common.enums.TagTypeEnum;
 import com.boss.common.util.BeanCopyUtils;
 import com.boss.common.util.PageUtils;
@@ -22,9 +21,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static com.boss.common.enums.TagTypeEnum.ITEM;
 
 /**
  * 标签服务
@@ -91,10 +93,22 @@ public class TagServiceImpl extends ServiceImpl<TagDao, Tag> implements TagServi
 
     @Override
     public List<SelectVO> tagSelect(String type) {
-        List<SelectVO> selectVOS = tagDao.selectList(new QueryWrapper<Tag>().eq("tag_type", type)).stream()
-                .map(tag -> SelectVO.builder()
-                        .key(tag.getId())
-                        .value(tag.getTagName()).build()).collect(Collectors.toList());
+        List<SelectVO> selectVOS = new ArrayList<>();
+        if (ITEM.getCode().equals(type)) {
+            List<String> typeList = new ArrayList<>();
+            typeList.add(type);
+            typeList.add("AUTO");
+            selectVOS = tagDao.selectList(new QueryWrapper<Tag>().in("tag_type", typeList)).stream()
+                    .map(tag -> SelectVO.builder()
+                            .key(tag.getId())
+                            .value(tag.getTagName()).build()).collect(Collectors.toList());
+        } else {
+            selectVOS = tagDao.selectList(new QueryWrapper<Tag>().eq("tag_type", type)).stream()
+                    .map(tag -> SelectVO.builder()
+                            .key(tag.getId())
+                            .value(tag.getTagName()).build()).collect(Collectors.toList());
+        }
+
         return selectVOS;
     }
 

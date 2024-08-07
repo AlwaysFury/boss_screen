@@ -1,19 +1,18 @@
 package com.boss.client.controller;
 
 
+import com.boss.client.dto.ConditionDTO;
 import com.boss.client.service.impl.OrderServiceImpl;
 import com.boss.client.vo.OrderEscrowInfoVO;
 import com.boss.client.vo.OrderEscrowVO;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.Result;
-import com.boss.client.dto.ConditionDTO;
+import com.boss.common.dto.RefreshDTO;
 import com.boss.common.vo.SelectVO;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -60,5 +59,15 @@ public class OrderController {
         return Result.ok(orderService.getStatusSelect());
     }
 
+    /**
+     * 刷新订单
+     * @param refreshDTO
+     * @return
+     */
+    @PostMapping("/refreshOrders")
+    public Result<?> refreshOrders(@Valid @RequestBody RefreshDTO refreshDTO) {
+        orderService.refreshOrders(refreshDTO);
+        return Result.ok("", "已提交后台任务，请稍后查看");
+    }
 
 }

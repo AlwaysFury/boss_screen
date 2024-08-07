@@ -40,6 +40,11 @@ spring:
           min-idle: 8
           max-idle: 0
           max-wait: -1
+  rabbitmq:
+    host: 120.76.157.173
+    port: 5672
+    username: mq
+    password: Hxt@102620
 
 # 配置MybatisPlus
 mybatis-plus:
@@ -57,4 +62,4 @@ shopeeApi:
   account_redirect_url: http://120.79.52.53:8991/api/shopee/saveOrUpdateAccount
 
 feishu:
-  url: https://open.feishu.cn/open-apis/bot/v2/hook/3180aa6f-9447-4ebd-aa68-9c1b0e932068
+  url: https://open.feishu.cn/open-apis/bot/v2/hook/fb73b361-c1e2-41b8-9536-e5fd1a3ba0b6

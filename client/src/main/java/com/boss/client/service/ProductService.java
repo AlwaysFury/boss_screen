@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.boss.client.vo.PageResult;
 import com.boss.client.vo.ProductInfoVO;
 import com.boss.client.vo.ProductVO;
+import com.boss.common.dto.RefreshDTO;
 import com.boss.common.vo.SelectVO;
 import com.boss.client.dto.ConditionDTO;
 import com.boss.common.enities.Product;
@@ -23,20 +24,21 @@ public interface ProductService extends IService<Product> {
 
     PageResult<ProductVO> productListByCondition(ConditionDTO conditionDTO);
 
-
     ProductInfoVO getProductInfo(Long itemId);
 
     List<SelectVO> getCategorySelect();
 
     List<SelectVO> getStatusSelect();
-//
-//    void updateAccountsStatus(UpdateStatusDTO updateStatusDTO);
 
+//    void updateAccountsStatus(UpdateStatusDTO updateStatusDTO);
+//
 //    void refreshAccountToken();
 
-    void refreshProducts(List<Long> itemIds);
+    void refreshProducts(RefreshDTO refreshDTO);
 
-    void initProduct(long shopId);
+//    void initProduct(long shopId);
+
+
 
     List<String> getNewerSaleProductNames();
 }

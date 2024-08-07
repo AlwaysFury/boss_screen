@@ -21,7 +21,9 @@ public interface FileTransferStrategy {
      */
     Map<String, String> uploadFile(MultipartFile file, String path);
 
-    Map<String, Object> uploadChunkFile(UploadChunkFileDTO uploadChunkFileDTO, String fileName);
+    Map<String, Object> uploadChunkFile(UploadChunkFileDTO uploadChunkFileDTO);
+
+    Map<String, String> getUploadId(String key);
 
     /**
      * 下载文件

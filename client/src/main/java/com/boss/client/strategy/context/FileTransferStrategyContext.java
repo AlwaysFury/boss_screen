@@ -40,7 +40,11 @@ public class FileTransferStrategyContext {
     }
 
     public Map<String, Object> executeUploadChunkStrategy(UploadChunkFileDTO uploadChunkFileDTO) {
-        return uploadStrategyMap.get(getStrategy(uploadMode)).uploadChunkFile(uploadChunkFileDTO, "");
+        return uploadStrategyMap.get(getStrategy(uploadMode)).uploadChunkFile(uploadChunkFileDTO);
+    }
+
+    public Map<String,String> getUploadId(String key) {
+        return uploadStrategyMap.get(getStrategy(uploadMode)).getUploadId(key);
     }
 
     /**

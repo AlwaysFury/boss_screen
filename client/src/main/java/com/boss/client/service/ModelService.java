@@ -1,6 +1,7 @@
 package com.boss.client.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.boss.client.vo.ModelVO;
 import com.boss.common.enities.Model;
 
 import java.util.List;
@@ -12,5 +13,7 @@ import java.util.List;
  */
 public interface ModelService extends IService<Model> {
 
-    void getModel(long itemId, String token, long shopId, List<Model> modelList);
+//    void getModel(long itemId, String token, long shopId, List<Model> modelList);
+
+    List<ModelVO> getModelVOListByItemId(Long itemId);
 }

@@ -2,14 +2,11 @@ package com.boss.common.util;
 
 import lombok.extern.slf4j.Slf4j;
 
-import javax.swing.text.DateFormatter;
-import java.text.SimpleDateFormat;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -184,5 +181,37 @@ public class CommonUtil {
             subLists.add(new ArrayList<>(list.subList(i, Math.min(i + size, list.size()))));
         }
         return subLists;
+    }
+
+    /**
+     * 并集
+     * @param lists
+     * @return
+     * @param <T>
+     */
+    public static <T> Set<T> getUnion(List<List<T>> lists) {
+        return lists.stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * 交集
+     * @param lists
+     * @return
+     */
+    public static Set<Long> getIntersection(List<List<Long>> lists) {
+        Set<Long> resultSet = new HashSet<>(lists.get(0));
+
+        for (int i = 1; i < lists.size(); i++) {
+            Set<Long> currentSet = new HashSet<>(lists.get(i));
+            resultSet.retainAll(currentSet);
+
+            if (resultSet.isEmpty()) {
+                break; // Early exit if the intersection is already empty.
+            }
+        }
+
+        return resultSet;
     }
 }

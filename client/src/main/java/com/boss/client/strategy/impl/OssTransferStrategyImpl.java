@@ -1,6 +1,5 @@
 package com.boss.client.strategy.impl;
 
-import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -20,29 +19,27 @@ import com.boss.common.constant.RedisPrefixConst;
 import com.boss.common.enums.FilePathEnum;
 import com.boss.common.util.CommonUtil;
 import com.boss.common.util.FileUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.stream.Collectors;
+import java.util.concurrent.*;
 
 /**
  * oss上传策略
  */
 @Service("ossUploadStrategyImpl")
+@Slf4j
 public class OssTransferStrategyImpl extends AbstractTransferStrategyImpl {
     @Autowired
     private OssConfigProperties ossConfigProperties;
@@ -50,11 +47,9 @@ public class OssTransferStrategyImpl extends AbstractTransferStrategyImpl {
     @Autowired
     private RedisServiceImpl redisService;
 
-    @Autowired
-    @Qualifier("customThreadPool")
-    private ThreadPoolExecutor customThreadPool;
-
     private static OSS ossClient = null;
+    @Autowired
+    private ThreadPoolExecutor customThreadPool;
 
     @Override
     public Boolean exists(String filePath) {
@@ -70,7 +65,8 @@ public class OssTransferStrategyImpl extends AbstractTransferStrategyImpl {
     public void multipartUpload(String path, String fileName, MultipartFile file) throws Exception {
         long startTime = System.currentTimeMillis();
 
-        OSS ossClient = getOssClient();
+        ossClient = getOssClient();
+        log.info("1231231");
         String objectName = path + fileName;
         String bucketName = ossConfigProperties.getBucketName();
         File sampleFile = FileUtils.multipartFileToFile(file);
@@ -128,7 +124,6 @@ public class OssTransferStrategyImpl extends AbstractTransferStrategyImpl {
             if (fileLength % partSize != 0) {
                 partCount++;
             }
-            ExecutorService executor = Executors.newFixedThreadPool(10);
             // 遍历分片上传。
             for (int i = 0; i < partCount; i++) {
                 long startPos = i * partSize;
@@ -185,8 +180,7 @@ public class OssTransferStrategyImpl extends AbstractTransferStrategyImpl {
             // completeMultipartUploadRequest.setHeaders(headers);
 
             // 完成分片上传。
-            CompleteMultipartUploadResult completeMultipartUploadResult = ossClient.completeMultipartUpload(completeMultipartUploadRequest);
-            System.out.println(completeMultipartUploadResult.getETag());
+//            CompleteMultipartUploadResult completeMultipartUploadResult = ossClient.completeMultipartUpload(completeMultipartUploadRequest);
         } catch (OSSException oe) {
             System.out.println("Caught an OSSException, which means your request made it to OSS, "
                     + "but was rejected with an error response for some reason.");
@@ -215,13 +209,13 @@ public class OssTransferStrategyImpl extends AbstractTransferStrategyImpl {
      * @return
      */
     @Override
-    public Map uploadChunk(UploadChunkFileDTO param) {
+    public Map<String, Object> uploadChunk(UploadChunkFileDTO param) {
         if (ObjectUtil.isEmpty(param.getKey())) {
-            String key = getKey(null, param.getIdentifier(), param.getFilename());
+            String key = FilePathEnum.PHOTO.getPath() + param.getFilename();
             param.setKey(key);
         }
         return uploadChunk(param.getUploadId(), param.getKey(), param.getFile(), param.getChunkNumber(),
-                param.getCurrentChunkSize(), param.getTotalChunks());
+                param.getFile().getSize(), param.getTotalChunks(), param.getFilename());
     }
 
     /**
@@ -240,73 +234,164 @@ public class OssTransferStrategyImpl extends AbstractTransferStrategyImpl {
      * @param chunkCount 总分片数
      * @return
      */
-    public Map uploadChunk(String uploadId, String key, MultipartFile file, Integer chunkIndex,
-                           long chunkSize, Integer chunkCount) {
+    public Map<String, Object> uploadChunk(String uploadId, String key, MultipartFile file, Integer chunkIndex,
+                                           long chunkSize, Integer chunkCount, String fileName) {
+        long startTime = System.currentTimeMillis();
+
         if (ObjectUtil.isEmpty(key)) {
-            key = getKey(FilePathEnum.PHOTO.getPath(), null, FileUtil.getSuffix(file.getOriginalFilename()));
+            key = FilePathEnum.PHOTO.getPath() + fileName;
         }
         ossClient = getOssClient();
+        Map<String, Object> map = MapUtil.newHashMap();
         try {
-            Map<String, Object> map = MapUtil.newHashMap();
-            // 判断是否上传
-            if (checkExist(key)) {
-                map.put("skipUpload", true);
-                map.put("url", getUrl(key));
-                return map;
-            }
+
+
             // 判断是否第一次上传
-            if (StringUtils.isBlank(uploadId)) {
-                uploadId = uploadChunkInit(file, key);
-                map.put("skipUpload", false);
-                map.put("uploadId", uploadId);
-                map.put("uploaded", null);
-                return map;
+            uploadId = "5265F827C663417280F91F1B6105C065";
+            if (uploadId == null || StringUtils.isBlank(uploadId)) {
+
+//                map.put("skipUpload", false);
+//                map.put("uploadId", uploadId);
+//                map.put("uploaded", null);
+//                return map;
             }
 //            RedisManager redisService = initRedisManager();
             // 检查分片是否已上传 实现断点续传
-            if (file == null) {
-                Map<String, String> uploadedCache = (Map<String, String>) redisService.hGet(RedisPrefixConst.ALI_OSS_KEY + uploadId, chunkIndex + ",");
-                List<Integer> uploaded = Lists.newArrayList();
-                for (Map.Entry<String, String> entry : uploadedCache.entrySet()) {
-                    uploaded.add(JSONUtil.toBean(entry.getValue(), PartETag.class).getPartNumber());
+//            if (file == null) {
+//                Map<String, String> uploadedCache = (Map<String, String>) redisService.hGet(RedisPrefixConst.ALI_OSS_KEY + uploadId, chunkIndex + ",");
+//                List<Integer> uploaded = Lists.newArrayList();
+//                for (Map.Entry<String, String> entry : uploadedCache.entrySet()) {
+//                    uploaded.add(JSONUtil.toBean(entry.getValue(), PartETag.class).getPartNumber());
+//                }
+//                map.put("skipUpload", false);
+//                map.put("uploadId", uploadId);
+//                map.put("uploaded", uploaded);
+//                return map;
+//            }
+
+//            String finalUploadId = uploadId;
+//            String finalKey = key;
+            log.info("开始上传分片:"+chunkIndex+",uploadId："+uploadId);
+
+            String finalUploadId = uploadId;
+            String finalKey = key;
+            CompletableFuture.runAsync(() -> {
+                try {
+                    uploadChunkPart(finalUploadId, finalKey, file.getInputStream(), chunkIndex, chunkSize, chunkCount);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
-                map.put("skipUpload", false);
-                map.put("uploadId", uploadId);
-                map.put("uploaded", uploaded);
-                return map;
-            }
+            }, customThreadPool);
+
+
+
             // 上传分片
-            PartETag partETag = uploadChunkPart(uploadId, key, file.getInputStream(), chunkIndex, chunkSize, chunkCount);
-            // 分片上传完成缓存key
-            redisService.hSet(RedisPrefixConst.ALI_OSS_KEY + uploadId, chunkIndex + ",", JSONUtil.toJsonStr(partETag));
-            // 取出所有已上传的分片信息
-            Map<String, String> dataMap = (Map<String, String>) redisService.hGet(RedisPrefixConst.ALI_OSS_KEY + uploadId, chunkIndex + ",");
-            List<PartETag> partETagList = Lists.newArrayList();
-            for (Map.Entry<String, String> entry : dataMap.entrySet()) {
-                partETagList.add(JSONUtil.toBean(entry.getValue(), PartETag.class));
-            }
-            // 判断是否上传完成
-            if (dataMap.keySet().size() == chunkCount) {
-                uploadChunkComplete(uploadId, key, partETagList);
-                for (String mapKey : dataMap.keySet()) {
-                    redisService.hDel(RedisPrefixConst.ALI_OSS_KEY + uploadId, mapKey);
-                }
-                map.put("skipUpload", true);
-                map.put("uploadId", uploadId);
-                map.put("url", getUrl(key));
-            } else {
-                List<Integer> list = partETagList.stream().map(PartETag::getPartNumber).collect(Collectors.toList());
-                map.put("uploaded", list);
-                map.put("skipUpload", false);
-                map.put("uploadId", uploadId);
-            }
+//            PartETag partETag = uploadChunkPart(uploadId, key, file.getInputStream(), chunkIndex, chunkSize, chunkCount);
+//            log.info("上传分片耗时：" + (System.currentTimeMillis() - startTime) / 1000);
+//            // 分片上传完成缓存key
+//            startTime = System.currentTimeMillis();
+//            redisService.hSet(RedisPrefixConst.ALI_OSS_KEY + uploadId, chunkIndex + ",", JSONUtil.toJsonStr(partETag));
+//            log.info("获取缓存耗时：" + (System.currentTimeMillis() - startTime) / 1000);
+//            startTime = System.currentTimeMillis();
+//            // 取出所有已上传的分片信息
+//            Map<String, String> dataMap = (Map<String, String>) redisService.hGetAll(RedisPrefixConst.ALI_OSS_KEY + uploadId);
+//            List<PartETag> partETagList = Lists.newArrayList();
+//            for (Map.Entry<String, String> entry : dataMap.entrySet()) {
+//                partETagList.add(JSONUtil.toBean(entry.getValue(), PartETag.class));
+//            }
+//
+//            // 判断是否上传完成
+//            if (dataMap.keySet().size() == chunkCount) {
+//                log.info("完成：" + chunkIndex + ":" + uploadId);
+//                uploadChunkComplete(uploadId, key, partETagList);
+//                for (String mapKey : dataMap.keySet()) {
+//                    redisService.hDel(RedisPrefixConst.ALI_OSS_KEY + uploadId, mapKey);
+//                }
+//                map.put("skipUpload", true);
+//                map.put("uploadId", uploadId);
+//                map.put("url", getUrl(key));
+//
+//                if (ossClient != null) {
+//                    ossClient.shutdown();
+//                }
+//            } else {
+//                log.info("未完成：" + chunkIndex + ":" + uploadId);
+//                List<Integer> list = partETagList.stream().map(PartETag::getPartNumber).collect(Collectors.toList());
+//                map.put("uploaded", list);
+//                map.put("skipUpload", false);
+//                map.put("uploadId", uploadId);
+//            }
             return map;
         } catch (Exception e) {
             e.printStackTrace();
             throw new BizException("上传失败：" + e.getMessage());
         }
 
+
     }
+
+
+    private void uploadChunkPartFuture(String uploadId, String key, InputStream instream,
+                                    Integer chunkIndex, long chunkSize, Integer chunkCount) {
+//        try {
+            UploadPartRequest partRequest = new UploadPartRequest();
+            log.info("开始分片");
+            // 阿里云 oss 文件根目录
+            partRequest.setBucketName(ossConfigProperties.getBucketName());
+            // 文件key
+            partRequest.setKey(key);
+            // 分片上传uploadId
+            partRequest.setUploadId(uploadId);
+            // 分片文件
+            partRequest.setInputStream(instream);
+            // 分片大小。除了最后一个分片没有大小限制，其他的分片最小为100 KB。
+            partRequest.setPartSize(chunkSize);
+            // 分片号。每一个上传的分片都有一个分片号，取值范围是1~10000，如果超出这个范围，OSS将返回InvalidArgument的错误码。
+            partRequest.setPartNumber(chunkIndex);
+//            CompletableFuture.runAsync(() -> {
+                try {
+//                    if (ossClient == null) {
+                        ossClient = getOssClient();
+//                    }
+                    // 每个分片不需要按顺序上传，甚至可以在不同客户端上传，OSS会按照分片号排序组成完整的文件。
+                    UploadPartResult uploadPartResult = ossClient.uploadPart(partRequest);
+                    // 每次上传分片之后，OSS的返回结果包含PartETag。PartETag将被保存在redis中。
+                    PartETag partETag = uploadPartResult.getPartETag();
+                    // 分片上传完成缓存key
+                    log.info("partETag：{}", JSONUtil.toJsonStr(partETag));
+                    redisService.hSet(RedisPrefixConst.ALI_OSS_KEY + uploadId, chunkIndex + ",", JSONUtil.toJsonStr(partETag));
+
+//                    while (chunkIndex == chunkCount) {
+//                        log.info("开始合并===");
+//                        // 取出所有已上传的分片信息
+//                        Map<String, String> dataMap = (Map<String, String>) redisService.hGetAll(RedisPrefixConst.ALI_OSS_KEY + uploadId);
+//                        // 判断是否上传完成
+//                        if (dataMap.keySet().size() == chunkCount) {
+//                            List<PartETag> partETagList = Lists.newArrayList();
+//                            for (Map.Entry<String, String> entry : dataMap.entrySet()) {
+//                                partETagList.add(JSONUtil.toBean(entry.getValue(), PartETag.class));
+//                            }
+//                            log.info("完成：" + chunkIndex + ":" + uploadId);
+//                            uploadChunkComplete(uploadId, key, partETagList);
+//                            for (String mapKey : dataMap.keySet()) {
+//                                redisService.hDel(RedisPrefixConst.ALI_OSS_KEY + uploadId, mapKey);
+//                            }
+//                            ossClient.shutdown();
+//                            break;
+//                        } else {
+//                            TimeUnit.SECONDS.sleep(20);
+//                        }
+//                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+//            }, customThreadPool);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            throw new BizException("分片上传失败：" + e.getMessage());
+//        }
+    }
+
 
     /**
      * 上传分片文件
@@ -320,7 +405,10 @@ public class OssTransferStrategyImpl extends AbstractTransferStrategyImpl {
      */
     public PartETag uploadChunkPart(String uploadId, String key, InputStream instream,
                                     Integer chunkIndex, long chunkSize, Integer chunkCount) {
-        ossClient = getOssClient();
+        if (ossClient == null) {
+            ossClient = getOssClient();
+        }
+
         try {
             UploadPartRequest partRequest = new UploadPartRequest();
             // 阿里云 oss 文件根目录
@@ -328,12 +416,12 @@ public class OssTransferStrategyImpl extends AbstractTransferStrategyImpl {
             // 文件key
             partRequest.setKey(key);
             // 分片上传uploadId
+            log.info("uploadId==>"+uploadId);
             partRequest.setUploadId(uploadId);
             // 分片文件
             partRequest.setInputStream(instream);
             // 分片大小。除了最后一个分片没有大小限制，其他的分片最小为100 KB。
             partRequest.setPartSize(chunkSize);
-            System.out.println(chunkSize + "    " + chunkIndex + "   " + uploadId);
             // 分片号。每一个上传的分片都有一个分片号，取值范围是1~10000，如果超出这个范围，OSS将返回InvalidArgument的错误码。
             partRequest.setPartNumber(chunkIndex);
             // 每个分片不需要按顺序上传，甚至可以在不同客户端上传，OSS会按照分片号排序组成完整的文件。
@@ -355,11 +443,18 @@ public class OssTransferStrategyImpl extends AbstractTransferStrategyImpl {
      * @return
      */
     public CompleteMultipartUploadResult uploadChunkComplete(String uploadId, String key, List<PartETag> chunkTags) {
-        ossClient = getOssClient();
+        if (ossClient == null) {
+            ossClient = getOssClient();
+        }
+
         try {
+            long startTime = System.currentTimeMillis();
+
             CompleteMultipartUploadRequest completeMultipartUploadRequest =
                     new CompleteMultipartUploadRequest(ossConfigProperties.getBucketName(), key, uploadId, chunkTags);
             CompleteMultipartUploadResult result = ossClient.completeMultipartUpload(completeMultipartUploadRequest);
+
+            log.info("完成耗时：" + (System.currentTimeMillis() - startTime) / 1000);
             return result;
         } catch (Exception e) {
             e.printStackTrace();
@@ -391,18 +486,7 @@ public class OssTransferStrategyImpl extends AbstractTransferStrategyImpl {
         }
     }
 
-    /**
-     * 初始化分片上传
-     *
-     * @param key
-     * @return 分片上传的uploadId
-     */
-    public String uploadChunkInit(MultipartFile file, String key) {
-        if (ObjectUtil.isEmpty(key)) {
-            key = getKey(FilePathEnum.PHOTO.getPath(), null, FileUtil.getSuffix(file.getOriginalFilename()));
-        }
-        return uploadChunkInit(key);
-    }
+
 
     /**
      * 获取上传文件的key

@@ -3,6 +3,8 @@ package com.boss.task.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.boss.common.enities.Order;
 
+import java.util.List;
+
 /**
  * @Description
  * @Author 罗宇航
@@ -12,9 +14,9 @@ public interface OrderService extends IService<Order> {
 
     void refreshSingleOrderBySn(String orderSn, long shopId, String status);
 
-    void refreshOrderByTimeStr(long startTime, long endTime);
+    void refreshOrderByTime(String startTimeStr, String endTimeStr);
 
-//    void refreshOrder(List<String> sns);
+    void refreshOrderBySn(List<String> sns);
 
 //    void refreshOrderByStatus(String... status);
 

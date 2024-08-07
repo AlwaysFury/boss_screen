@@ -21,9 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -86,7 +84,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
     @Override
     public void initProduct(long shopId) {
         String accessToken = shopService.getAccessTokenByShopId(String.valueOf(shopId));
-        String status = "&item_status=NORMAL&item_status=BANNED&item_status=UNLIST&item_status=REVIEWING";
+        String status = "&item_status=NORMAL&item_status=UNLIST&item_status=REVIEWING";
         List<String> itemIds = ShopeeUtil.getProducts(accessToken, shopId, 0, new ArrayList<>(), status);
 
         if (itemIds == null || itemIds.isEmpty()) {
@@ -207,42 +205,43 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 }
                 productDao.update(new UpdateWrapper<Product>().set("status", SELLER_DELETE.getCode()).in("item_id", joiner));
             }
+        }
+    }
 
-//            status = "&item_status=SHOPEE_DELETE";
-//            itemIds = ShopeeUtil.getProducts(accessToken, shopId, 0, new ArrayList<>(), status);
-//            if (itemIds != null && !itemIds.isEmpty()) {
-//                StringJoiner joiner = new StringJoiner(",");
-//                for (String itemId : itemIds) {
-//                    joiner.add(itemId);
-//                }
-//            }
-//            tempList = productDao.selectList(new QueryWrapper<Product>().select("item_id" ).in("item_id", itemIds))
-//                    .stream().map(p -> String.valueOf(p.getItemId())).collect(Collectors.toList());
-//            if (tempList != null && !tempList.isEmpty()) {
-//                StringJoiner joiner = new StringJoiner(",");
-//                for (String itemId : tempList) {
-//                    joiner.add(itemId);
-//                }
-//                productDao.update(new UpdateWrapper<Product>().set("status", "SHOPEE_DELETE").in("item_id", joiner));
-//            }
-//
-//            status = "&item_status=BANNED";
-//            itemIds = ShopeeUtil.getProducts(accessToken, shopId, 0, new ArrayList<>(), status);
-//            if (itemIds != null && !itemIds.isEmpty()) {
-//                StringJoiner joiner = new StringJoiner(",");
-//                for (String itemId : itemIds) {
-//                    joiner.add(itemId);
-//                }
-//            }
-//            tempList = productDao.selectList(new QueryWrapper<Product>().select("item_id" ).in("item_id", itemIds))
-//                    .stream().map(p -> String.valueOf(p.getItemId())).collect(Collectors.toList());
-//            if (tempList != null && !tempList.isEmpty()) {
-//                StringJoiner joiner = new StringJoiner(",");
-//                for (String itemId : tempList) {
-//                    joiner.add(itemId);
-//                }
-//                productDao.update(new UpdateWrapper<Product>().set("status", "BANNED").in("item_id", joiner));
-//            }
+    @Override
+    public void refreshProductsById(List<Long> itemIds) {
+        StringJoiner sj = new StringJoiner(",");
+        for (int i = 0; i < itemIds.size(); i ++) {
+            sj.add(String.valueOf(itemIds.get(i)));
+        }
+        List<Product> products = productDao.selectList(new QueryWrapper<Product>().select("item_id", "shop_id").in("item_id", sj.toString()));
+
+        Map<Long, List<String>> map = new HashMap<>();
+
+        for (Product product : products) {
+            long itemId = product.getItemId();
+            long shop_id = product.getShopId();
+
+            if (!map.containsKey(shop_id)) {
+                List<String> temp = new ArrayList<>();
+                temp.add(String.valueOf(itemId));
+                map.put(shop_id, temp);
+            } else {
+                List<String> temp = map.get(shop_id);
+                temp.add(String.valueOf(itemId));
+                map.put(shop_id, temp);
+            }
+        }
+
+        for (long shopId : map.keySet()) {
+            List<String> oldItemList = map.get(shopId);
+
+            List<String> itemIdList = new ArrayList<>();
+            for (int i = 0; i < oldItemList.size(); i += 50) {
+                itemIdList.add(String.join(",", oldItemList.subList(i, Math.min(i + 50, oldItemList.size()))));
+            }
+
+            refreshProductByItemId(itemIdList, shopId);
         }
     }
 
@@ -289,11 +288,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
 
 
         List<List<Product>> splitProduct = CommonUtil.splitListBatches(productList, 100);
-//        List<CompletableFuture<Void>> insertProductFutures = new ArrayList<>();
         for (List<Product> batch : splitProduct) {
             CompletableFuture.runAsync(() -> {
                 try {
-//                    TransactionTemplate transactionTemplate = new TransactionTemplate();
                     transactionTemplate.executeWithoutResult(status -> {
                         this.saveOrUpdateBatch(batch);
                     });
@@ -302,16 +299,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                 }
             }, customThreadPool);
 
-//            insertProductFutures.add(future);
         }
 
-
         List<List<Model>> splitModel = CommonUtil.splitListBatches(modelList, 5000);
-//        List<CompletableFuture<Void>> insertModelFutures = new ArrayList<>();
         for (List<Model> batch : splitModel) {
             CompletableFuture.runAsync(() -> {
                 try {
-//                    TransactionTemplate transactionTemplate = new TransactionTemplate();
                     transactionTemplate.executeWithoutResult(status -> {
                         modelService.saveOrUpdateBatch(batch);
                     });
@@ -319,12 +312,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductDao, Product> impleme
                     e.printStackTrace();
                 }
             }, customThreadPool);
-
-//            insertModelFutures.add(future);
         }
-
-//        CompletableFuture.allOf(insertProductFutures.toArray(new CompletableFuture[0])).join();
-//        CompletableFuture.allOf(insertModelFutures.toArray(new CompletableFuture[0])).join();
 
         log.info("===产品数据落库结束，耗时：{}秒", (System.currentTimeMillis() - startTime) / 1000);
 

@@ -86,4 +86,47 @@
         group by s.name, t.item_id
     </select>
 
+    <select id="getRuleSku" resultType="java.lang.Long">
+        SELECT
+            s.id
+        FROM
+            tb_sku as s
+        left join tb_model as m on s.name = m.sku_name
+        where s.id is not null
+        <choose>
+            <when test="ruleCondition.allOrNot == true">
+                <if test="ruleCondition.skuName != null">
+                    and s.name = #{ruleCondition.skuName}
+                </if>
+            </when>
+            <when test="ruleCondition.allOrNot == false">
+                <if test="ruleCondition.skuName != null">
+                    or s.name = #{ruleCondition.skuName}
+                </if>
+            </when>
+        </choose>
+        group by s.id
+    </select>
+
+    <select id="getRuleSkuByTime" resultType="java.lang.Long">
+        SELECT
+            s.id
+        FROM
+            tb_sku as s
+        left join tb_model as m on s.name = m.sku_name
+        left join tb_product as p on m.item_id = p.id
+        where s.id is not null
+        group by s.id
+        having
+        <if test="ruleCondition.createStartTime != 0 and ruleCondition.createEndTime == 0">
+            min(p.create_time) >= #{ruleCondition.createStartTime}
+        </if>
+        <if test="ruleCondition.createStartTime == 0 and ruleCondition.createEndTime != 0">
+            min(p.create_time) &lt;= #{ruleCondition.createEndTime}
+        </if>
+        <if test="ruleCondition.createStartTime != 0 and ruleCondition.createEndTime != 0">
+            min(p.create_time) >= #{ruleCondition.createStartTime} and min(p.create_time) &lt;= #{ruleCondition.createEndTime}
+        </if>
+    </select>
+
 </mapper>

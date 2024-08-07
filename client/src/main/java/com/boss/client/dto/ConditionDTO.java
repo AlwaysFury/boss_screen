@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * @Description
  * @Author 罗宇航
@@ -131,6 +133,11 @@ public class ConditionDTO {
      * 标签id
      */
     private Long tag_id;
+
+    /**
+     * 标签id数组
+     */
+    private List<Long> tag_ids;
 
     /**
      * 标签名称

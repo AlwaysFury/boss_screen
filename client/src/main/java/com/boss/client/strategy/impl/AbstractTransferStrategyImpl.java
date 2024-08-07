@@ -7,6 +7,8 @@ import com.boss.client.exception.BizException;
 import com.boss.client.strategy.FileTransferStrategy;
 import com.boss.common.enums.FilePathEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +18,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * 抽象上传模板
@@ -24,20 +28,24 @@ import java.util.Map;
 @Slf4j
 public abstract class AbstractTransferStrategyImpl implements FileTransferStrategy {
 
+    @Autowired
+    @Qualifier("customThreadPool")
+    private ThreadPoolExecutor customThreadPool;
+
     @Override
     public Map<String, String> uploadFile(MultipartFile file, String path) {
         try {
             //获取文件名
-            final long LIMITSIZE = 50 * 1024 * 1024L;
+//            final long LIMITSIZE = 50 * 1024 * 1024L;
             String fileName = FileUtil.getName(file.getOriginalFilename());
-            if (file.getSize() >= LIMITSIZE) {
-                log.info("文件大于50m，开始分片上传");
+//            if (file.getSize() >= LIMITSIZE) {
+                log.info("文件开始上传");
                 multipartUpload(path, fileName, file);
 
-            } else {
-                log.info("文件开始上传");
-                upload(path, fileName, file.getInputStream());
-            }
+//            } else {
+//                log.info("文件开始上传");
+//                upload(path, fileName, file.getInputStream());
+//            }
 
             Map<String, String> map = new HashMap<>();
             map.put("name", FileUtil.getName(file.getOriginalFilename()));
@@ -53,8 +61,14 @@ public abstract class AbstractTransferStrategyImpl implements FileTransferStrate
         }
     }
 
-    public Map<String, Object> uploadChunkFile(UploadChunkFileDTO uploadChunkFileDTO, String fileName) {
-        return uploadChunk(uploadChunkFileDTO);
+    public Map<String, Object> uploadChunkFile(UploadChunkFileDTO uploadChunkFileDTO) {
+        log.info("文件开始分片上传");
+        Map<String, Object> map = new HashMap<>();
+        map.put("name", uploadChunkFileDTO.getFilename());
+        map.put("src", getFileAccessUrl(FilePathEnum.PHOTO.getPath() + uploadChunkFileDTO.getFilename()));
+        uploadChunk(uploadChunkFileDTO);
+//        log.info("文件结束上传");
+        return map;
     }
 
     /**
@@ -64,6 +78,16 @@ public abstract class AbstractTransferStrategyImpl implements FileTransferStrate
      * @return {@link Boolean}
      */
     public abstract Boolean exists(String filePath);
+
+    public Map<String, String> getUploadId(String key) {
+        String id = uploadChunkInit(key);
+        Map<String, String> map = new HashMap<>();
+        map.put("uploadId", id);
+        map.put("name", key);
+        map.put("src", getFileAccessUrl(FilePathEnum.PHOTO.getPath() + key));
+
+        return map;
+    }
 
     /**
      * 上传
@@ -81,6 +105,8 @@ public abstract class AbstractTransferStrategyImpl implements FileTransferStrate
     public abstract void multipartUpload(String path, String fileName, MultipartFile file) throws Exception;
 
     public abstract Map<String, Object> uploadChunk(UploadChunkFileDTO uploadChunkFileDTO);
+
+    public abstract String uploadChunkInit(String key);
 
     /**
      * 获取文件访问url

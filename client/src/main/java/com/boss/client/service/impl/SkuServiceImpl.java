@@ -8,10 +8,7 @@ import com.boss.client.dto.SkuDTO;
 import com.boss.client.enities.Sku;
 import com.boss.client.exception.BizException;
 import com.boss.client.service.SkuService;
-import com.boss.client.vo.PageResult;
-import com.boss.client.vo.SkuInfoVO;
-import com.boss.client.vo.SkuStatisticsVO;
-import com.boss.client.vo.SkuVO;
+import com.boss.client.vo.*;
 import com.boss.common.util.BeanCopyUtils;
 import com.boss.common.util.CommonUtil;
 import com.boss.common.util.PageUtils;
@@ -80,7 +77,14 @@ public class SkuServiceImpl extends ServiceImpl<SkuDao, Sku> implements SkuServi
         String relevanceIds = sku.getRelevanceIds();
         if (relevanceIds != null && !relevanceIds.isEmpty()) {
             List<Long> relevanceIdList = Arrays.stream(relevanceIds.split(",")).map(Long::valueOf).collect(Collectors.toList());
-            skuInfoVO.setRelevanceIds(relevanceIdList);
+            List<Sku> relevanceSkus = skuDao.selectList(new QueryWrapper<Sku>().in("id", relevanceIdList));
+            if (relevanceSkus != null) {
+                List<RelevanceSkuVO> relevanceSkuVOList = relevanceSkus.stream()
+                        .map(s -> {
+                            return BeanCopyUtils.copyObject(s, RelevanceSkuVO.class);
+                        }).collect(Collectors.toList());
+                skuInfoVO.setRelevanceSku(relevanceSkuVOList);
+            }
         }
 
         return skuInfoVO;
@@ -119,10 +123,14 @@ public class SkuServiceImpl extends ServiceImpl<SkuDao, Sku> implements SkuServi
             String itemIdValue = resultMap.get("itemId");
             // 如果键不存在或当前值为空字符串，则直接添加或覆盖
             if (itemIdValue == null || itemIdValue.isEmpty()) {
-                resultMap.put("itemId", itemId);
+                if (itemId != null) {
+                    resultMap.put("itemId", itemId);
+                }
             } else {
                 // 如果键存在，用逗号拼接新旧值
-                resultMap.put("itemId", itemIdValue + "," + itemId);
+                if (itemId != null) {
+                    resultMap.put("itemId", itemIdValue + "," + itemId);
+                }
             }
 
             String shopName = record.get("shopName");

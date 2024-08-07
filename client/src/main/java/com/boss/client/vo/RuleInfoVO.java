@@ -29,4 +29,6 @@ public class RuleInfoVO {
     private JSONObject rule;
 
     private String type;
+
+    private Integer weight;
 }

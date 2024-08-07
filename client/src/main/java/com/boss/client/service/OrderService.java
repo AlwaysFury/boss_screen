@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.boss.client.vo.OrderEscrowInfoVO;
 import com.boss.client.vo.OrderEscrowVO;
 import com.boss.client.vo.PageResult;
+import com.boss.common.dto.RefreshDTO;
 import com.boss.common.vo.SelectVO;
 import com.boss.client.dto.ConditionDTO;
 import com.boss.common.enities.Order;
@@ -23,5 +24,5 @@ public interface OrderService extends IService<Order> {
 
     List<SelectVO> getStatusSelect();
 
-    void initOrder(long shopId);
+    void refreshOrders(RefreshDTO refreshDTO);
 }

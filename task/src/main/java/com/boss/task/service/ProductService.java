@@ -3,6 +3,8 @@ package com.boss.task.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.boss.common.enities.Product;
 
+import java.util.List;
+
 /**
  * @Description
  * @Author 罗宇航
@@ -19,4 +21,6 @@ public interface ProductService extends IService<Product> {
     void initProduct(long shopId);
 
     void updateStatusByItemId(Long itemId, String status);
+
+    void refreshProductsById(List<Long> itemIds);
 }

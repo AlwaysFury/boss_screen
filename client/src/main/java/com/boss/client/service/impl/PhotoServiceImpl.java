@@ -5,34 +5,32 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.boss.client.dao.OrderItemDao;
 import com.boss.client.dao.PhotoDao;
 import com.boss.client.dao.SkuDao;
 import com.boss.client.dao.TagDao;
 import com.boss.client.dto.ConditionDTO;
 import com.boss.client.dto.PhotoInfoDTO;
+import com.boss.client.dto.UploadChunkFileDTO;
 import com.boss.client.enities.Photo;
 import com.boss.client.enities.Sku;
 import com.boss.client.exception.BizException;
 import com.boss.client.service.PhotoService;
 import com.boss.client.strategy.context.FileTransferStrategyContext;
-import com.boss.client.vo.PageResult;
-import com.boss.client.vo.PhotoInfoVO;
-import com.boss.client.vo.PhotoVO;
-import com.boss.client.vo.Result;
+import com.boss.client.vo.*;
 import com.boss.common.enities.Tag;
+import com.boss.common.enums.FilePathEnum;
 import com.boss.common.util.BeanCopyUtils;
 import com.boss.common.util.PageUtils;
-import com.boss.common.vo.SelectVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.boss.common.enums.TagTypeEnum.PHOTO;
@@ -41,6 +39,7 @@ import static com.boss.common.enums.TagTypeEnum.PHOTO;
  * 照片服务
  */
 @Service
+@Slf4j
 public class PhotoServiceImpl extends ServiceImpl<PhotoDao, Photo> implements PhotoService {
     @Autowired
     private PhotoDao photoDao;
@@ -54,8 +53,6 @@ public class PhotoServiceImpl extends ServiceImpl<PhotoDao, Photo> implements Ph
     @Autowired
     private ProductOrImgTagServiceImpl productOrImgTagService;
 
-    @Autowired
-    private GradeServiceImpl gradeService;
 
     @Autowired
     private SkuServiceImpl skuService;
@@ -63,17 +60,8 @@ public class PhotoServiceImpl extends ServiceImpl<PhotoDao, Photo> implements Ph
     @Autowired
     private FileTransferStrategyContext fileTransferStrategyContext;
 
-    @Autowired
-    private OrderItemDao orderItemDao;
-
-    @Autowired
-    private RedisServiceImpl redisService;
-
-    @Autowired
-    private RuleServiceImpl ruleService;
-
-    @Autowired
-    private TagServiceImpl tagService;
+    @Value("${upload.oss.url}")
+    private String url;
 
     @Override
     public PageResult<PhotoVO> photoListByCondition(ConditionDTO condition) {
@@ -118,6 +106,27 @@ public class PhotoServiceImpl extends ServiceImpl<PhotoDao, Photo> implements Ph
         productOrImgTagService.saveProductOrImgTag(photoInfoDTO.getTagNameList(), sku.getId(), PHOTO.getCode());
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void saveUploadInfo(String data) {
+        log.info(data);
+        Map<String, String> map = parseQueryString(data);
+        String originFileName = map.get("filename");
+        String fileName = originFileName.split("/")[1];
+        log.info("上传文件信息：{}", originFileName);
+
+        Photo existPhoto = photoDao.selectOne(new QueryWrapper<Photo>().eq("photo_name", fileName));
+        if (ObjectUtil.isNotNull(existPhoto)) {
+            photoDao.update(new UpdateWrapper<Photo>().set("photo_src", url + originFileName).eq("photo_name", fileName));
+        } else {
+            PhotoInfoDTO photoInfoDTO = PhotoInfoDTO.builder()
+                    .photoName(fileName)
+                    .photoSrc(url + originFileName)
+                    .build();
+            saveOrUpdatePhotoInfo(photoInfoDTO);
+        }
+    }
+
     @Override
     public PhotoInfoVO getPhotoById(long id) {
         PhotoInfoVO photoInfoVO = photoDao.getPhotoInfoById(id);
@@ -127,22 +136,25 @@ public class PhotoServiceImpl extends ServiceImpl<PhotoDao, Photo> implements Ph
 
 //        GradeObject gradeObject = orderItemDao.skuMinPriceAndCreateTime(photoInfoVO.getSkuName());
 
-        List<Tag> tagList = tagDao.getTagListByItemOrImgId(photoInfoVO.getId());
+        List<Tag> tagList = tagDao.getTagListByItemOrImgId(photoInfoVO.getSkuId());
         if (tagList != null) {
-//            List<Long> skuIds = tagList.stream().map(Tag::getId).toList();
-            List<String> tagNameList = tagList.stream().map(Tag::getTagName).toList();
-            photoInfoVO.setTagNameList(tagNameList);
-//            gradeObject.setTagIds(skuIds);
+            List<TagVO> tagVOList = tagList.stream().map(tag -> {
+                return BeanCopyUtils.copyObject(tag, TagVO.class);
+            }).toList();
+            photoInfoVO.setTagList(tagVOList);
         }
         String relevanceIds = skuDao.selectOne(new QueryWrapper<Sku>().eq("id", photoInfoVO.getSkuId())).getRelevanceIds();
         if (relevanceIds != null && !relevanceIds.isEmpty()) {
             List<Long> relevanceIdList = Arrays.stream(relevanceIds.split(",")).map(Long::valueOf).collect(Collectors.toList());
-            photoInfoVO.setRelevanceIds(relevanceIdList);
+            List<Sku> relevanceSkus = skuDao.selectList(new QueryWrapper<Sku>().in("id", relevanceIdList));
+            if (relevanceSkus != null) {
+                List<RelevanceSkuVO> relevanceSkuVOList = relevanceSkus.stream()
+                        .map(sku -> {
+                            return BeanCopyUtils.copyObject(sku, RelevanceSkuVO.class);
+                        }).collect(Collectors.toList());
+                photoInfoVO.setRelevanceSku(relevanceSkuVOList);
+            }
         }
-
-//        Object grade = redisService.get(GRADE_PHOTO + photoInfoVO.getSkuId());
-//        photoInfoVO.setGrade(grade == null ? "未设置" : String.valueOf(grade));
-
         return photoInfoVO;
     }
 
@@ -168,14 +180,31 @@ public class PhotoServiceImpl extends ServiceImpl<PhotoDao, Photo> implements Ph
         photoDao.deleteBatchIds(photoIdList);
     }
 
-    @GetMapping("/gradeSelect")
-    public Result<List<SelectVO>> gradeSelect() {
-        return Result.ok(ruleService.gradeSelect(PHOTO.getCode()));
+    @Override
+    public Map<String, String> upload(MultipartFile file) {
+        return fileTransferStrategyContext.executeUploadStrategy(file, FilePathEnum.PHOTO.getPath());
     }
 
-    @GetMapping("/tagSelect")
-    public Result<List<SelectVO>> tagSelect() {
-        return Result.ok(tagService.tagSelect(PHOTO.getCode()));
+    @Override
+    public Map<String, String> getUploadId(String key) {
+        return fileTransferStrategyContext.getUploadId(key);
+    }
+
+    @Override
+    public Map<String, Object> uploadChunk(UploadChunkFileDTO uploadChunkFileDTO) {
+        return fileTransferStrategyContext.executeUploadChunkStrategy(uploadChunkFileDTO);
+    }
+
+    private Map<String, String> parseQueryString(String queryString) {
+        Map<String, String> map = new HashMap<>();
+        String[] params = queryString.split("&");
+        for (String param : params) {
+            String[] keyValue = param.split("=");
+            if (keyValue.length == 2) {
+                map.put(keyValue[0], keyValue[1]);
+            }
+        }
+        return map;
     }
 }
 
